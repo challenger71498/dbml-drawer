@@ -1,0 +1,119 @@
+[tools]
+node = "26.3.0"
+"npm:pnpm" = "11.5.2"
+
+[tasks.install]
+description = "Install dependencies for all projects"
+run = "pnpm --dir frontend install && pnpm --dir backend install"
+
+[tasks.dev]
+description = "Run frontend and backend development servers"
+run = "mise run frontend:dev & mise run backend:dev & wait"
+
+[tasks."frontend:dev"]
+description = "Run the frontend development server"
+run = "pnpm --dir frontend dev"
+
+[tasks."backend:dev"]
+description = "Run the backend development server"
+run = "pnpm --dir backend dev"
+
+[tasks.lint]
+description = "Lint all projects"
+run = "mise run frontend:lint && mise run backend:lint"
+
+[tasks."frontend:lint"]
+description = "Lint the frontend project"
+run = "pnpm --dir frontend lint"
+
+[tasks."backend:lint"]
+description = "Lint the backend project"
+run = "pnpm --dir backend lint"
+
+[tasks.typecheck]
+description = "Type check all projects"
+run = "mise run frontend:typecheck && mise run backend:typecheck"
+
+[tasks."frontend:typecheck"]
+description = "Type check the frontend project"
+run = "pnpm --dir frontend typecheck"
+
+[tasks."backend:typecheck"]
+description = "Type check the backend project"
+run = "pnpm --dir backend typecheck"
+
+[tasks.test]
+description = "Run all project tests"
+run = "mise run frontend:test && mise run backend:test"
+
+[tasks."frontend:test"]
+description = "Run frontend tests"
+run = "pnpm --dir frontend test"
+
+[tasks."backend:test"]
+description = "Run backend tests"
+run = "pnpm --dir backend test"
+
+[tasks.build]
+description = "Build all projects"
+run = "mise run frontend:build && mise run backend:build"
+
+[tasks."frontend:build"]
+description = "Build the frontend project"
+run = "pnpm --dir frontend build"
+
+[tasks."backend:build"]
+description = "Build the backend project"
+run = "pnpm --dir backend build"
+
+[tasks.format]
+description = "Format all projects"
+run = "mise run frontend:format && mise run backend:format"
+
+[tasks."frontend:format"]
+description = "Format the frontend project"
+run = "pnpm --dir frontend format"
+
+[tasks."backend:format"]
+description = "Format the backend project"
+run = "pnpm --dir backend format"
+
+[tasks."format:check"]
+description = "Check formatting in all projects"
+run = "mise run frontend:format:check && mise run backend:format:check"
+
+[tasks."frontend:format:check"]
+description = "Check frontend formatting"
+run = "pnpm --dir frontend format:check"
+
+[tasks."backend:format:check"]
+description = "Check backend formatting"
+run = "pnpm --dir backend format:check"
+
+[tasks.coverage]
+description = "Run coverage reports for all projects"
+run = "mise run frontend:coverage && mise run backend:coverage"
+
+[tasks."frontend:coverage"]
+description = "Run frontend coverage"
+run = "pnpm --dir frontend coverage"
+
+[tasks."backend:coverage"]
+description = "Run backend coverage"
+run = "pnpm --dir backend coverage"
+
+[tasks."dead-code"]
+description = "Check all projects for unused files, exports, and dependencies"
+run = "mise run frontend:dead-code && mise run backend:dead-code"
+
+[tasks."frontend:dead-code"]
+description = "Check frontend for unused files, exports, and dependencies"
+run = "pnpm --dir frontend dead-code"
+
+[tasks."backend:dead-code"]
+description = "Check backend for unused files, exports, and dependencies"
+run = "pnpm --dir backend dead-code"
+
+[tasks.quality]
+description = "Run the full repository quality gate"
+run = "mise run format:check && mise run lint && mise run typecheck && mise run test && mise run coverage && mise run dead-code && mise run build"
