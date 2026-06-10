@@ -113,6 +113,50 @@
   line-height: 1.2;
 }
 
+.diagramHeaderActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.relationLineStyleControl {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid #cbd4e1;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.relationLineStyleButton {
+  min-height: 1.75rem;
+  padding: 0 0.55rem;
+  border: 0;
+  border-right: 1px solid #cbd4e1;
+  background: transparent;
+  color: #5d6678;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.relationLineStyleButton:last-child {
+  border-right: 0;
+}
+
+.relationLineStyleButton:hover {
+  background: #eef3f8;
+  color: #22324a;
+}
+
+.relationLineStyleButtonActive,
+.relationLineStyleButtonActive:hover {
+  background: #22324a;
+  color: #ffffff;
+}
+
 .diagramSurface {
   position: relative;
   min-height: 24rem;

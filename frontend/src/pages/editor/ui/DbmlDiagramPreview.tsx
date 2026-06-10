@@ -8,11 +8,15 @@ import {
   type NodeTypes,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   mapDbmlDiagramToFlow,
   type DbmlDiagramFlowElements,
 } from '../lib/map-dbml-diagram-flow'
+import {
+  DEFAULT_DBML_RELATION_LINE_STYLE,
+  type DbmlRelationLineStyle,
+} from '../model/dbml-diagram-rendering'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
 import { DbmlRelationEdge } from './DbmlRelationEdge'
 import { DbmlTableNode } from './DbmlTableNode'
@@ -37,14 +41,37 @@ const EMPTY_FLOW_ELEMENTS: DbmlDiagramFlowElements = {
   edges: [],
 }
 
+const RELATION_LINE_STYLE_OPTIONS = [
+  {
+    value: 'bezier',
+    label: 'Bezier',
+  },
+  {
+    value: 'orthogonal',
+    label: 'Step',
+  },
+  {
+    value: 'rounded-orthogonal',
+    label: 'Rounded',
+  },
+] satisfies Array<{
+  value: DbmlRelationLineStyle
+  label: string
+}>
+
 export function DbmlDiagramPreview({
   diagram,
   isPending,
   isPaused,
 }: DbmlDiagramPreviewProps) {
+  const [relationLineStyle, setRelationLineStyle] =
+    useState<DbmlRelationLineStyle>(DEFAULT_DBML_RELATION_LINE_STYLE)
   const elements = useMemo(
-    () => (diagram ? mapDbmlDiagramToFlow(diagram) : EMPTY_FLOW_ELEMENTS),
-    [diagram],
+    () =>
+      diagram
+        ? mapDbmlDiagramToFlow(diagram, relationLineStyle)
+        : EMPTY_FLOW_ELEMENTS,
+    [diagram, relationLineStyle],
   )
   const isEmpty = !diagram || diagram.tables.length === 0
 
@@ -59,9 +86,35 @@ export function DbmlDiagramPreview({
           <p className={styles.eyebrow}>Preview</p>
           <h2 id="diagram-heading">Diagram</h2>
         </div>
-        <span className={styles.documentState}>
-          {getPreviewStateLabel({ isPending, isPaused, isEmpty })}
-        </span>
+        <div className={styles.diagramHeaderActions}>
+          <div
+            className={styles.relationLineStyleControl}
+            role="group"
+            aria-label="Relation line style"
+          >
+            {RELATION_LINE_STYLE_OPTIONS.map((option) => (
+              <button
+                aria-pressed={relationLineStyle === option.value}
+                className={[
+                  styles.relationLineStyleButton,
+                  relationLineStyle === option.value
+                    ? styles.relationLineStyleButtonActive
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                key={option.value}
+                onClick={() => setRelationLineStyle(option.value)}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <span className={styles.documentState}>
+            {getPreviewStateLabel({ isPending, isPaused, isEmpty })}
+          </span>
+        </div>
       </div>
 
       <div className={styles.diagramSurface}>

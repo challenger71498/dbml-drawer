@@ -24,6 +24,19 @@ vi.mock('@xyflow/react', () => ({
     <path data-testid="diagram-edge" d={path} />
   ),
   Controls: () => <div data-testid="diagram-controls" />,
+  getBezierPath: ({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+  }: {
+    sourceX: number
+    sourceY: number
+    targetX: number
+    targetY: number
+  }) => [
+    `M ${sourceX} ${sourceY} C 48 ${sourceY} 72 ${targetY} ${targetX} ${targetY}`,
+  ],
   Handle: ({ id }: { id: string }) => <span data-handle-id={id} />,
   Position: {
     Left: 'left',
