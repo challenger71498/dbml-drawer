@@ -33,6 +33,7 @@ type DbmlDiagramPreviewProps = {
   isPending: boolean
   isPaused: boolean
   activeRelationIds?: ReadonlySet<string>
+  activeTableIds?: ReadonlySet<string>
   activeTarget?: DbmlDiagramSelectionTarget | null
   onTableFocus?: (table: DbmlDiagramTable) => void
   onTableHover?: (target: DbmlDiagramSelectionTarget | null) => void
@@ -83,6 +84,7 @@ export function DbmlDiagramPreview({
   isPending,
   isPaused,
   activeRelationIds = EMPTY_ACTIVE_RELATION_IDS,
+  activeTableIds = EMPTY_ACTIVE_RELATION_IDS,
   activeTarget = null,
   onTableFocus = () => undefined,
   onTableHover = () => undefined,
@@ -104,11 +106,18 @@ export function DbmlDiagramPreview({
   const selectionViewState = useMemo(
     () => ({
       activeRelationIds,
+      activeTableIds,
       activeTarget,
       onColumnFocus,
       onColumnHover,
     }),
-    [activeRelationIds, activeTarget, onColumnFocus, onColumnHover],
+    [
+      activeRelationIds,
+      activeTableIds,
+      activeTarget,
+      onColumnFocus,
+      onColumnHover,
+    ],
   )
   const fitViewKey = useMemo(
     () => (diagram ? getDiagramFitViewKey(diagram) : 'empty'),

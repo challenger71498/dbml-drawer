@@ -11,6 +11,7 @@ import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
   getActiveDiagramSelectionTarget,
   getActiveRelationIds,
+  getActiveTableIds,
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
@@ -62,6 +63,10 @@ export function EditorPage({
   })
   const activeRelationIds = useMemo(
     () => getActiveRelationIds(layoutedDiagram, activeDiagramTarget),
+    [activeDiagramTarget, layoutedDiagram],
+  )
+  const activeTableIds = useMemo(
+    () => getActiveTableIds(layoutedDiagram, activeDiagramTarget),
     [activeDiagramTarget, layoutedDiagram],
   )
 
@@ -211,6 +216,7 @@ export function EditorPage({
           <Suspense fallback={<div className={styles.diagramFallback} />}>
             <DbmlDiagramPreview
               activeRelationIds={activeRelationIds}
+              activeTableIds={activeTableIds}
               activeTarget={activeDiagramTarget}
               diagram={layoutedDiagram}
               isPending={isDiagramPending}

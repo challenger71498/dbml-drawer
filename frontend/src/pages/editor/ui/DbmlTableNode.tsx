@@ -10,10 +10,12 @@ import styles from './EditorPage.module.css'
 
 export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
   const { table } = data
-  const { activeTarget, onColumnFocus, onColumnHover } =
+  const { activeTableIds, activeTarget, onColumnFocus, onColumnHover } =
     useDbmlDiagramSelectionView()
   const hasActiveTarget = activeTarget !== null
   const isNodeActive = isTableNodeActive(activeTarget, table.id)
+  const isNodeConnected = activeTableIds.has(table.id)
+  const isNodeDimmed = hasActiveTarget && !isNodeConnected
   const isHeaderActive = isTableHeaderActive(activeTarget, table.id)
   const activeColumnId =
     activeTarget?.type === 'column' &&
@@ -26,12 +28,15 @@ export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
     <article
       className={[
         styles.diagramTableNode,
+        isNodeConnected ? styles.diagramTableNodeConnected : '',
         isNodeActive ? styles.diagramTableNodeActive : '',
-        hasActiveTarget && !isNodeActive ? styles.diagramTableNodeDimmed : '',
+        isNodeDimmed ? styles.diagramTableNodeDimmed : '',
       ]
         .filter(Boolean)
         .join(' ')}
       data-active={isNodeActive ? 'true' : 'false'}
+      data-connected={isNodeConnected ? 'true' : 'false'}
+      data-dimmed={isNodeDimmed ? 'true' : 'false'}
     >
       <header
         className={[
@@ -57,9 +62,6 @@ export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
                 styles.diagramColumnRow,
                 'nodrag nopan',
                 isColumnSelected ? styles.diagramColumnRowActive : '',
-                hasActiveTarget && !isColumnSelected
-                  ? styles.diagramColumnRowDimmed
-                  : '',
               ]
                 .filter(Boolean)
                 .join(' ')}

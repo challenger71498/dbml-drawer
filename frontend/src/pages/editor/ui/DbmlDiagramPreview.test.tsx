@@ -13,6 +13,7 @@ import { parseDbmlDocument } from '../lib/parse-dbml-document'
 import {
   getActiveDiagramSelectionTarget,
   getActiveRelationIds,
+  getActiveTableIds,
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
@@ -154,6 +155,25 @@ Table posts {
 }
 `
 
+const ISOLATED_RELATION_SOURCE = `Table users {
+  id integer [pk]
+}
+
+Table posts {
+  id integer [pk]
+  user_id integer [ref: > users.id]
+}
+
+Table teams {
+  id integer [pk]
+}
+
+Table memberships {
+  id integer [pk]
+  team_id integer [ref: > teams.id]
+}
+`
+
 describe('DbmlDiagramPreview', () => {
   afterEach(() => {
     cleanup()
@@ -259,6 +279,14 @@ describe('DbmlDiagramPreview', () => {
       'data-active',
       'true',
     )
+    expect(screen.getByText('posts').closest('article')).toHaveAttribute(
+      'data-connected',
+      'true',
+    )
+    expect(screen.getByText('users').closest('article')).toHaveAttribute(
+      'data-connected',
+      'true',
+    )
     expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
       'data-stroke',
       '#e05d2f',
@@ -270,6 +298,33 @@ describe('DbmlDiagramPreview', () => {
       'data-active',
       'false',
     )
+  })
+
+  it('dims only tables and relations unrelated to the active table', async () => {
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(ISOLATED_RELATION_SOURCE),
+    )
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.mouseEnter(screen.getByTestId('diagram-node-table:public.posts'))
+
+    expect(getTableArticle('posts')).toHaveAttribute('data-dimmed', 'false')
+    expect(getTableArticle('users')).toHaveAttribute('data-dimmed', 'false')
+    expect(getTableArticle('teams')).toHaveAttribute('data-dimmed', 'true')
+    expect(getTableArticle('memberships')).toHaveAttribute(
+      'data-dimmed',
+      'true',
+    )
+    const edges = screen.getAllByTestId('diagram-edge')
+
+    expect(
+      edges.some((edge) => edge.getAttribute('data-stroke') === '#e05d2f'),
+    ).toBe(true)
+    expect(
+      edges.some((edge) => edge.getAttribute('data-opacity') === '0.28'),
+    ).toBe(true)
   })
 
   it('keeps table focus after the pointer leaves', async () => {
@@ -376,6 +431,21 @@ describe('DbmlDiagramPreview', () => {
     expect(userIdColumn).toHaveAttribute('data-active', 'false')
   })
 
+  it('keeps both endpoint tables visible when a relation column is active', async () => {
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(ISOLATED_RELATION_SOURCE),
+    )
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.mouseEnter(getColumnRow('user_id'))
+
+    expect(getTableArticle('posts')).toHaveAttribute('data-dimmed', 'false')
+    expect(getTableArticle('users')).toHaveAttribute('data-dimmed', 'false')
+    expect(getTableArticle('teams')).toHaveAttribute('data-dimmed', 'true')
+  })
+
   it('keeps column focus after the pointer leaves', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
@@ -461,6 +531,7 @@ function InteractivePreviewHarness({
   return (
     <DbmlDiagramPreview
       activeRelationIds={getActiveRelationIds(diagram, activeTarget)}
+      activeTableIds={getActiveTableIds(diagram, activeTarget)}
       activeTarget={activeTarget}
       diagram={diagram}
       isPending={false}
@@ -486,6 +557,16 @@ function InteractivePreviewHarness({
       onTableHover={setHoveredTarget}
     />
   )
+}
+
+function getTableArticle(tableName: string) {
+  const table = screen.getByText(tableName).closest('article')
+
+  if (!table) {
+    throw new Error(`Expected ${tableName} table to render in an article.`)
+  }
+
+  return table
 }
 
 function getColumnRow(columnName: string) {

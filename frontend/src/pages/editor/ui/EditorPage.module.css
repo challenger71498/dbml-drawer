@@ -203,8 +203,24 @@
     0 14px 30px rgb(23 32 51 / 18%);
 }
 
+.diagramTableNodeConnected {
+  opacity: 1;
+}
+
 .diagramTableNodeDimmed {
   opacity: 0.62;
+}
+
+.diagramSurface :global(.react-flow__edges) {
+  z-index: 1;
+}
+
+.diagramSurface :global(.react-flow__node:has(.diagramTableNodeDimmed)) {
+  z-index: 0 !important;
+}
+
+.diagramSurface :global(.react-flow__node:has(.diagramTableNodeConnected)) {
+  z-index: 2 !important;
 }
 
 .diagramTableHeader {

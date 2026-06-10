@@ -41,6 +41,28 @@ export function getActiveRelationIds(
   )
 }
 
+export function getActiveTableIds(
+  diagram: LayoutedDbmlDiagram | null,
+  activeTarget: DbmlDiagramSelectionTarget | null,
+) {
+  if (!diagram || !activeTarget) {
+    return new Set<string>()
+  }
+
+  const tableIds = new Set<string>([activeTarget.tableId])
+
+  for (const relation of diagram.relations) {
+    if (!isRelationConnectedToTarget(relation, activeTarget)) {
+      continue
+    }
+
+    tableIds.add(relation.sourceTableId)
+    tableIds.add(relation.targetTableId)
+  }
+
+  return tableIds
+}
+
 export function isTableNodeActive(
   activeTarget: DbmlDiagramSelectionTarget | null,
   tableId: string,
