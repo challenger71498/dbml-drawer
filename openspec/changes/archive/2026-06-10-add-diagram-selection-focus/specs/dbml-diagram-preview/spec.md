@@ -4,10 +4,10 @@
 
 The diagram preview SHALL allow users to hover and focus rendered DBML tables.
 
-#### Scenario: Hovering table highlights table and connected relations
+#### Scenario: Hovering table highlights connected relations
 
 - **WHEN** a user hovers a rendered table header in the diagram preview
-- **THEN** the preview MUST visually highlight that table and every relation line connected to that table
+- **THEN** the preview MUST visually highlight every relation line connected to that table without changing table focus styling
 
 #### Scenario: Leaving hovered table restores previous focus state
 
@@ -17,7 +17,7 @@ The diagram preview SHALL allow users to hover and focus rendered DBML tables.
 #### Scenario: Clicking table focuses table
 
 - **WHEN** a user clicks a rendered table header in the diagram preview
-- **THEN** the preview MUST set that table as the focused diagram target and MUST keep that table and its connected relation lines highlighted
+- **THEN** the preview MUST set that table as the focused diagram target, MUST visually distinguish the focused table, and MUST keep its connected relation lines highlighted
 
 #### Scenario: Focused table is replaced by another target
 
@@ -28,10 +28,10 @@ The diagram preview SHALL allow users to hover and focus rendered DBML tables.
 
 The diagram preview SHALL allow users to hover and focus rendered DBML columns.
 
-#### Scenario: Hovering column highlights column and connected relations
+#### Scenario: Hovering column highlights connected relations
 
 - **WHEN** a user hovers a rendered column row in the diagram preview
-- **THEN** the preview MUST visually highlight that column and every relation line connected to that column
+- **THEN** the preview MUST visually highlight every relation line connected to that column without changing column focus styling
 
 #### Scenario: Leaving hovered column restores previous focus state
 
@@ -41,31 +41,36 @@ The diagram preview SHALL allow users to hover and focus rendered DBML columns.
 #### Scenario: Clicking column focuses column
 
 - **WHEN** a user clicks a rendered column row in the diagram preview
-- **THEN** the preview MUST set that column as the focused diagram target and MUST keep that column and its connected relation lines highlighted
+- **THEN** the preview MUST set that column as the focused diagram target, MUST visually distinguish the focused column, and MUST keep its connected relation lines highlighted
 
 #### Scenario: Focused column is replaced by another target
 
 - **WHEN** a column is focused and a user clicks another rendered table header or column row
 - **THEN** the preview MUST replace the previous focused target with the newly clicked diagram target
 
-### Requirement: Active diagram layering
+### Requirement: Focused diagram layering
 
-The diagram preview SHALL render active diagram elements above inactive diagram elements.
+The diagram preview SHALL layer focused and dimmed diagram elements so focused context remains readable in dense diagrams.
 
-#### Scenario: Active table appears above inactive tables
+#### Scenario: Focused table appears above dimmed tables
 
-- **WHEN** a table is hovered or focused
-- **THEN** that rendered table MUST appear above inactive rendered tables
+- **WHEN** a table is focused
+- **THEN** that rendered table MUST appear above dimmed rendered tables
 
-#### Scenario: Active column appears above inactive content within table
+#### Scenario: Focused column appears above inactive content within table
 
-- **WHEN** a column is hovered or focused
+- **WHEN** a column is focused
 - **THEN** that rendered column row MUST be visually emphasized above inactive rows in the same table
 
-#### Scenario: Active relation appears above inactive relations
+#### Scenario: Active relation appears above dimmed tables
 
 - **WHEN** a relation line is connected to the active table or column target
-- **THEN** that relation line MUST appear above inactive relation lines
+- **THEN** that relation line MUST appear above dimmed rendered tables and below non-dimmed rendered tables
+
+#### Scenario: Dimmed relation appears behind dimmed tables
+
+- **WHEN** a relation line is unrelated to the active table or column target
+- **THEN** that relation line MUST appear behind dimmed rendered tables
 
 ### Requirement: Diagram interaction preserves rendering settings
 
