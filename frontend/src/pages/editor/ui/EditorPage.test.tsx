@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { EditorPage } from './EditorPage'
@@ -224,6 +225,91 @@ describe('EditorPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('renders the DBML editor activity and toggles the left sidebar while keeping the diagram visible', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    const editorActivityBar = screen.getByRole('complementary', {
+      name: 'Editor authoring activities',
+    })
+    const editorWorkspace = screen
+      .getByRole('heading', { name: 'Editor' })
+      .closest('section')
+    const editorButton = within(editorActivityBar).getByRole('button', {
+      name: 'DBML editor',
+    })
+    const editorPanel = screen.getByRole('region', { name: 'DBML editor' })
+
+    expect(editorWorkspace).not.toContainElement(editorActivityBar)
+    expect(editorWorkspace).not.toContainElement(editorPanel)
+    expect(editorButton).toHaveAttribute('aria-expanded', 'true')
+    expect(editorButton).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(editorPanel).getByLabelText('DBML editor'),
+    ).toBeInTheDocument()
+    expect(await screen.findByLabelText('Diagram canvas')).toBeInTheDocument()
+
+    fireEvent.click(editorButton)
+
+    expect(editorButton).toHaveAttribute('aria-expanded', 'false')
+    expect(editorButton).toHaveAttribute('aria-pressed', 'false')
+    expect(
+      screen.queryByRole('region', { name: 'DBML editor' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Diagram canvas')).toBeInTheDocument()
+  })
+
+  it('resizes the DBML editor sidebar with drag and keyboard controls', () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    const page = screen.getByRole('main')
+    const resizeHandle = screen.getByRole('separator', {
+      name: 'Resize DBML editor',
+    })
+
+    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
+      '384px',
+    )
+    expect(resizeHandle).toHaveAttribute('aria-valuenow', '384')
+
+    fireEvent.pointerDown(resizeHandle, {
+      clientX: 400,
+      pointerId: 1,
+    })
+    fireEvent.pointerMove(resizeHandle, {
+      clientX: 520,
+      pointerId: 1,
+    })
+    fireEvent.pointerUp(resizeHandle, {
+      clientX: 520,
+      pointerId: 1,
+    })
+
+    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
+      '504px',
+    )
+    expect(resizeHandle).toHaveAttribute('aria-valuenow', '504')
+
+    fireEvent.keyDown(resizeHandle, { key: 'ArrowLeft' })
+
+    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
+      '480px',
+    )
+
+    fireEvent.keyDown(resizeHandle, { key: 'Home' })
+
+    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
+      '320px',
+    )
+
+    fireEvent.keyDown(resizeHandle, { key: 'End' })
+
+    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
+      '672px',
+    )
+  })
+
   it('opens diagnostics and presets through inspector activities', async () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
@@ -232,6 +318,13 @@ describe('EditorPage', () => {
 
     expect(
       await screen.findByRole('heading', { name: 'Diagnostics' }),
+    ).toBeInTheDocument()
+    expect(
+      within(
+        screen.getByRole('region', {
+          name: 'DBML editor',
+        }),
+      ).getByLabelText('DBML editor'),
     ).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'DBML presets' }))
@@ -323,7 +416,7 @@ describe('EditorPage', () => {
     vi.useFakeTimers()
     render(<EditorPage isEditorDevMode={false} />)
 
-    fireEvent.change(screen.getByLabelText('DBML editor'), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'DBML editor' }), {
       target: { value: 'Table users {' },
     })
 
@@ -402,7 +495,7 @@ describe('EditorPage', () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
 
-    const editor = screen.getByLabelText('DBML editor')
+    const editor = screen.getByRole('textbox', { name: 'DBML editor' })
 
     if (!(editor instanceof HTMLTextAreaElement)) {
       throw new Error('Expected DBML editor to render as a textarea in tests.')

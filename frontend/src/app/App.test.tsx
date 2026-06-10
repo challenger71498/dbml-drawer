@@ -82,7 +82,7 @@ describe('App', () => {
   it('renders the editor route with sample DBML', () => {
     render(<App />)
 
-    const editor = screen.getByLabelText('DBML editor')
+    const editor = screen.getByRole('textbox', { name: 'DBML editor' })
 
     if (!(editor instanceof HTMLTextAreaElement)) {
       throw new Error('Expected DBML editor to render as a textarea in tests.')
@@ -98,7 +98,7 @@ describe('App', () => {
   it('shows diagnostics for invalid DBML after editor changes', () => {
     render(<App />)
 
-    fireEvent.change(screen.getByLabelText('DBML editor'), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'DBML editor' }), {
       target: { value: 'Table users {' },
     })
 

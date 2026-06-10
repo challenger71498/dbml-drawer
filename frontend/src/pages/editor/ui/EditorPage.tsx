@@ -1,4 +1,14 @@
-import { Suspense, lazy, useCallback, useMemo, useRef, useState } from 'react'
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react'
 import {
   DbmlCodeEditor,
   type DbmlCodeEditorHandle,
@@ -6,6 +16,7 @@ import {
 } from './DbmlCodeEditor'
 import { EditorInspector } from './EditorInspector'
 import {
+  DbmlEditorIcon,
   DiagramSettingsIcon,
   DiagnosticsIcon,
   PresetsIcon,
@@ -51,10 +62,23 @@ type EditorPageProps = {
   isEditorDevMode?: boolean
 }
 
+const EDITOR_SIDEBAR_DEFAULT_WIDTH = 384
+const EDITOR_SIDEBAR_MIN_WIDTH = 320
+const EDITOR_SIDEBAR_MAX_WIDTH = 672
+const EDITOR_SIDEBAR_KEYBOARD_STEP = 24
+
 export function EditorPage({
   isEditorDevMode = isEditorDevModeEnabled(),
 }: EditorPageProps) {
   const editorRef = useRef<DbmlCodeEditorHandle | null>(null)
+  const editorSidebarResizeRef = useRef<{
+    startX: number
+    startWidth: number
+  } | null>(null)
+  const [editorSidebarWidth, setEditorSidebarWidth] = useState(
+    EDITOR_SIDEBAR_DEFAULT_WIDTH,
+  )
+  const [isEditorSidebarExpanded, setEditorSidebarExpanded] = useState(true)
   const [isInspectorExpanded, setInspectorExpanded] = useState(false)
   const [hoveredDiagramTarget, setHoveredDiagramTarget] =
     useState<DbmlDiagramSelectionTarget | null>(null)
@@ -225,9 +249,11 @@ export function EditorPage({
   ])
 
   const hasInspectorActivities = inspectorActivities.length > 0
+  const editorPanelId = 'editor-left-sidebar-panel-dbml'
 
   const pageClassName = [
     styles.editorPage,
+    isEditorSidebarExpanded ? styles.editorPageLeftSidebarExpanded : '',
     hasInspectorActivities ? styles.editorPageWithInspector : '',
     hasInspectorActivities && isInspectorExpanded
       ? styles.editorPageInspectorExpanded
@@ -236,8 +262,147 @@ export function EditorPage({
     .filter(Boolean)
     .join(' ')
 
+  const pageStyle = useMemo(
+    () =>
+      ({
+        '--editor-left-sidebar-width': `${editorSidebarWidth}px`,
+      }) as CSSProperties,
+    [editorSidebarWidth],
+  )
+
+  const handleEditorSidebarToggle = useCallback(() => {
+    setEditorSidebarExpanded((isExpanded) => !isExpanded)
+  }, [])
+
+  const handleEditorSidebarResizePointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      event.preventDefault()
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+      editorSidebarResizeRef.current = {
+        startX: event.clientX,
+        startWidth: editorSidebarWidth,
+      }
+    },
+    [editorSidebarWidth],
+  )
+
+  const handleEditorSidebarResizePointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const resizeState = editorSidebarResizeRef.current
+
+      if (!resizeState) {
+        return
+      }
+
+      setEditorSidebarWidth(
+        clampEditorSidebarWidth(
+          resizeState.startWidth + event.clientX - resizeState.startX,
+        ),
+      )
+    },
+    [],
+  )
+
+  const handleEditorSidebarResizePointerEnd = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      event.currentTarget.releasePointerCapture?.(event.pointerId)
+      editorSidebarResizeRef.current = null
+    },
+    [],
+  )
+
+  const handleEditorSidebarResizeKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        setEditorSidebarWidth((currentWidth) =>
+          clampEditorSidebarWidth(currentWidth - EDITOR_SIDEBAR_KEYBOARD_STEP),
+        )
+        return
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        setEditorSidebarWidth((currentWidth) =>
+          clampEditorSidebarWidth(currentWidth + EDITOR_SIDEBAR_KEYBOARD_STEP),
+        )
+        return
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault()
+        setEditorSidebarWidth(EDITOR_SIDEBAR_MIN_WIDTH)
+        return
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault()
+        setEditorSidebarWidth(EDITOR_SIDEBAR_MAX_WIDTH)
+      }
+    },
+    [],
+  )
+
   return (
-    <main className={pageClassName}>
+    <main className={pageClassName} style={pageStyle}>
+      <aside
+        className={styles.editorLeftActivityBar}
+        aria-label="Editor authoring activities"
+      >
+        <button
+          className={`${styles.editorActivityButton} ${
+            isEditorSidebarExpanded ? styles.editorActivityButtonActive : ''
+          }`}
+          type="button"
+          aria-controls={editorPanelId}
+          aria-expanded={isEditorSidebarExpanded}
+          aria-label="DBML editor"
+          aria-pressed={isEditorSidebarExpanded}
+          title="DBML editor"
+          onClick={handleEditorSidebarToggle}
+        >
+          <DbmlEditorIcon className={styles.editorActivityIcon} />
+        </button>
+      </aside>
+
+      {isEditorSidebarExpanded ? (
+        <section
+          className={styles.editorLeftSidebar}
+          id={editorPanelId}
+          aria-label="DBML editor"
+        >
+          <div className={styles.editorLeftSidebarHeader}>
+            <p>DBML editor</p>
+          </div>
+          <div className={styles.editorLeftSidebarPanel}>
+            <div className={styles.editorSurface}>
+              <DbmlCodeEditor
+                ref={editorRef}
+                value={documentText}
+                diagnostics={diagnostics}
+                onChange={setDocumentText}
+              />
+            </div>
+          </div>
+          <div
+            className={styles.editorLeftSidebarResizeHandle}
+            role="separator"
+            aria-label="Resize DBML editor"
+            aria-orientation="vertical"
+            aria-valuemin={EDITOR_SIDEBAR_MIN_WIDTH}
+            aria-valuemax={EDITOR_SIDEBAR_MAX_WIDTH}
+            aria-valuenow={editorSidebarWidth}
+            aria-valuetext={`${editorSidebarWidth}px`}
+            tabIndex={0}
+            onKeyDown={handleEditorSidebarResizeKeyDown}
+            onPointerCancel={handleEditorSidebarResizePointerEnd}
+            onPointerDown={handleEditorSidebarResizePointerDown}
+            onPointerMove={handleEditorSidebarResizePointerMove}
+            onPointerUp={handleEditorSidebarResizePointerEnd}
+          />
+        </section>
+      ) : null}
+
       <section
         className={styles.editorWorkspace}
         aria-labelledby="editor-heading"
@@ -253,35 +418,30 @@ export function EditorPage({
         </div>
 
         <div className={styles.editorContent}>
-          <div className={styles.editorSurface}>
-            <DbmlCodeEditor
-              ref={editorRef}
-              value={documentText}
-              diagnostics={diagnostics}
-              onChange={setDocumentText}
-            />
+          <div className={styles.editorMainPane}>
+            <Suspense fallback={<div className={styles.diagramFallback} />}>
+              <DbmlDiagramPreview
+                activeRelationIds={activeRelationIds}
+                activeTarget={activeDiagramTarget}
+                diagram={layoutedDiagram}
+                focusedTableIds={focusedTableIds}
+                focusedTarget={focusedDiagramTarget}
+                isPending={isDiagramPending}
+                isPaused={isDiagramPaused}
+                sourceColumnIds={
+                  activeRelationEndpointColumnIds.sourceColumnIds
+                }
+                referenceColumnIds={
+                  activeRelationEndpointColumnIds.referenceColumnIds
+                }
+                onColumnFocus={handleColumnFocus}
+                onColumnHover={handleDiagramHover}
+                onFocusClear={handleDiagramFocusClear}
+                onTableFocus={handleTableFocus}
+                onTableHover={handleDiagramHover}
+              />
+            </Suspense>
           </div>
-
-          <Suspense fallback={<div className={styles.diagramFallback} />}>
-            <DbmlDiagramPreview
-              activeRelationIds={activeRelationIds}
-              activeTarget={activeDiagramTarget}
-              diagram={layoutedDiagram}
-              focusedTableIds={focusedTableIds}
-              focusedTarget={focusedDiagramTarget}
-              isPending={isDiagramPending}
-              isPaused={isDiagramPaused}
-              sourceColumnIds={activeRelationEndpointColumnIds.sourceColumnIds}
-              referenceColumnIds={
-                activeRelationEndpointColumnIds.referenceColumnIds
-              }
-              onColumnFocus={handleColumnFocus}
-              onColumnHover={handleDiagramHover}
-              onFocusClear={handleDiagramFocusClear}
-              onTableFocus={handleTableFocus}
-              onTableHover={handleDiagramHover}
-            />
-          </Suspense>
         </div>
       </section>
 
@@ -292,6 +452,13 @@ export function EditorPage({
         />
       ) : null}
     </main>
+  )
+}
+
+function clampEditorSidebarWidth(width: number) {
+  return Math.min(
+    EDITOR_SIDEBAR_MAX_WIDTH,
+    Math.max(EDITOR_SIDEBAR_MIN_WIDTH, Math.round(width)),
   )
 }
 
