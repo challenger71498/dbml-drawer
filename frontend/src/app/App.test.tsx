@@ -1,0 +1,59 @@
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { App } from './App'
+
+vi.mock('@monaco-editor/react', () => ({
+  default: ({
+    value,
+    onChange,
+  }: {
+    value: string
+    onChange: (value?: string) => void
+  }) => (
+    <textarea
+      aria-label="DBML editor"
+      value={value}
+      onChange={(event) => onChange(event.currentTarget.value)}
+    />
+  ),
+}))
+
+describe('App', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    window.history.pushState({}, '', '/editor')
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+  })
+
+  it('renders the editor route with sample DBML', () => {
+    render(<App />)
+
+    const editor = screen.getByLabelText('DBML editor')
+
+    if (!(editor instanceof HTMLTextAreaElement)) {
+      throw new Error('Expected DBML editor to render as a textarea in tests.')
+    }
+
+    expect(screen.getByRole('heading', { name: 'Editor' })).toBeInTheDocument()
+    expect(editor.value).toContain('Table users')
+    expect(screen.getByText('No diagnostics')).toBeInTheDocument()
+  })
+
+  it('shows diagnostics for invalid DBML after editor changes', () => {
+    render(<App />)
+
+    fireEvent.change(screen.getByLabelText('DBML editor'), {
+      target: { value: 'Table users {' },
+    })
+
+    act(() => {
+      vi.advanceTimersByTime(350)
+    })
+
+    expect(screen.getByText(/Expected/i)).toBeInTheDocument()
+  })
+})

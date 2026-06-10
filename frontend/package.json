@@ -16,9 +16,13 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "@dbml/core": "^8.2.5",
+    "@monaco-editor/react": "^4.7.0",
     "@vitejs/plugin-react": "^6.0.2",
+    "monaco-editor": "^0.55.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-router-dom": "^7.17.0",
     "vite": "^8.0.16"
   },
   "devDependencies": {

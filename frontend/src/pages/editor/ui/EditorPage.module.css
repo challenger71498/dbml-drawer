@@ -1,0 +1,174 @@
+.editorPage {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
+  background: #edf1f5;
+  color: #172033;
+}
+
+.editorWorkspace {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  border-right: 1px solid #d7dde6;
+  background: #f8fafc;
+}
+
+.editorToolbar {
+  display: flex;
+  min-height: 5.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #d7dde6;
+  background: #ffffff;
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  color: #5d6678;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.editorToolbar h1,
+.panelHeader h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.documentState,
+.diagnosticsCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.75rem;
+  padding: 0 0.65rem;
+  border: 1px solid #cbd4e1;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #344056;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.editorSurface {
+  min-height: 28rem;
+  flex: 1;
+}
+
+.inspectorSidebar {
+  min-width: 0;
+  background: #ffffff;
+}
+
+.diagnosticsPanel {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.panelHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem 1rem;
+  align-items: center;
+}
+
+.panelHeader .eyebrow {
+  grid-column: 1 / -1;
+}
+
+.diagnosticsEmpty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #dbe3ed;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #556173;
+}
+
+.diagnosticsList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.diagnosticsItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid #f0c5c5;
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.diagnosticsItem p {
+  margin: 0;
+  color: #2d3545;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.diagnosticsItem span {
+  display: block;
+  margin-top: 0.35rem;
+  color: #6d7687;
+  font-size: 0.8rem;
+}
+
+.severityDot {
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: 0.28rem;
+  border-radius: 999px;
+}
+
+.severityDotError {
+  background: #d83b3b;
+}
+
+.severityDotWarning {
+  background: #d99a1e;
+}
+
+@media (max-width: 840px) {
+  .editorPage {
+    grid-template-columns: 1fr;
+  }
+
+  .editorWorkspace {
+    min-height: 70vh;
+    border-right: 0;
+    border-bottom: 1px solid #d7dde6;
+  }
+
+  .inspectorSidebar {
+    min-height: 16rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .editorToolbar,
+  .panelHeader {
+    align-items: flex-start;
+  }
+
+  .editorToolbar {
+    flex-direction: column;
+  }
+
+  .panelHeader {
+    grid-template-columns: 1fr;
+  }
+}

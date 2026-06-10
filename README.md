@@ -51,8 +51,16 @@ mise run backend:dev
 
 Default local URLs:
 
-- Frontend: `http://localhost:5173`
+- Frontend editor: `http://localhost:5173/editor`
 - Backend health: `http://localhost:3000/health`
+
+## Frontend Structure
+
+Frontend source follows a minimal Feature-Sliced Design shape:
+
+- `frontend/src/app/`: app bootstrap, routing, and global styles
+- `frontend/src/pages/editor/`: `/editor` DBML editor page, including Monaco integration and DBML validation
+- `frontend/src/shared/`: reusable infrastructure without DBML workflow logic
 
 ## Verification
 
