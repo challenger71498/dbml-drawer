@@ -8,13 +8,14 @@ import type { CSSProperties } from 'react'
 import type { DbmlRelationEdgeData } from '../lib/map-dbml-diagram-flow'
 import {
   DEFAULT_DBML_RELATION_HIGHLIGHT_MODE,
+  DBML_RELATION_DEFAULT_COLOR,
   DBML_RELATION_REFERENCE_COLOR,
   DBML_RELATION_SOURCE_COLOR,
 } from '../model/dbml-diagram-rendering'
 import { useDbmlDiagramSelectionView } from '../model/dbml-diagram-selection-view'
 
 const RELATION_EDGE_STYLE = {
-  stroke: '#3b6ea8',
+  stroke: DBML_RELATION_DEFAULT_COLOR,
   strokeWidth: 1.5,
 } satisfies CSSProperties
 
