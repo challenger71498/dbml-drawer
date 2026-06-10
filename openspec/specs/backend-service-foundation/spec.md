@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define the backend service foundation for a TypeScript Fastify API service that can be developed, verified, and configured independently from other projects in the repository.
+
+## Requirements
 
 ### Requirement: Backend API shell
 

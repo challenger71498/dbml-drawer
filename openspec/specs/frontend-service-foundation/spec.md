@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define the frontend service foundation for a TypeScript React application that can be developed, verified, and configured independently from other projects in the repository.
+
+## Requirements
 
 ### Requirement: Frontend application shell
 
