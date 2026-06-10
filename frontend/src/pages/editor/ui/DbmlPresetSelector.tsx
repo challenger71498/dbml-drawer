@@ -1,4 +1,3 @@
-import type { ChangeEvent } from 'react'
 import type { DbmlPreset, DbmlPresetId } from '../lib/dbml-presets'
 import styles from './EditorPage.module.css'
 
@@ -17,16 +16,6 @@ export function DbmlPresetSelector({
     (preset) => preset.id === selectedPresetId,
   )
 
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const nextPreset = presets.find(
-      (preset) => preset.id === event.currentTarget.value,
-    )
-
-    if (nextPreset) {
-      onSelect(nextPreset)
-    }
-  }
-
   return (
     <section className={styles.presetPanel} aria-labelledby="preset-heading">
       <div>
@@ -34,20 +23,18 @@ export function DbmlPresetSelector({
         <h2 id="preset-heading">DBML presets</h2>
       </div>
 
-      <label className={styles.presetField}>
-        <span>Preset</span>
-        <select
-          aria-label="DBML preset"
-          value={selectedPresetId}
-          onChange={handleChange}
-        >
-          {presets.map((preset) => (
-            <option key={preset.id} value={preset.id}>
-              {preset.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className={styles.presetList} role="group" aria-label="DBML presets">
+        {presets.map((preset) => (
+          <button
+            className={styles.presetListButton}
+            key={preset.id}
+            onClick={() => onSelect(preset)}
+            type="button"
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
 
       {selectedPreset ? (
         <p className={styles.presetDescription}>{selectedPreset.description}</p>

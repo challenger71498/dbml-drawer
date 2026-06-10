@@ -236,10 +236,14 @@ describe('EditorPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'DBML presets' }))
 
-    expect(await screen.findByLabelText('DBML preset')).toBeInTheDocument()
-    expect(screen.getByText('Simple')).toBeInTheDocument()
-    expect(screen.getByText('Complex')).toBeInTheDocument()
-    expect(screen.getByText('Very complex')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('group', { name: 'DBML presets' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Simple' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Complex' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Very complex' }),
+    ).toBeInTheDocument()
   })
 
   it('opens diagram settings through inspector activities', async () => {
@@ -302,7 +306,9 @@ describe('EditorPage', () => {
     expect(
       screen.queryByRole('button', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('DBML preset')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('group', { name: 'DBML presets' }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Diagram settings' }),
     ).not.toBeInTheDocument()
@@ -406,9 +412,7 @@ describe('EditorPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'DBML presets' }))
 
-    fireEvent.change(await screen.findByLabelText('DBML preset'), {
-      target: { value: 'very-complex' },
-    })
+    fireEvent.click(await screen.findByRole('button', { name: 'Very complex' }))
 
     expect(editor.value).toContain('Project operations')
     expect(editor.value).toContain('Table deployment_steps')

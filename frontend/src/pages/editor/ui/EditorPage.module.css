@@ -514,6 +514,30 @@
   font-weight: 600;
 }
 
+.presetList {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.presetListButton {
+  display: grid;
+  min-height: 2.4rem;
+  place-items: center start;
+  border: 1px solid #cbd4e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #344056;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.presetListButton:hover {
+  border-color: #97a7ba;
+  background: #f8fafc;
+}
+
 .diagramSettingsControls {
   display: grid;
   gap: 0.75rem;
