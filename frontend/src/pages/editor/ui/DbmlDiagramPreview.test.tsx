@@ -5,6 +5,10 @@ import { layoutDbmlDiagram } from '../lib/layout-dbml-diagram'
 import { parseDbmlDocument } from '../lib/parse-dbml-document'
 import { DbmlDiagramPreview } from './DbmlDiagramPreview'
 
+const reactFlowProps = vi.hoisted(() => ({
+  capture: vi.fn(),
+}))
+
 vi.mock('@xyflow/react', () => ({
   Background: () => <div data-testid="diagram-background" />,
   BaseEdge: ({ path }: { path: string }) => (
@@ -20,21 +24,26 @@ vi.mock('@xyflow/react', () => ({
     children,
     nodeTypes,
     nodes,
+    ...props
   }: {
     children: React.ReactNode
     nodeTypes: Record<string, React.ComponentType<{ data: unknown }>>
     nodes: Array<{ id: string; type?: string; data: unknown }>
+    [key: string]: unknown
   }) => (
-    <div aria-label="Diagram canvas">
-      {nodes.map((node) => {
-        const NodeComponent = nodeTypes[node.type ?? '']
+    reactFlowProps.capture(props),
+    (
+      <div aria-label="Diagram canvas">
+        {nodes.map((node) => {
+          const NodeComponent = nodeTypes[node.type ?? '']
 
-        return NodeComponent ? (
-          <NodeComponent data={node.data} key={node.id} />
-        ) : null
-      })}
-      {children}
-    </div>
+          return NodeComponent ? (
+            <NodeComponent data={node.data} key={node.id} />
+          ) : null
+        })}
+        {children}
+      </div>
+    )
   ),
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => children,
   useReactFlow: () => ({
@@ -50,6 +59,7 @@ const SOURCE = `Table users {
 describe('DbmlDiagramPreview', () => {
   afterEach(() => {
     cleanup()
+    reactFlowProps.capture.mockClear()
   })
 
   it('renders tables and columns for a layouted diagram', async () => {
@@ -97,5 +107,25 @@ describe('DbmlDiagramPreview', () => {
 
     expect(screen.getByText('No renderable tables')).toBeInTheDocument()
     expect(screen.getByText('Empty')).toBeInTheDocument()
+  })
+
+  it('disables React Flow keyboard shortcuts so editor typing is not intercepted', () => {
+    render(
+      <DbmlDiagramPreview
+        diagram={{ tables: [], relations: [] }}
+        isPending={false}
+        isPaused={false}
+      />,
+    )
+
+    expect(reactFlowProps.capture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        deleteKeyCode: null,
+        selectionKeyCode: null,
+        multiSelectionKeyCode: null,
+        panActivationKeyCode: null,
+        zoomActivationKeyCode: null,
+      }),
+    )
   })
 })

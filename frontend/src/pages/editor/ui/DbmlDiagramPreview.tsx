@@ -108,7 +108,14 @@ function DiagramCanvas({ elements, isEmpty }: DiagramCanvasProps) {
       fitView
       nodesDraggable={false}
       nodesConnectable={false}
+      nodesFocusable={false}
+      edgesFocusable={false}
       elementsSelectable={false}
+      deleteKeyCode={null}
+      selectionKeyCode={null}
+      multiSelectionKeyCode={null}
+      panActivationKeyCode={null}
+      zoomActivationKeyCode={null}
       proOptions={{ hideAttribution: true }}
     >
       <Background color="#d7dde6" gap={20} />
