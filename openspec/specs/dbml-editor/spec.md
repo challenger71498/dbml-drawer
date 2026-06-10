@@ -6,7 +6,7 @@ Define the frontend DBML editor authoring capability.
 
 ### Requirement: DBML editor workspace
 
-The frontend SHALL provide a DBML editor workspace at the `/editor` route as the primary authoring surface.
+The frontend SHALL provide a DBML editor workspace at the `/editor` route as the primary authoring surface with DBML text editing, diagnostics, and diagram preview.
 
 #### Scenario: Editor workspace renders
 
@@ -27,6 +27,11 @@ The frontend SHALL provide a DBML editor workspace at the `/editor` route as the
 
 - **WHEN** a user changes the editor content
 - **THEN** the workspace MUST update the current DBML document state
+
+#### Scenario: Diagram preview is available
+
+- **WHEN** the DBML editor workspace renders
+- **THEN** the workspace MUST include a DBML diagram preview for the current document
 
 ### Requirement: Monaco-based DBML editing
 
