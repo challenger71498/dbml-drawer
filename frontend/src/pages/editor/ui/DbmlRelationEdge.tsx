@@ -47,14 +47,19 @@ export function DbmlRelationEdge({
   })
 
   return (
-    <BaseEdge
-      path={path}
-      markerEnd={markerEnd}
-      style={getRelationEdgeStyle({
-        isActive,
-        isDimmed,
-      })}
-    />
+    <g
+      data-relation-edge-active={isActive ? 'true' : 'false'}
+      data-relation-edge-dimmed={isDimmed ? 'true' : 'false'}
+    >
+      <BaseEdge
+        path={path}
+        markerEnd={markerEnd}
+        style={getRelationEdgeStyle({
+          isActive,
+          isDimmed,
+        })}
+      />
+    </g>
   )
 }
 

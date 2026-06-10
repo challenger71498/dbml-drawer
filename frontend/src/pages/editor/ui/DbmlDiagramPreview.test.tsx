@@ -282,6 +282,14 @@ describe('DbmlDiagramPreview', () => {
       'data-stroke',
       '#e05d2f',
     )
+    expect(screen.getByTestId('diagram-edge').closest('g')).toHaveAttribute(
+      'data-relation-edge-active',
+      'true',
+    )
+    expect(screen.getByTestId('diagram-edge').closest('g')).toHaveAttribute(
+      'data-relation-edge-dimmed',
+      'false',
+    )
 
     fireEvent.mouseLeave(postsNode)
 
@@ -312,6 +320,20 @@ describe('DbmlDiagramPreview', () => {
     ).toBe(true)
     expect(
       edges.some((edge) => edge.getAttribute('data-opacity') === '0.28'),
+    ).toBe(true)
+    expect(
+      edges.some(
+        (edge) =>
+          edge.closest('g')?.getAttribute('data-relation-edge-active') ===
+          'true',
+      ),
+    ).toBe(true)
+    expect(
+      edges.some(
+        (edge) =>
+          edge.closest('g')?.getAttribute('data-relation-edge-dimmed') ===
+          'true',
+      ),
     ).toBe(true)
   })
 

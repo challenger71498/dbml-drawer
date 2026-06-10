@@ -211,21 +211,29 @@
   opacity: 0.62;
 }
 
-.diagramSurface :global(.react-flow__edges),
+.diagramSurface :global(.react-flow__edges) {
+  z-index: auto !important;
+}
+
 .diagramSurface :global(.react-flow__edges svg) {
-  z-index: 1 !important;
-}
-
-.diagramSurface :global(.react-flow__node):has([data-dimmed='true']) {
-  z-index: 0 !important;
-}
-
-.diagramSurface :global(.react-flow__node):has([data-dimmed='false']) {
   z-index: 2 !important;
 }
 
-.diagramSurface :global(.react-flow__node):has([data-active='true']) {
+.diagramSurface
+  :global(.react-flow__edges svg):has([data-relation-edge-dimmed='true']) {
+  z-index: 0 !important;
+}
+
+.diagramSurface :global(.react-flow__node):has([data-dimmed='true']) {
+  z-index: 1 !important;
+}
+
+.diagramSurface :global(.react-flow__node):has([data-dimmed='false']) {
   z-index: 3 !important;
+}
+
+.diagramSurface :global(.react-flow__node):has([data-active='true']) {
+  z-index: 4 !important;
 }
 
 .diagramTableHeader {
