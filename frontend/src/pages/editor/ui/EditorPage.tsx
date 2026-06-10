@@ -5,7 +5,11 @@ import {
   type DbmlEditorSourceRange,
 } from './DbmlCodeEditor'
 import { EditorInspector } from './EditorInspector'
-import { DiagnosticsIcon, PresetsIcon } from './EditorInspectorIcons'
+import {
+  DiagramSettingsIcon,
+  DiagnosticsIcon,
+  PresetsIcon,
+} from './EditorInspectorIcons'
 import { isEditorDevModeEnabled } from '../lib/editor-dev-mode'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
@@ -36,6 +40,12 @@ const DbmlPresetActivityPanel = lazy(() =>
   })),
 )
 
+const DiagramSettingsActivityPanel = lazy(() =>
+  import('./DiagramSettingsActivityPanel').then((module) => ({
+    default: module.DiagramSettingsActivityPanel,
+  })),
+)
+
 type EditorPageProps = {
   isEditorDevMode?: boolean
 }
@@ -52,6 +62,10 @@ export function EditorPage({
   const {
     documentText,
     setDocumentText,
+    selectedLayoutAlgorithmId,
+    selectedLayoutOptionValues,
+    selectLayoutAlgorithm,
+    setSelectedLayoutOptionValue,
     diagnostics,
     layoutedDiagram,
     isDiagramPending,
@@ -172,8 +186,34 @@ export function EditorPage({
           </Suspense>
         ),
       },
+      {
+        id: 'diagram-settings',
+        label: 'Diagram settings',
+        panelLabel: 'Diagram settings',
+        icon: <DiagramSettingsIcon className={styles.editorActivityIcon} />,
+        renderPanel: () => (
+          <Suspense
+            fallback={<div className={styles.inspectorPanelFallback} />}
+          >
+            <DiagramSettingsActivityPanel
+              selectedLayoutAlgorithmId={selectedLayoutAlgorithmId}
+              selectedLayoutOptionValues={selectedLayoutOptionValues}
+              onLayoutAlgorithmSelect={selectLayoutAlgorithm}
+              onLayoutOptionChange={setSelectedLayoutOptionValue}
+            />
+          </Suspense>
+        ),
+      },
     ]
-  }, [diagnostics, isEditorDevMode, setDocumentText])
+  }, [
+    diagnostics,
+    isEditorDevMode,
+    selectedLayoutAlgorithmId,
+    selectedLayoutOptionValues,
+    selectLayoutAlgorithm,
+    setDocumentText,
+    setSelectedLayoutOptionValue,
+  ])
 
   const hasInspectorActivities = inspectorActivities.length > 0
 

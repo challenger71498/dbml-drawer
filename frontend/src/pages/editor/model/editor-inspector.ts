@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 
-export type EditorInspectorActivityId = 'diagnostics' | 'presets'
+export type EditorInspectorActivityId =
+  | 'diagnostics'
+  | 'presets'
+  | 'diagram-settings'
 
 export type EditorInspectorActivity = {
   id: EditorInspectorActivityId

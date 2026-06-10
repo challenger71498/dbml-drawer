@@ -17,12 +17,21 @@ import type {
   LayoutedDbmlDiagram,
   LayoutedDbmlDiagramTable,
 } from '../model/dbml-layout'
+import {
+  DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
+  type DbmlLayoutAlgorithmId,
+  type DbmlLayoutOptionValueMap,
+} from '../model/dbml-layout-settings'
 import { TABLE_COLUMN_HEIGHT } from './create-dbml-diagram'
 
 const elk = new ELK()
 
-const LAYOUT_OPTIONS = {
-  'elk.algorithm': 'layered',
+export type DbmlDiagramLayoutOptions = {
+  algorithmId?: DbmlLayoutAlgorithmId
+  optionValues?: DbmlLayoutOptionValueMap
+}
+
+const DEFAULT_ELK_LAYOUT_OPTIONS = {
   'elk.direction': 'RIGHT',
   'elk.edgeRouting': 'ORTHOGONAL',
   'elk.portConstraints': 'FIXED_ORDER',
@@ -40,6 +49,7 @@ const EMPTY_ROUTE: DbmlDiagramRoute = {
 
 export async function layoutDbmlDiagram(
   diagram: DbmlDiagram,
+  options: DbmlDiagramLayoutOptions = {},
 ): Promise<LayoutedDbmlDiagram> {
   if (diagram.tables.length === 0) {
     return {
@@ -48,17 +58,31 @@ export async function layoutDbmlDiagram(
     }
   }
 
-  const graph = await elk.layout(toElkGraph(diagram))
+  const graph = await elk.layout(toElkGraph(diagram, options))
 
   return fromElkGraph(diagram, graph)
 }
 
-export function toElkGraph(diagram: DbmlDiagram): ElkNode {
+export function toElkGraph(
+  diagram: DbmlDiagram,
+  options: DbmlDiagramLayoutOptions = {},
+): ElkNode {
   return {
     id: 'dbml-diagram',
-    layoutOptions: LAYOUT_OPTIONS,
+    layoutOptions: createElkLayoutOptions(options),
     children: diagram.tables.map(toElkNode),
     edges: diagram.relations.map(toElkEdge),
+  }
+}
+
+export function createElkLayoutOptions({
+  algorithmId = DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
+  optionValues = {},
+}: DbmlDiagramLayoutOptions) {
+  return {
+    'elk.algorithm': algorithmId,
+    ...DEFAULT_ELK_LAYOUT_OPTIONS,
+    ...optionValues,
   }
 }
 

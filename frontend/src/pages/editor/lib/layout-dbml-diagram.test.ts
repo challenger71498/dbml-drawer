@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { ElkNode } from 'elkjs/lib/elk-api'
 import { createDbmlDiagram } from './create-dbml-diagram'
-import { fromElkGraph, toElkGraph } from './layout-dbml-diagram'
+import {
+  createElkLayoutOptions,
+  fromElkGraph,
+  toElkGraph,
+} from './layout-dbml-diagram'
 import { parseDbmlDocument } from './parse-dbml-document'
+import { DEFAULT_DBML_LAYOUT_ALGORITHM_ID } from '../model/dbml-layout-settings'
 
 const SOURCE = `Table users {
   id integer [pk]
@@ -25,7 +30,7 @@ describe('layout-dbml-diagram', () => {
     )
 
     expect(graph.layoutOptions).toMatchObject({
-      'elk.algorithm': 'layered',
+      'elk.algorithm': DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
       'elk.edgeRouting': 'ORTHOGONAL',
       'elk.portConstraints': 'FIXED_ORDER',
     })
@@ -36,6 +41,22 @@ describe('layout-dbml-diagram', () => {
     expect(graph.edges?.[0]).toMatchObject({
       sources: ['table:public.posts.column:user_id.port:right'],
       targets: ['table:public.users.column:id.port:left'],
+    })
+  })
+
+  it('uses the selected ELK layout algorithm in layout options', () => {
+    expect(
+      createElkLayoutOptions({
+        algorithmId: 'org.eclipse.elk.force',
+        optionValues: {
+          'elk.force.model': 'EADES',
+        },
+      }),
+    ).toMatchObject({
+      'elk.algorithm': 'org.eclipse.elk.force',
+      'elk.force.model': 'EADES',
+      'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.portConstraints': 'FIXED_ORDER',
     })
   })
 

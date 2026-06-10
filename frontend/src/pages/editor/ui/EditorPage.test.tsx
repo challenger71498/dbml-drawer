@@ -1,4 +1,11 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { EditorPage } from './EditorPage'
 
@@ -19,6 +26,69 @@ const monacoApi = vi.hoisted(() => ({
     Error: 8,
     Warning: 4,
   },
+}))
+
+const layoutAlgorithmOptions = vi.hoisted(() => [
+  {
+    id: 'org.eclipse.elk.layered',
+    label: 'ELK Layered',
+    description: 'Layered layout',
+  },
+  {
+    id: 'org.eclipse.elk.force',
+    label: 'ELK Force',
+    description: 'Force layout',
+  },
+])
+
+const layoutOptionControls = vi.hoisted(() => ({
+  'org.eclipse.elk.layered': [
+    {
+      id: 'elk.direction',
+      label: 'Direction',
+      kind: 'select',
+      defaultValue: 'RIGHT',
+      choices: [
+        { value: 'RIGHT', label: 'Right' },
+        { value: 'DOWN', label: 'Down' },
+      ],
+    },
+  ],
+  'org.eclipse.elk.force': [
+    {
+      id: 'elk.force.model',
+      label: 'Force model',
+      kind: 'select',
+      defaultValue: 'FRUCHTERMAN_REINGOLD',
+      choices: [
+        { value: 'FRUCHTERMAN_REINGOLD', label: 'Fruchterman Reingold' },
+        { value: 'EADES', label: 'Eades' },
+      ],
+    },
+  ],
+}))
+
+const loadDbmlLayoutAlgorithmOptions = vi.hoisted(() => vi.fn())
+
+vi.mock('../model/dbml-layout-settings', () => ({
+  DEFAULT_DBML_LAYOUT_ALGORITHM_ID: 'org.eclipse.elk.layered',
+  DEFAULT_DBML_LAYOUT_ALGORITHM_OPTION: layoutAlgorithmOptions[0],
+  getDbmlLayoutOptionControls: (algorithmId: string) =>
+    layoutOptionControls[algorithmId as keyof typeof layoutOptionControls] ??
+    [],
+  getDefaultDbmlLayoutOptionValues: (algorithmId: string) =>
+    Object.fromEntries(
+      (
+        layoutOptionControls[
+          algorithmId as keyof typeof layoutOptionControls
+        ] ?? []
+      ).map((control) => [control.id, control.defaultValue]),
+    ),
+  loadDbmlLayoutAlgorithmOptions,
+  normalizeDbmlLayoutOptionValues: (optionValues: Record<string, string>) =>
+    Object.fromEntries(
+      Object.entries(optionValues).filter(([, value]) => value !== ''),
+    ),
 }))
 
 vi.mock('@monaco-editor/react', () => ({
@@ -124,6 +194,8 @@ vi.mock('@xyflow/react', () => ({
 describe('EditorPage', () => {
   afterEach(() => {
     cleanup()
+    loadDbmlLayoutAlgorithmOptions.mockReset()
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     monacoEditor.focus.mockClear()
     monacoEditor.getModel.mockClear()
     monacoEditor.revealRangeInCenter.mockClear()
@@ -135,6 +207,7 @@ describe('EditorPage', () => {
   })
 
   it('shows development inspector activity controls when editor dev mode is enabled', () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
 
     expect(
@@ -144,11 +217,15 @@ describe('EditorPage', () => {
       screen.getByRole('button', { name: 'DBML presets' }),
     ).toBeInTheDocument()
     expect(
+      screen.getByRole('button', { name: 'Diagram settings' }),
+    ).toBeInTheDocument()
+    expect(
       screen.queryByRole('heading', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()
   })
 
   it('opens diagnostics and presets through inspector activities', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Diagnostics' }))
@@ -165,17 +242,78 @@ describe('EditorPage', () => {
     expect(screen.getByText('Very complex')).toBeInTheDocument()
   })
 
-  it('hides development diagnostics and preset controls when editor dev mode is disabled', () => {
+  it('opens diagram settings through inspector activities', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Diagram settings' }))
+
+    const selector = await screen.findByLabelText('Diagram layout algorithm')
+
+    expect(selector).toHaveValue('org.eclipse.elk.layered')
+    expect(await screen.findByLabelText('Direction')).toHaveValue('RIGHT')
+
+    await waitFor(() => {
+      expect(screen.getByText('ELK Force')).toBeInTheDocument()
+    })
+  })
+
+  it('updates the selected diagram layout algorithm from inspector settings', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Diagram settings' }))
+
+    const selector = await screen.findByLabelText('Diagram layout algorithm')
+
+    await waitFor(() => {
+      expect(screen.getByText('ELK Force')).toBeInTheDocument()
+    })
+
+    fireEvent.change(selector, {
+      target: { value: 'org.eclipse.elk.force' },
+    })
+
+    expect(selector).toHaveValue('org.eclipse.elk.force')
+    expect(await screen.findByLabelText('Force model')).toHaveValue(
+      'FRUCHTERMAN_REINGOLD',
+    )
+  })
+
+  it('updates a curated diagram layout option from inspector settings', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Diagram settings' }))
+
+    const directionSelector = await screen.findByLabelText('Direction')
+
+    fireEvent.change(directionSelector, {
+      target: { value: 'DOWN' },
+    })
+
+    expect(directionSelector).toHaveValue('DOWN')
+  })
+
+  it('hides development diagnostics, preset, and layout settings controls when editor dev mode is disabled', () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
     expect(
       screen.queryByRole('button', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()
     expect(screen.queryByLabelText('DBML preset')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Diagram settings' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByLabelText('Diagram layout algorithm'),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Editor' })).toBeInTheDocument()
   })
 
   it('keeps validation state active when development diagnostics are hidden', () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     vi.useFakeTimers()
     render(<EditorPage isEditorDevMode={false} />)
 
@@ -194,6 +332,7 @@ describe('EditorPage', () => {
   })
 
   it('collapses and expands the active inspector activity', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
 
     const diagnosticsButton = screen.getByRole('button', {
@@ -229,6 +368,7 @@ describe('EditorPage', () => {
   })
 
   it('closes the inspector sidebar from the active panel', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Diagnostics' }))
@@ -253,6 +393,7 @@ describe('EditorPage', () => {
   })
 
   it('replaces the editor document when a development preset is selected', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
 
     const editor = screen.getByLabelText('DBML editor')
@@ -274,6 +415,7 @@ describe('EditorPage', () => {
   })
 
   it('moves the editor cursor when a diagram table is focused', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
     fireEvent.click(
@@ -287,6 +429,7 @@ describe('EditorPage', () => {
   })
 
   it('clears diagram focus when the empty diagram pane is clicked', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
     fireEvent.click(
@@ -307,6 +450,7 @@ describe('EditorPage', () => {
   })
 
   it('moves the editor cursor when a diagram column is focused', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
     const emailColumn = await screen.findByText('email')
