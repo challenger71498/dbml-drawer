@@ -2,19 +2,43 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { EditorPage } from './EditorPage'
 
+const monacoEditor = vi.hoisted(() => ({
+  focus: vi.fn(),
+  getModel: vi.fn(() => ({})),
+  revealRangeInCenter: vi.fn(),
+  revealPositionInCenter: vi.fn(),
+  setSelection: vi.fn(),
+  setPosition: vi.fn(),
+}))
+
+const monacoApi = vi.hoisted(() => ({
+  editor: {
+    setModelMarkers: vi.fn(),
+  },
+  MarkerSeverity: {
+    Error: 8,
+    Warning: 4,
+  },
+}))
+
 vi.mock('@monaco-editor/react', () => ({
   default: ({
     value,
     onChange,
+    onMount,
   }: {
     value: string
     onChange: (value?: string) => void
+    onMount?: (editor: typeof monacoEditor, monaco: typeof monacoApi) => void
   }) => (
-    <textarea
-      aria-label="DBML editor"
-      value={value}
-      onChange={(event) => onChange(event.currentTarget.value)}
-    />
+    onMount?.(monacoEditor, monacoApi),
+    (
+      <textarea
+        aria-label="DBML editor"
+        value={value}
+        onChange={(event) => onChange(event.currentTarget.value)}
+      />
+    )
   ),
 }))
 
@@ -46,17 +70,46 @@ vi.mock('@xyflow/react', () => ({
     children,
     nodeTypes,
     nodes,
+    onNodeClick,
+    onNodeMouseEnter,
+    onNodeMouseLeave,
+    onPaneClick,
   }: {
     children: React.ReactNode
     nodeTypes: Record<string, React.ComponentType<{ data: unknown }>>
     nodes: Array<{ id: string; type?: string; data: unknown }>
+    onNodeClick?: (
+      event: React.MouseEvent<HTMLDivElement>,
+      node: { id: string; type?: string; data: unknown },
+    ) => void
+    onNodeMouseEnter?: (
+      event: React.MouseEvent<HTMLDivElement>,
+      node: { id: string; type?: string; data: unknown },
+    ) => void
+    onNodeMouseLeave?: (
+      event: React.MouseEvent<HTMLDivElement>,
+      node: { id: string; type?: string; data: unknown },
+    ) => void
+    onPaneClick?: (event: React.MouseEvent<HTMLDivElement>) => void
   }) => (
     <div aria-label="Diagram canvas">
+      <div
+        data-testid="diagram-pane"
+        onClick={(event) => onPaneClick?.(event)}
+      />
       {nodes.map((node) => {
         const NodeComponent = nodeTypes[node.type ?? '']
 
         return NodeComponent ? (
-          <NodeComponent data={node.data} key={node.id} />
+          <div
+            data-testid={`diagram-node-${node.id}`}
+            key={node.id}
+            onClick={(event) => onNodeClick?.(event, node)}
+            onMouseEnter={(event) => onNodeMouseEnter?.(event, node)}
+            onMouseLeave={(event) => onNodeMouseLeave?.(event, node)}
+          >
+            <NodeComponent data={node.data} />
+          </div>
         ) : null
       })}
       {children}
@@ -71,6 +124,13 @@ vi.mock('@xyflow/react', () => ({
 describe('EditorPage', () => {
   afterEach(() => {
     cleanup()
+    monacoEditor.focus.mockClear()
+    monacoEditor.getModel.mockClear()
+    monacoEditor.revealRangeInCenter.mockClear()
+    monacoEditor.revealPositionInCenter.mockClear()
+    monacoEditor.setSelection.mockClear()
+    monacoEditor.setPosition.mockClear()
+    monacoApi.editor.setModelMarkers.mockClear()
     vi.useRealTimers()
   })
 
@@ -212,4 +272,89 @@ describe('EditorPage', () => {
     expect(editor.value).toContain('Project operations')
     expect(editor.value).toContain('Table deployment_steps')
   })
+
+  it('moves the editor cursor when a diagram table is focused', async () => {
+    render(<EditorPage isEditorDevMode={false} />)
+
+    fireEvent.click(
+      await screen.findByTestId('diagram-node-table:public.users'),
+    )
+
+    expectEditorRangeCall(monacoEditor.setSelection)
+    expectEditorRangeCall(monacoEditor.revealRangeInCenter)
+    expect(monacoEditor.setPosition).not.toHaveBeenCalled()
+    expect(monacoEditor.focus).toHaveBeenCalled()
+  })
+
+  it('clears diagram focus when the empty diagram pane is clicked', async () => {
+    render(<EditorPage isEditorDevMode={false} />)
+
+    fireEvent.click(
+      await screen.findByTestId('diagram-node-table:public.users'),
+    )
+
+    expect(screen.getByText('users').closest('article')).toHaveAttribute(
+      'data-active',
+      'true',
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-pane'))
+
+    expect(screen.getByText('users').closest('article')).toHaveAttribute(
+      'data-active',
+      'false',
+    )
+  })
+
+  it('moves the editor cursor when a diagram column is focused', async () => {
+    render(<EditorPage isEditorDevMode={false} />)
+
+    const emailColumn = await screen.findByText('email')
+    const columnRow = emailColumn.closest('div')
+
+    if (!columnRow) {
+      throw new Error('Expected email column to render inside a diagram row.')
+    }
+
+    fireEvent.click(columnRow)
+
+    expectEditorRangeCall(monacoEditor.setSelection)
+    expectEditorRangeCall(monacoEditor.revealRangeInCenter)
+    expect(monacoEditor.setPosition).not.toHaveBeenCalled()
+    expect(monacoEditor.focus).toHaveBeenCalled()
+  })
 })
+
+function expectEditorRangeCall(callback: typeof monacoEditor.setSelection) {
+  const lastCall = callback.mock.lastCall as [unknown] | undefined
+  const range = lastCall?.[0]
+
+  if (!isEditorRange(range)) {
+    throw new Error('Expected editor range callback to receive a range.')
+  }
+
+  expect(range.startLineNumber).toBeGreaterThan(0)
+  expect(range.startColumn).toBeGreaterThan(0)
+  expect(range.endLineNumber).toBeGreaterThan(0)
+  expect(range.endColumn).toBeGreaterThan(0)
+}
+
+function isEditorRange(value: unknown): value is {
+  startLineNumber: number
+  startColumn: number
+  endLineNumber: number
+  endColumn: number
+} {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'startLineNumber' in value &&
+    'startColumn' in value &&
+    'endLineNumber' in value &&
+    'endColumn' in value &&
+    typeof value.startLineNumber === 'number' &&
+    typeof value.startColumn === 'number' &&
+    typeof value.endLineNumber === 'number' &&
+    typeof value.endColumn === 'number'
+  )
+}
