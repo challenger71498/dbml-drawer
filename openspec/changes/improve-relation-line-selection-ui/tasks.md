@@ -50,6 +50,7 @@
 
 ## 8. Dynamic Flow Marker Detail
 
-- [x] 8.1 Render dynamic flow markers as flattened football-shaped ellipses that rotate along the relation path.
-- [x] 8.2 Fill dynamic flow markers with the active relation gradient so marker color follows the visible line color.
+- [x] 8.1 Render dynamic flow markers as smaller circular markers.
+- [x] 8.2 Animate dynamic flow marker fill through the active relation colors so marker color follows the visible line color.
 - [x] 8.3 Update dynamic mode tests and run verification.
+- [x] 8.4 Use the visible relation path directly for dynamic marker motion instead of resolving a hidden path by SVG id.

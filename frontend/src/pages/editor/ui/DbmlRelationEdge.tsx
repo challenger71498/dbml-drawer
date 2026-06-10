@@ -24,8 +24,8 @@ const ACTIVE_RELATION_EDGE_STYLE = {
 
 const DYNAMIC_DOT_SPACING = 72
 const DYNAMIC_DOT_SPEED = 120
-const DYNAMIC_DOT_RADIUS_X = 7
-const DYNAMIC_DOT_RADIUS_Y = 3.2
+const DYNAMIC_DOT_RADIUS = 3.2
+const DYNAMIC_MARKER_FILL_KEY_TIMES = '0;0.67;1'
 const BEZIER_LENGTH_SAMPLE_COUNT = 16
 
 const DIMMED_RELATION_EDGE_STYLE = {
@@ -52,10 +52,8 @@ export function DbmlRelationEdge({
     data && isActive && highlightMode !== 'solid'
       ? getRelationGradientId(data.relation.id)
       : null
-  const motionPathId =
+  const shouldRenderDynamicFlow =
     data && isActive && highlightMode === 'dynamic'
-      ? getRelationMotionPathId(data.relation.id)
-      : null
   const path = getRelationPath({
     lineStyle: data?.lineStyle ?? 'bezier',
     sourceX,
@@ -65,7 +63,7 @@ export function DbmlRelationEdge({
     targetY,
     targetPosition,
   })
-  const dynamicFlow = motionPathId
+  const dynamicFlow = shouldRenderDynamicFlow
     ? getDynamicFlow({
         lineStyle: data?.lineStyle ?? 'bezier',
         sourceX,
@@ -109,27 +107,27 @@ export function DbmlRelationEdge({
           isDimmed,
         })}
       />
-      {motionPathId ? (
+      {dynamicFlow ? (
         <>
-          <path
-            d={path}
-            data-testid="relation-edge-motion-path"
-            fill="none"
-            id={motionPathId}
-            stroke="none"
-          />
           {dynamicFlow?.beginTimes.map((begin) => (
-            <ellipse
+            <circle
+              cx={0}
+              cy={0}
               data-testid="relation-edge-flow-dot"
-              fill={
-                gradientId
-                  ? `url(#${gradientId})`
-                  : DBML_RELATION_REFERENCE_COLOR
-              }
+              fill={DBML_RELATION_REFERENCE_COLOR}
               key={begin}
-              rx={DYNAMIC_DOT_RADIUS_X}
-              ry={DYNAMIC_DOT_RADIUS_Y}
+              r={DYNAMIC_DOT_RADIUS}
             >
+              <animate
+                attributeName="fill"
+                begin={begin}
+                calcMode="linear"
+                data-testid="relation-edge-flow-fill-animation"
+                dur={dynamicFlow.duration}
+                keyTimes={DYNAMIC_MARKER_FILL_KEY_TIMES}
+                repeatCount="indefinite"
+                values={`${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`}
+              />
               <animateMotion
                 begin={begin}
                 calcMode="linear"
@@ -137,12 +135,10 @@ export function DbmlRelationEdge({
                 dur={dynamicFlow.duration}
                 keyPoints="1;0"
                 keyTimes="0;1"
+                path={path}
                 repeatCount="indefinite"
-                rotate="auto"
-              >
-                <mpath href={`#${motionPathId}`} />
-              </animateMotion>
-            </ellipse>
+              />
+            </circle>
           ))}
         </>
       ) : null}
@@ -177,10 +173,6 @@ function getRelationEdgeStyle({
 
 function getRelationGradientId(relationId: string) {
   return `dbml-relation-gradient-${relationId.replaceAll(/[^a-zA-Z0-9_-]/g, '-')}`
-}
-
-function getRelationMotionPathId(relationId: string) {
-  return `dbml-relation-motion-${relationId.replaceAll(/[^a-zA-Z0-9_-]/g, '-')}`
 }
 
 function getDynamicFlow(params: RelationPathParams) {

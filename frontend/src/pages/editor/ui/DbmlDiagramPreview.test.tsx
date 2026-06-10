@@ -364,7 +364,7 @@ describe('DbmlDiagramPreview', () => {
     )[0]
 
     expect(shortDots).toHaveLength(1)
-    expect(shortDots[0].tagName.toLowerCase()).toBe('ellipse')
+    expect(shortDots[0].tagName.toLowerCase()).toBe('circle')
     expect(shortAnimation).toHaveAttribute('dur', '0.5s')
 
     shortEdge.unmount()
@@ -898,26 +898,36 @@ function expectDynamicEdge(edge: HTMLElement) {
   expect(edge).toHaveAttribute('data-stroke-dasharray', '')
   expect(edge).toHaveAttribute('data-stroke-linecap', '')
 
-  const motionPath = edge
-    .closest('g')
-    ?.querySelector('[data-testid="relation-edge-motion-path"]')
   const dots = edge
     .closest('g')
     ?.querySelectorAll('[data-testid="relation-edge-flow-dot"]')
+  const fillAnimations = edge
+    .closest('g')
+    ?.querySelectorAll('[data-testid="relation-edge-flow-fill-animation"]')
   const animations = edge.closest('g')?.querySelectorAll('animateMotion')
 
-  expect(motionPath).toHaveAttribute('d', edge.getAttribute('d'))
   expect(dots).toHaveLength(2)
+  expect(fillAnimations).toHaveLength(2)
   expect(animations).toHaveLength(2)
-  expect(dots?.[0]).toHaveAttribute('fill', edge.getAttribute('data-stroke'))
-  expect(dots?.[0]).toHaveAttribute('rx', '7')
-  expect(dots?.[0]).toHaveAttribute('ry', '3.2')
+  expect(dots?.[0]).toHaveAttribute('fill', DBML_RELATION_REFERENCE_COLOR)
+  expect(dots?.[0]).toHaveAttribute('cx', '0')
+  expect(dots?.[0]).toHaveAttribute('cy', '0')
+  expect(dots?.[0]).toHaveAttribute('r', '3.2')
   expect(animations?.[0]).toHaveAttribute('begin', '0s')
   expect(animations?.[1]).toHaveAttribute('begin', '-0.57s')
   expect(animations?.[0]).toHaveAttribute('dur', '1.14s')
   expect(animations?.[0]).toHaveAttribute('keyPoints', '1;0')
   expect(animations?.[0]).toHaveAttribute('keyTimes', '0;1')
-  expect(animations?.[0]).toHaveAttribute('rotate', 'auto')
+  expect(animations?.[0]).toHaveAttribute('path', edge.getAttribute('d'))
+  expect(animations?.[0]).not.toHaveAttribute('rotate')
+  expect(fillAnimations?.[0]).toHaveAttribute('begin', '0s')
+  expect(fillAnimations?.[1]).toHaveAttribute('begin', '-0.57s')
+  expect(fillAnimations?.[0]).toHaveAttribute('dur', '1.14s')
+  expect(fillAnimations?.[0]).toHaveAttribute('keyTimes', '0;0.67;1')
+  expect(fillAnimations?.[0]).toHaveAttribute(
+    'values',
+    `${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`,
+  )
 }
 
 function isGradientStroke(stroke: string | null) {
