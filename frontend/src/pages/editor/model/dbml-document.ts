@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDebouncedValue } from '@/shared/lib/debounce'
-import { INITIAL_DBML_DOCUMENT } from '../lib/dbml-sample'
+import { INITIAL_DBML_DOCUMENT } from '../lib/dbml-default-document'
 import { validateDbml } from '../lib/validate-dbml'
 import type { LayoutedDbmlDiagram } from './dbml-layout'
 

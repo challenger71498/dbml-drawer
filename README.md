@@ -21,17 +21,16 @@ Install repository tools:
 mise install
 ```
 
-Install project dependencies from the repository root:
+Initialize local environment files and install project dependencies from the repository root:
 
 ```sh
-mise run install
+mise run init
 ```
 
-Copy local environment examples as needed:
+Create local environment files without installing dependencies:
 
 ```sh
-cp frontend/.env.example frontend/.env
-cp backend/.env.example backend/.env
+mise run env:init
 ```
 
 ## Development

@@ -1,6 +1,6 @@
 export const INITIAL_DBML_DOCUMENT = `Project dbml_drawer {
   database_type: "PostgreSQL"
-  Note: "Sample DBML document"
+  Note: "Simple DBML document"
 }
 
 Table users {

@@ -77,7 +77,9 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Editor' })).toBeInTheDocument()
     expect(editor.value).toContain('Table users')
-    expect(screen.getByText('No diagnostics')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Diagnostics' }),
+    ).not.toBeInTheDocument()
   })
 
   it('shows diagnostics for invalid DBML after editor changes', () => {
@@ -91,6 +93,9 @@ describe('App', () => {
       vi.advanceTimersByTime(350)
     })
 
-    expect(screen.getByText(/Expected/i)).toBeInTheDocument()
+    expect(screen.getByText('Needs attention')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Diagnostics' }),
+    ).not.toBeInTheDocument()
   })
 })

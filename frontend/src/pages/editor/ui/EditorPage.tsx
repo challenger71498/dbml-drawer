@@ -1,6 +1,6 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { DbmlCodeEditor } from './DbmlCodeEditor'
-import { DiagnosticsPanel } from './DiagnosticsPanel'
+import { isEditorDevModeEnabled } from '../lib/editor-dev-mode'
 import { useDbmlDocument } from '../model/dbml-document'
 import styles from './EditorPage.module.css'
 
@@ -10,7 +10,20 @@ const DbmlDiagramPreview = lazy(() =>
   })),
 )
 
-export function EditorPage() {
+const EditorDevTools = lazy(() =>
+  import('./EditorDevTools').then((module) => ({
+    default: module.EditorDevTools,
+  })),
+)
+
+type EditorPageProps = {
+  isEditorDevMode?: boolean
+}
+
+export function EditorPage({
+  isEditorDevMode = isEditorDevModeEnabled(),
+}: EditorPageProps) {
+  const [isDiagnosticsCollapsed, setDiagnosticsCollapsed] = useState(false)
   const {
     documentText,
     setDocumentText,
@@ -20,8 +33,22 @@ export function EditorPage() {
     isDiagramPaused,
   } = useDbmlDocument()
 
+  const toggleDiagnostics = () => {
+    setDiagnosticsCollapsed((currentValue) => !currentValue)
+  }
+
+  const pageClassName = [
+    styles.editorPage,
+    isEditorDevMode ? styles.editorPageDevMode : '',
+    isEditorDevMode && isDiagnosticsCollapsed
+      ? styles.editorPageInspectorCollapsed
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   return (
-    <main className={styles.editorPage}>
+    <main className={pageClassName}>
       <section
         className={styles.editorWorkspace}
         aria-labelledby="editor-heading"
@@ -55,9 +82,16 @@ export function EditorPage() {
         </div>
       </section>
 
-      <aside className={styles.inspectorSidebar}>
-        <DiagnosticsPanel diagnostics={diagnostics} />
-      </aside>
+      {isEditorDevMode ? (
+        <Suspense fallback={<div className={styles.inspectorFallback} />}>
+          <EditorDevTools
+            diagnostics={diagnostics}
+            isDiagnosticsCollapsed={isDiagnosticsCollapsed}
+            onToggleDiagnostics={toggleDiagnostics}
+            onPresetSelect={setDocumentText}
+          />
+        </Suspense>
+      ) : null}
     </main>
   )
 }

@@ -2,9 +2,25 @@
 node = "26.3.0"
 "npm:pnpm" = "11.5.2"
 
+[tasks.init]
+description = "Initialize local environment files and install dependencies"
+run = "mise run env:init && mise run install"
+
 [tasks.install]
 description = "Install dependencies for all projects"
 run = "pnpm --dir frontend install && pnpm --dir backend install"
+
+[tasks."env:init"]
+description = "Create local env files for all projects"
+run = "mise run frontend:env:init && mise run backend:env:init"
+
+[tasks."frontend:env:init"]
+description = "Create the frontend local env file from its example"
+run = "cp -n frontend/.env.example frontend/.env"
+
+[tasks."backend:env:init"]
+description = "Create the backend local env file from its example"
+run = "cp -n backend/.env.example backend/.env"
 
 [tasks.dev]
 description = "Run frontend and backend development servers"
