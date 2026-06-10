@@ -65,9 +65,9 @@ export function EditorPage({
     () => getActiveRelationIds(layoutedDiagram, activeDiagramTarget),
     [activeDiagramTarget, layoutedDiagram],
   )
-  const activeTableIds = useMemo(
-    () => getActiveTableIds(layoutedDiagram, activeDiagramTarget),
-    [activeDiagramTarget, layoutedDiagram],
+  const focusedTableIds = useMemo(
+    () => getActiveTableIds(layoutedDiagram, focusedDiagramTarget),
+    [focusedDiagramTarget, layoutedDiagram],
   )
 
   const revealSourcePosition = useCallback(
@@ -216,9 +216,10 @@ export function EditorPage({
           <Suspense fallback={<div className={styles.diagramFallback} />}>
             <DbmlDiagramPreview
               activeRelationIds={activeRelationIds}
-              activeTableIds={activeTableIds}
               activeTarget={activeDiagramTarget}
               diagram={layoutedDiagram}
+              focusedTableIds={focusedTableIds}
+              focusedTarget={focusedDiagramTarget}
               isPending={isDiagramPending}
               isPaused={isDiagramPaused}
               onColumnFocus={handleColumnFocus}

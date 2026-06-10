@@ -265,7 +265,7 @@ describe('DbmlDiagramPreview', () => {
     )
   })
 
-  it('highlights a hovered table and connected relation', async () => {
+  it('highlights a hovered relation without changing table state', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
 
@@ -275,18 +275,9 @@ describe('DbmlDiagramPreview', () => {
 
     fireEvent.mouseEnter(postsNode)
 
-    expect(screen.getByText('posts').closest('article')).toHaveAttribute(
-      'data-active',
-      'true',
-    )
-    expect(screen.getByText('posts').closest('article')).toHaveAttribute(
-      'data-connected',
-      'true',
-    )
-    expect(screen.getByText('users').closest('article')).toHaveAttribute(
-      'data-connected',
-      'true',
-    )
+    expect(getTableArticle('posts')).toHaveAttribute('data-active', 'false')
+    expect(getTableArticle('posts')).toHaveAttribute('data-connected', 'false')
+    expect(getTableArticle('users')).toHaveAttribute('data-connected', 'false')
     expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
       'data-stroke',
       '#e05d2f',
@@ -294,13 +285,10 @@ describe('DbmlDiagramPreview', () => {
 
     fireEvent.mouseLeave(postsNode)
 
-    expect(screen.getByText('posts').closest('article')).toHaveAttribute(
-      'data-active',
-      'false',
-    )
+    expect(getTableArticle('posts')).toHaveAttribute('data-active', 'false')
   })
 
-  it('dims only tables and relations unrelated to the active table', async () => {
+  it('dims only tables and relations unrelated to the focused table', async () => {
     const diagram = createDbmlDiagram(
       parseDbmlDocument(ISOLATED_RELATION_SOURCE),
     )
@@ -308,7 +296,7 @@ describe('DbmlDiagramPreview', () => {
 
     render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
 
-    fireEvent.mouseEnter(screen.getByTestId('diagram-node-table:public.posts'))
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
 
     expect(getTableArticle('posts')).toHaveAttribute('data-dimmed', 'false')
     expect(getTableArticle('users')).toHaveAttribute('data-dimmed', 'false')
@@ -410,7 +398,7 @@ describe('DbmlDiagramPreview', () => {
     expect(focusProps.edges).toBe(initialProps.edges)
   })
 
-  it('highlights a hovered column and connected relation', async () => {
+  it('highlights a hovered column relation without changing column state', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
 
@@ -420,7 +408,7 @@ describe('DbmlDiagramPreview', () => {
 
     fireEvent.mouseEnter(userIdColumn)
 
-    expect(userIdColumn).toHaveAttribute('data-active', 'true')
+    expect(userIdColumn).toHaveAttribute('data-active', 'false')
     expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
       'data-stroke',
       '#e05d2f',
@@ -431,7 +419,7 @@ describe('DbmlDiagramPreview', () => {
     expect(userIdColumn).toHaveAttribute('data-active', 'false')
   })
 
-  it('keeps both endpoint tables visible when a relation column is active', async () => {
+  it('keeps both endpoint tables visible when a relation column is focused', async () => {
     const diagram = createDbmlDiagram(
       parseDbmlDocument(ISOLATED_RELATION_SOURCE),
     )
@@ -439,11 +427,32 @@ describe('DbmlDiagramPreview', () => {
 
     render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
 
-    fireEvent.mouseEnter(getColumnRow('user_id'))
+    fireEvent.click(getColumnRow('user_id'))
 
     expect(getTableArticle('posts')).toHaveAttribute('data-dimmed', 'false')
     expect(getTableArticle('users')).toHaveAttribute('data-dimmed', 'false')
     expect(getTableArticle('teams')).toHaveAttribute('data-dimmed', 'true')
+  })
+
+  it('restores table hover when the pointer leaves a column inside the same table', async () => {
+    const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    const postsNode = screen.getByTestId('diagram-node-table:public.posts')
+    const userIdColumn = getColumnRow('user_id')
+
+    fireEvent.mouseEnter(postsNode)
+    fireEvent.mouseEnter(userIdColumn)
+    fireEvent.mouseLeave(userIdColumn, {
+      relatedTarget: getTableHeader('posts'),
+    })
+
+    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
+      'data-stroke',
+      '#e05d2f',
+    )
   })
 
   it('keeps column focus after the pointer leaves', async () => {
@@ -531,9 +540,10 @@ function InteractivePreviewHarness({
   return (
     <DbmlDiagramPreview
       activeRelationIds={getActiveRelationIds(diagram, activeTarget)}
-      activeTableIds={getActiveTableIds(diagram, activeTarget)}
       activeTarget={activeTarget}
       diagram={diagram}
+      focusedTableIds={getActiveTableIds(diagram, focusedTarget)}
+      focusedTarget={focusedTarget}
       isPending={false}
       isPaused={false}
       onColumnFocus={(column) =>
@@ -567,6 +577,16 @@ function getTableArticle(tableName: string) {
   }
 
   return table
+}
+
+function getTableHeader(tableName: string) {
+  const header = getTableArticle(tableName).querySelector('header')
+
+  if (!header) {
+    throw new Error(`Expected ${tableName} table to render a header.`)
+  }
+
+  return header
 }
 
 function getColumnRow(columnName: string) {

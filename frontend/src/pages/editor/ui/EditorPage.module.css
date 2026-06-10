@@ -215,11 +215,11 @@
   z-index: 1;
 }
 
-.diagramSurface :global(.react-flow__node:has(.diagramTableNodeDimmed)) {
+.diagramSurface :global(.react-flow__node):has(.diagramTableNodeDimmed) {
   z-index: 0 !important;
 }
 
-.diagramSurface :global(.react-flow__node:has(.diagramTableNodeConnected)) {
+.diagramSurface :global(.react-flow__node):has(.diagramTableNodeConnected) {
   z-index: 2 !important;
 }
 

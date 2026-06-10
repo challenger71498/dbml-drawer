@@ -10,18 +10,18 @@ import styles from './EditorPage.module.css'
 
 export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
   const { table } = data
-  const { activeTableIds, activeTarget, onColumnFocus, onColumnHover } =
+  const { focusedTableIds, focusedTarget, onColumnFocus, onColumnHover } =
     useDbmlDiagramSelectionView()
-  const hasActiveTarget = activeTarget !== null
-  const isNodeActive = isTableNodeActive(activeTarget, table.id)
-  const isNodeConnected = activeTableIds.has(table.id)
-  const isNodeDimmed = hasActiveTarget && !isNodeConnected
-  const isHeaderActive = isTableHeaderActive(activeTarget, table.id)
+  const hasFocusedTarget = focusedTarget !== null
+  const isNodeActive = isTableNodeActive(focusedTarget, table.id)
+  const isNodeConnected = focusedTableIds.has(table.id)
+  const isNodeDimmed = hasFocusedTarget && !isNodeConnected
+  const isHeaderActive = isTableHeaderActive(focusedTarget, table.id)
   const activeColumnId =
-    activeTarget?.type === 'column' &&
-    activeTarget.tableId === table.id &&
-    isColumnActive(activeTarget, activeTarget.columnId)
-      ? activeTarget.columnId
+    focusedTarget?.type === 'column' &&
+    focusedTarget.tableId === table.id &&
+    isColumnActive(focusedTarget, focusedTarget.columnId)
+      ? focusedTarget.columnId
       : null
 
   return (
@@ -87,7 +87,12 @@ export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
                   columnId: column.id,
                 })
               }
-              onMouseLeave={() => onColumnHover(null)}
+              onMouseLeave={() =>
+                onColumnHover({
+                  type: 'table',
+                  tableId: table.id,
+                })
+              }
               onMouseDown={(event) => event.stopPropagation()}
             >
               <Handle
