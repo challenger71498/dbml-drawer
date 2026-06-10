@@ -18,7 +18,9 @@ import {
 } from '../lib/map-dbml-diagram-flow'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
+  DEFAULT_DBML_RELATION_HIGHLIGHT_MODE,
   DEFAULT_DBML_RELATION_LINE_STYLE,
+  type DbmlRelationHighlightMode,
   type DbmlRelationLineStyle,
 } from '../model/dbml-diagram-rendering'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
@@ -36,6 +38,8 @@ type DbmlDiagramPreviewProps = {
   activeTarget?: DbmlDiagramSelectionTarget | null
   focusedTableIds?: ReadonlySet<string>
   focusedTarget?: DbmlDiagramSelectionTarget | null
+  sourceColumnIds?: ReadonlySet<string>
+  referenceColumnIds?: ReadonlySet<string>
   onTableFocus?: (table: DbmlDiagramTable) => void
   onTableHover?: (target: DbmlDiagramSelectionTarget | null) => void
   onColumnFocus?: (column: DbmlDiagramColumn) => void
@@ -57,6 +61,7 @@ const EMPTY_FLOW_ELEMENTS: DbmlDiagramFlowElements = {
 }
 
 const EMPTY_ACTIVE_RELATION_IDS = new Set<string>()
+const EMPTY_ENDPOINT_COLUMN_IDS = new Set<string>()
 
 const NOOP_FOCUS_CLEAR = () => undefined
 const NOOP_COLUMN_FOCUS = () => undefined
@@ -80,6 +85,24 @@ const RELATION_LINE_STYLE_OPTIONS = [
   label: string
 }>
 
+const RELATION_HIGHLIGHT_MODE_OPTIONS = [
+  {
+    value: 'solid',
+    label: 'Solid',
+  },
+  {
+    value: 'gradient',
+    label: 'Gradient',
+  },
+  {
+    value: 'dynamic',
+    label: 'Dynamic',
+  },
+] satisfies Array<{
+  value: DbmlRelationHighlightMode
+  label: string
+}>
+
 export function DbmlDiagramPreview({
   diagram,
   isPending,
@@ -88,6 +111,8 @@ export function DbmlDiagramPreview({
   activeTarget = null,
   focusedTableIds = EMPTY_ACTIVE_RELATION_IDS,
   focusedTarget = null,
+  sourceColumnIds = EMPTY_ENDPOINT_COLUMN_IDS,
+  referenceColumnIds = EMPTY_ENDPOINT_COLUMN_IDS,
   onTableFocus = () => undefined,
   onTableHover = () => undefined,
   onColumnFocus = NOOP_COLUMN_FOCUS,
@@ -96,14 +121,17 @@ export function DbmlDiagramPreview({
 }: DbmlDiagramPreviewProps) {
   const [relationLineStyle, setRelationLineStyle] =
     useState<DbmlRelationLineStyle>(DEFAULT_DBML_RELATION_LINE_STYLE)
+  const [relationHighlightMode, setRelationHighlightMode] =
+    useState<DbmlRelationHighlightMode>(DEFAULT_DBML_RELATION_HIGHLIGHT_MODE)
   const elements = useMemo(
     () =>
       diagram
         ? mapDbmlDiagramToFlow(diagram, {
+            highlightMode: relationHighlightMode,
             lineStyle: relationLineStyle,
           })
         : EMPTY_FLOW_ELEMENTS,
-    [diagram, relationLineStyle],
+    [diagram, relationHighlightMode, relationLineStyle],
   )
   const selectionViewState = useMemo(
     () => ({
@@ -111,6 +139,8 @@ export function DbmlDiagramPreview({
       activeTarget,
       focusedTableIds,
       focusedTarget,
+      sourceColumnIds,
+      referenceColumnIds,
       onColumnFocus,
       onColumnHover,
     }),
@@ -119,6 +149,8 @@ export function DbmlDiagramPreview({
       activeTarget,
       focusedTableIds,
       focusedTarget,
+      sourceColumnIds,
+      referenceColumnIds,
       onColumnFocus,
       onColumnHover,
     ],
@@ -159,6 +191,30 @@ export function DbmlDiagramPreview({
                   .join(' ')}
                 key={option.value}
                 onClick={() => setRelationLineStyle(option.value)}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div
+            className={styles.relationLineStyleControl}
+            role="group"
+            aria-label="Relation highlight mode"
+          >
+            {RELATION_HIGHLIGHT_MODE_OPTIONS.map((option) => (
+              <button
+                aria-pressed={relationHighlightMode === option.value}
+                className={[
+                  styles.relationLineStyleButton,
+                  relationHighlightMode === option.value
+                    ? styles.relationLineStyleButtonActive
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                key={option.value}
+                onClick={() => setRelationHighlightMode(option.value)}
                 type="button"
               >
                 {option.label}

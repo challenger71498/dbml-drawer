@@ -119,6 +119,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .relationLineStyleControl {
@@ -295,6 +296,28 @@
 }
 
 .diagramColumnRowActive:hover {
+  background: #fff1e8;
+}
+
+.diagramColumnRowSource {
+  z-index: 1;
+  background: #eef2f7;
+  color: #172033;
+  box-shadow: inset 3px 0 0 #22324a;
+}
+
+.diagramColumnRowSource:hover {
+  background: #eef2f7;
+}
+
+.diagramColumnRowReference {
+  z-index: 1;
+  background: #fff1e8;
+  color: #172033;
+  box-shadow: inset 3px 0 0 #e05d2f;
+}
+
+.diagramColumnRowReference:hover {
   background: #fff1e8;
 }
 

@@ -4,7 +4,9 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react'
+import { Position } from '@xyflow/react'
 import { useState, type CSSProperties } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createDbmlDiagram } from '../lib/create-dbml-diagram'
@@ -14,10 +16,17 @@ import {
   getActiveDiagramSelectionTarget,
   getActiveRelationIds,
   getActiveTableIds,
+  getRelationEndpointColumnIdsForTargets,
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
+import {
+  DBML_RELATION_REFERENCE_COLOR,
+  DBML_RELATION_SOURCE_COLOR,
+} from '../model/dbml-diagram-rendering'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
+import { DbmlDiagramSelectionViewProvider } from './DbmlDiagramSelectionViewProvider'
 import { DbmlDiagramPreview } from './DbmlDiagramPreview'
+import { DbmlRelationEdge } from './DbmlRelationEdge'
 
 const reactFlowProps = vi.hoisted(() => ({
   capture: vi.fn(),
@@ -32,6 +41,8 @@ vi.mock('@xyflow/react', () => ({
       d={path}
       data-opacity={String(style?.opacity ?? '')}
       data-stroke={String(style?.stroke ?? '')}
+      data-stroke-dasharray={String(style?.strokeDasharray ?? '')}
+      data-stroke-linecap={String(style?.strokeLinecap ?? '')}
       data-stroke-width={String(style?.strokeWidth ?? '')}
     />
   ),
@@ -113,23 +124,25 @@ vi.mock('@xyflow/react', () => ({
             </div>
           ) : null
         })}
-        {edges.map((edge) => {
-          const EdgeComponent = edgeTypes[edge.type ?? '']
+        <svg data-testid="diagram-edges">
+          {edges.map((edge) => {
+            const EdgeComponent = edgeTypes[edge.type ?? '']
 
-          return EdgeComponent ? (
-            <EdgeComponent
-              data={edge.data}
-              key={edge.id}
-              markerEnd="url(#arrow)"
-              sourcePosition="right"
-              sourceX={0}
-              sourceY={20}
-              targetPosition="left"
-              targetX={120}
-              targetY={80}
-            />
-          ) : null
-        })}
+            return EdgeComponent ? (
+              <EdgeComponent
+                data={edge.data}
+                key={edge.id}
+                markerEnd="url(#arrow)"
+                sourcePosition="right"
+                sourceX={0}
+                sourceY={20}
+                targetPosition="left"
+                targetX={120}
+                targetY={80}
+              />
+            ) : null
+          })}
+        </svg>
         {children}
       </div>
     )
@@ -152,6 +165,16 @@ const RELATION_SOURCE = `Table users {
 Table posts {
   id integer [pk]
   user_id integer [ref: > users.id]
+}
+`
+
+const REFERENCE_FOCUS_SOURCE = `Table posts {
+  id integer [pk]
+}
+
+Table comments {
+  id integer [pk]
+  post_id integer [ref: > posts.id]
 }
 `
 
@@ -265,6 +288,100 @@ describe('DbmlDiagramPreview', () => {
     )
   })
 
+  it('keeps active relation gradients when switching line styles', async () => {
+    const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Step' }))
+
+    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
+      'd',
+      expect.stringContaining(' L '),
+    )
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rounded' }))
+
+    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
+      'd',
+      expect.stringContaining(' Q '),
+    )
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
+  })
+
+  it('switches active relation highlight modes', async () => {
+    const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    expect(screen.getByRole('button', { name: 'Gradient' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Solid' }))
+
+    expect(screen.getByRole('button', { name: 'Solid' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
+      'data-stroke',
+      DBML_RELATION_REFERENCE_COLOR,
+    )
+    expect(
+      screen.queryByTestId('relation-edge-gradient'),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dynamic' }))
+
+    expect(screen.getByRole('button', { name: 'Dynamic' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
+    expectDynamicEdge(screen.getByTestId('diagram-edge'))
+  })
+
+  it('keeps dynamic dot speed consistent across relation lengths', () => {
+    const shortEdge = renderDynamicRelationEdge({
+      relationId: 'relation:short',
+      targetX: 60,
+    })
+    const shortDots = screen.getAllByTestId('relation-edge-flow-dot')
+    const shortAnimation = screen.getAllByTestId(
+      'relation-edge-flow-animation',
+    )[0]
+
+    expect(shortDots).toHaveLength(1)
+    expect(shortAnimation).toHaveAttribute('dur', '0.5s')
+
+    shortEdge.unmount()
+
+    renderDynamicRelationEdge({
+      relationId: 'relation:long',
+      targetX: 240,
+    })
+
+    const longDots = screen.getAllByTestId('relation-edge-flow-dot')
+    const longAnimation = screen.getAllByTestId(
+      'relation-edge-flow-animation',
+    )[0]
+
+    expect(longDots).toHaveLength(3)
+    expect(longAnimation).toHaveAttribute('dur', '2s')
+  })
+
   it('highlights a hovered relation without changing table state', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
@@ -278,10 +395,7 @@ describe('DbmlDiagramPreview', () => {
     expect(getTableArticle('posts')).toHaveAttribute('data-active', 'false')
     expect(getTableArticle('posts')).toHaveAttribute('data-connected', 'false')
     expect(getTableArticle('users')).toHaveAttribute('data-connected', 'false')
-    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
-      'data-stroke',
-      '#e05d2f',
-    )
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
     expect(screen.getByTestId('diagram-edge').closest('g')).toHaveAttribute(
       'data-relation-edge-active',
       'true',
@@ -316,7 +430,7 @@ describe('DbmlDiagramPreview', () => {
     const edges = screen.getAllByTestId('diagram-edge')
 
     expect(
-      edges.some((edge) => edge.getAttribute('data-stroke') === '#e05d2f'),
+      edges.some((edge) => isGradientStroke(edge.getAttribute('data-stroke'))),
     ).toBe(true)
     expect(
       edges.some((edge) => edge.getAttribute('data-opacity') === '0.28'),
@@ -352,10 +466,7 @@ describe('DbmlDiagramPreview', () => {
       'data-active',
       'true',
     )
-    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
-      'data-stroke',
-      '#e05d2f',
-    )
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
   })
 
   it('clears focused table selection when the diagram pane is clicked', async () => {
@@ -431,14 +542,22 @@ describe('DbmlDiagramPreview', () => {
     fireEvent.mouseEnter(userIdColumn)
 
     expect(userIdColumn).toHaveAttribute('data-active', 'false')
-    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
-      'data-stroke',
-      '#e05d2f',
+    expect(userIdColumn).toHaveAttribute('data-source', 'false')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
+    expect(getColumnRow('id', 'users')).toHaveAttribute('data-source', 'true')
+    expect(getColumnRow('id', 'users')).toHaveAttribute(
+      'data-reference',
+      'false',
     )
 
     fireEvent.mouseLeave(userIdColumn)
 
     expect(userIdColumn).toHaveAttribute('data-active', 'false')
+    expect(getColumnRow('id', 'users')).toHaveAttribute(
+      'data-reference',
+      'false',
+    )
   })
 
   it('keeps both endpoint tables visible when a relation column is focused', async () => {
@@ -471,10 +590,7 @@ describe('DbmlDiagramPreview', () => {
       relatedTarget: getTableHeader('posts'),
     })
 
-    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
-      'data-stroke',
-      '#e05d2f',
-    )
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
   })
 
   it('keeps column focus after the pointer leaves', async () => {
@@ -489,10 +605,53 @@ describe('DbmlDiagramPreview', () => {
     fireEvent.mouseLeave(userIdColumn)
 
     expect(userIdColumn).toHaveAttribute('data-active', 'true')
-    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
-      'data-stroke',
-      '#e05d2f',
+    expect(userIdColumn).toHaveAttribute('data-source', 'false')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
+    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
+    expect(getColumnRow('id', 'users')).toHaveAttribute('data-source', 'true')
+    expect(getColumnRow('id', 'users')).toHaveAttribute(
+      'data-reference',
+      'false',
     )
+  })
+
+  it('highlights a focused source column with the source color role', async () => {
+    const diagram = createDbmlDiagram(parseDbmlDocument(REFERENCE_FOCUS_SOURCE))
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    const postIdColumn = getColumnRow('id', 'posts')
+    const commentPostIdColumn = getColumnRow('post_id')
+
+    fireEvent.click(postIdColumn)
+
+    expect(postIdColumn).toHaveAttribute('data-active', 'true')
+    expect(postIdColumn).toHaveAttribute('data-source', 'true')
+    expect(postIdColumn).toHaveAttribute('data-reference', 'false')
+    expect(commentPostIdColumn).toHaveAttribute('data-source', 'false')
+    expect(commentPostIdColumn).toHaveAttribute('data-reference', 'true')
+  })
+
+  it('keeps focused reference column role while another column is hovered', async () => {
+    const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    const userIdColumn = getColumnRow('user_id')
+    const unrelatedPostIdColumn = getColumnRow('id', 'posts')
+
+    fireEvent.click(userIdColumn)
+
+    expect(userIdColumn).toHaveAttribute('data-active', 'true')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
+
+    fireEvent.mouseEnter(unrelatedPostIdColumn)
+
+    expect(userIdColumn).toHaveAttribute('data-active', 'true')
+    expect(userIdColumn).toHaveAttribute('data-source', 'false')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
   })
 
   it('shows a paused state while keeping the last valid diagram', async () => {
@@ -558,6 +717,11 @@ function InteractivePreviewHarness({
     hoveredTarget,
     focusedTarget,
   })
+  const activeRelationEndpointColumnIds =
+    getRelationEndpointColumnIdsForTargets(diagram, [
+      activeTarget,
+      focusedTarget,
+    ])
 
   return (
     <DbmlDiagramPreview
@@ -568,6 +732,8 @@ function InteractivePreviewHarness({
       focusedTarget={focusedTarget}
       isPending={false}
       isPaused={false}
+      sourceColumnIds={activeRelationEndpointColumnIds.sourceColumnIds}
+      referenceColumnIds={activeRelationEndpointColumnIds.referenceColumnIds}
       onColumnFocus={(column) =>
         setFocusedTarget({
           type: 'column',
@@ -591,6 +757,68 @@ function InteractivePreviewHarness({
   )
 }
 
+function renderDynamicRelationEdge({
+  relationId,
+  targetX,
+}: {
+  relationId: string
+  targetX: number
+}) {
+  return render(
+    <svg>
+      <DbmlDiagramSelectionViewProvider
+        value={{
+          activeRelationIds: new Set([relationId]),
+          activeTarget: {
+            type: 'column',
+            tableId: 'table:public.posts',
+            columnId: 'table:public.posts.column:user_id',
+          },
+          focusedTableIds: new Set(),
+          focusedTarget: null,
+          onColumnFocus: () => undefined,
+          onColumnHover: () => undefined,
+          referenceColumnIds: new Set(),
+          sourceColumnIds: new Set(),
+        }}
+      >
+        <DbmlRelationEdge
+          animated={false}
+          data={
+            {
+              highlightMode: 'dynamic',
+              lineStyle: 'orthogonal',
+              relation: {
+                id: relationId,
+              },
+              route: {
+                bendPoints: [],
+                endPoint: { x: targetX, y: 20 },
+                startPoint: { x: 0, y: 20 },
+              },
+            } as never
+          }
+          deletable={false}
+          id={relationId}
+          markerEnd=""
+          selectable={false}
+          selected={false}
+          source="table:public.users"
+          sourcePosition={Position.Right}
+          sourceX={0}
+          sourceY={20}
+          style={{}}
+          target="table:public.posts"
+          targetPosition={Position.Left}
+          targetX={targetX}
+          targetY={20}
+          type="dbmlRelation"
+        />
+      </DbmlDiagramSelectionViewProvider>
+    </svg>,
+  )
+}
+
 function getTableArticle(tableName: string) {
   const table = screen.getByText(tableName).closest('article')
 
@@ -611,8 +839,9 @@ function getTableHeader(tableName: string) {
   return header
 }
 
-function getColumnRow(columnName: string) {
-  const row = screen.getByText(columnName).closest('div')
+function getColumnRow(columnName: string, tableName?: string) {
+  const queryRoot = tableName ? within(getTableArticle(tableName)) : screen
+  const row = queryRoot.getByText(columnName).closest('div')
 
   if (!row) {
     throw new Error(`Expected ${columnName} column to render in a row.`)
@@ -637,4 +866,59 @@ function getCapturedReactFlowProps() {
     edges: lastCall.edges,
     nodes: lastCall.nodes,
   }
+}
+
+function expectActiveGradientEdge(edge: HTMLElement) {
+  expect(edge.getAttribute('data-stroke')).toEqual(
+    expect.stringMatching(/^url\(#dbml-relation-gradient-/),
+  )
+
+  const gradient = edge
+    .closest('g')
+    ?.querySelector('[data-testid="relation-edge-gradient"]')
+
+  expect(gradient).not.toBeNull()
+  expect(gradient).toHaveAttribute('x1', '0')
+  expect(gradient).toHaveAttribute('y1', '20')
+  expect(gradient).toHaveAttribute('x2', '120')
+  expect(gradient).toHaveAttribute('y2', '80')
+
+  const stops = gradient?.querySelectorAll('stop')
+
+  expect(stops?.[0]).toHaveAttribute('offset', '0%')
+  expect(getStopColor(stops?.[0])).toBe(DBML_RELATION_SOURCE_COLOR)
+  expect(stops?.[1]).toHaveAttribute('offset', '33%')
+  expect(getStopColor(stops?.[1])).toBe(DBML_RELATION_SOURCE_COLOR)
+  expect(stops?.[2]).toHaveAttribute('offset', '100%')
+  expect(getStopColor(stops?.[2])).toBe(DBML_RELATION_REFERENCE_COLOR)
+}
+
+function expectDynamicEdge(edge: HTMLElement) {
+  expect(edge).toHaveAttribute('data-stroke-dasharray', '')
+  expect(edge).toHaveAttribute('data-stroke-linecap', '')
+
+  const motionPath = edge
+    .closest('g')
+    ?.querySelector('[data-testid="relation-edge-motion-path"]')
+  const dots = edge
+    .closest('g')
+    ?.querySelectorAll('[data-testid="relation-edge-flow-dot"]')
+  const animations = edge.closest('g')?.querySelectorAll('animateMotion')
+
+  expect(motionPath).toHaveAttribute('d', edge.getAttribute('d'))
+  expect(dots).toHaveLength(2)
+  expect(animations).toHaveLength(2)
+  expect(animations?.[0]).toHaveAttribute('begin', '0s')
+  expect(animations?.[1]).toHaveAttribute('begin', '-0.57s')
+  expect(animations?.[0]).toHaveAttribute('dur', '1.14s')
+  expect(animations?.[0]).toHaveAttribute('keyPoints', '1;0')
+  expect(animations?.[0]).toHaveAttribute('keyTimes', '0;1')
+}
+
+function isGradientStroke(stroke: string | null) {
+  return stroke?.startsWith('url(#dbml-relation-gradient-') ?? false
+}
+
+function getStopColor(stop: Element | undefined) {
+  return stop?.getAttribute('stop-color') ?? stop?.getAttribute('stopColor')
 }

@@ -19,6 +19,11 @@ export type DbmlDiagramSelectionState = {
   focusedTarget: DbmlDiagramSelectionTarget | null
 }
 
+export type DbmlDiagramRelationEndpointColumnIds = {
+  sourceColumnIds: ReadonlySet<string>
+  referenceColumnIds: ReadonlySet<string>
+}
+
 export function getActiveDiagramSelectionTarget({
   hoveredTarget,
   focusedTarget,
@@ -61,6 +66,48 @@ export function getActiveTableIds(
   }
 
   return tableIds
+}
+
+export function getActiveRelationEndpointColumnIds(
+  diagram: LayoutedDbmlDiagram | null,
+  activeTarget: DbmlDiagramSelectionTarget | null,
+): DbmlDiagramRelationEndpointColumnIds {
+  return getRelationEndpointColumnIdsForTargets(diagram, [activeTarget])
+}
+
+export function getRelationEndpointColumnIdsForTargets(
+  diagram: LayoutedDbmlDiagram | null,
+  targets: readonly (DbmlDiagramSelectionTarget | null)[],
+): DbmlDiagramRelationEndpointColumnIds {
+  const sourceColumnIds = new Set<string>()
+  const referenceColumnIds = new Set<string>()
+
+  if (!diagram) {
+    return {
+      sourceColumnIds,
+      referenceColumnIds,
+    }
+  }
+
+  for (const target of targets) {
+    if (target?.type !== 'column') {
+      continue
+    }
+
+    for (const relation of diagram.relations) {
+      if (!isRelationConnectedToTarget(relation, target)) {
+        continue
+      }
+
+      sourceColumnIds.add(relation.sourceColumnId)
+      referenceColumnIds.add(relation.targetColumnId)
+    }
+  }
+
+  return {
+    sourceColumnIds,
+    referenceColumnIds,
+  }
 }
 
 export function isTableNodeActive(

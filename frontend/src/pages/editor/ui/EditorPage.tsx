@@ -16,6 +16,7 @@ import {
   getActiveDiagramSelectionTarget,
   getActiveRelationIds,
   getActiveTableIds,
+  getRelationEndpointColumnIdsForTargets,
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
@@ -82,6 +83,14 @@ export function EditorPage({
   const focusedTableIds = useMemo(
     () => getActiveTableIds(layoutedDiagram, focusedDiagramTarget),
     [focusedDiagramTarget, layoutedDiagram],
+  )
+  const activeRelationEndpointColumnIds = useMemo(
+    () =>
+      getRelationEndpointColumnIdsForTargets(layoutedDiagram, [
+        activeDiagramTarget,
+        focusedDiagramTarget,
+      ]),
+    [activeDiagramTarget, focusedDiagramTarget, layoutedDiagram],
   )
 
   const revealSourcePosition = useCallback(
@@ -262,6 +271,10 @@ export function EditorPage({
               focusedTarget={focusedDiagramTarget}
               isPending={isDiagramPending}
               isPaused={isDiagramPaused}
+              sourceColumnIds={activeRelationEndpointColumnIds.sourceColumnIds}
+              referenceColumnIds={
+                activeRelationEndpointColumnIds.referenceColumnIds
+              }
               onColumnFocus={handleColumnFocus}
               onColumnHover={handleDiagramHover}
               onFocusClear={handleDiagramFocusClear}

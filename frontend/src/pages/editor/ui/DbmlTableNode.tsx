@@ -10,8 +10,14 @@ import styles from './EditorPage.module.css'
 
 export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
   const { table } = data
-  const { focusedTableIds, focusedTarget, onColumnFocus, onColumnHover } =
-    useDbmlDiagramSelectionView()
+  const {
+    focusedTableIds,
+    focusedTarget,
+    sourceColumnIds,
+    referenceColumnIds,
+    onColumnFocus,
+    onColumnHover,
+  } = useDbmlDiagramSelectionView()
   const hasFocusedTarget = focusedTarget !== null
   const isNodeActive = isTableNodeActive(focusedTarget, table.id)
   const isNodeConnected = focusedTableIds.has(table.id)
@@ -55,6 +61,8 @@ export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
       <div className={styles.diagramColumnList}>
         {table.columns.map((column) => {
           const isColumnSelected = activeColumnId === column.id
+          const isSourceColumn = sourceColumnIds.has(column.id)
+          const isReferenceColumn = referenceColumnIds.has(column.id)
 
           return (
             <div
@@ -62,10 +70,14 @@ export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
                 styles.diagramColumnRow,
                 'nodrag nopan',
                 isColumnSelected ? styles.diagramColumnRowActive : '',
+                isSourceColumn ? styles.diagramColumnRowSource : '',
+                isReferenceColumn ? styles.diagramColumnRowReference : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
               data-active={isColumnSelected ? 'true' : 'false'}
+              data-source={isSourceColumn ? 'true' : 'false'}
+              data-reference={isReferenceColumn ? 'true' : 'false'}
               key={column.id}
               role="button"
               tabIndex={0}

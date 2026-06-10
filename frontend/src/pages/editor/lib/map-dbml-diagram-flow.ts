@@ -5,9 +5,13 @@ import type {
   LayoutedDbmlDiagramRelation,
   LayoutedDbmlDiagramTable,
 } from '../model/dbml-layout'
-import type { DbmlRelationLineStyle } from '../model/dbml-diagram-rendering'
+import type {
+  DbmlRelationHighlightMode,
+  DbmlRelationLineStyle,
+} from '../model/dbml-diagram-rendering'
 
 export type DbmlDiagramFlowOptions = {
+  highlightMode: DbmlRelationHighlightMode
   lineStyle: DbmlRelationLineStyle
 }
 
@@ -18,6 +22,7 @@ export type DbmlTableNodeData = {
 export type DbmlRelationEdgeData = {
   relation: LayoutedDbmlDiagramRelation
   route: DbmlDiagramRoute
+  highlightMode: DbmlRelationHighlightMode
   lineStyle: DbmlRelationLineStyle
 }
 
@@ -28,7 +33,7 @@ export type DbmlDiagramFlowElements = {
 
 export function mapDbmlDiagramToFlow(
   diagram: LayoutedDbmlDiagram,
-  { lineStyle }: DbmlDiagramFlowOptions,
+  { highlightMode, lineStyle }: DbmlDiagramFlowOptions,
 ): DbmlDiagramFlowElements {
   return {
     nodes: diagram.tables.map((table) => ({
@@ -49,6 +54,7 @@ export function mapDbmlDiagramToFlow(
       data: {
         relation,
         route: relation.route,
+        highlightMode,
         lineStyle,
       },
     })),

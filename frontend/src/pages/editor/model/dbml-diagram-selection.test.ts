@@ -3,7 +3,9 @@ import type { LayoutedDbmlDiagram } from './dbml-layout'
 import {
   getActiveDiagramSelectionTarget,
   getActiveRelationIds,
+  getActiveRelationEndpointColumnIds,
   getActiveTableIds,
+  getRelationEndpointColumnIdsForTargets,
   type DbmlDiagramSelectionTarget,
 } from './dbml-diagram-selection'
 
@@ -16,6 +18,12 @@ const COLUMN_TARGET: DbmlDiagramSelectionTarget = {
   type: 'column',
   tableId: 'table:public.posts',
   columnId: 'table:public.posts.column:user_id',
+}
+
+const TARGET_SIDE_COLUMN_TARGET: DbmlDiagramSelectionTarget = {
+  type: 'column',
+  tableId: 'table:public.posts',
+  columnId: 'table:public.posts.column:id',
 }
 
 const DIAGRAM = {
@@ -80,6 +88,60 @@ describe('dbml diagram selection', () => {
     expect([...getActiveTableIds(DIAGRAM, COLUMN_TARGET)]).toEqual([
       'table:public.posts',
       'table:public.users',
+    ])
+  })
+
+  it('derives endpoint column ids when the selected column is a relation source', () => {
+    const endpointColumnIds = getActiveRelationEndpointColumnIds(
+      DIAGRAM,
+      COLUMN_TARGET,
+    )
+
+    expect([...endpointColumnIds.sourceColumnIds]).toEqual([
+      'table:public.posts.column:user_id',
+    ])
+    expect([...endpointColumnIds.referenceColumnIds]).toEqual([
+      'table:public.users.column:id',
+    ])
+  })
+
+  it('derives endpoint column ids when the selected column is a relation target', () => {
+    const endpointColumnIds = getActiveRelationEndpointColumnIds(
+      DIAGRAM,
+      TARGET_SIDE_COLUMN_TARGET,
+    )
+
+    expect([...endpointColumnIds.sourceColumnIds]).toEqual([
+      'table:public.comments.column:post_id',
+    ])
+    expect([...endpointColumnIds.referenceColumnIds]).toEqual([
+      'table:public.posts.column:id',
+    ])
+  })
+
+  it('does not derive endpoint column ids for table targets', () => {
+    const endpointColumnIds = getActiveRelationEndpointColumnIds(
+      DIAGRAM,
+      TABLE_TARGET,
+    )
+
+    expect([...endpointColumnIds.sourceColumnIds]).toEqual([])
+    expect([...endpointColumnIds.referenceColumnIds]).toEqual([])
+  })
+
+  it('combines endpoint column ids for hovered and focused column targets', () => {
+    const endpointColumnIds = getRelationEndpointColumnIdsForTargets(DIAGRAM, [
+      COLUMN_TARGET,
+      TARGET_SIDE_COLUMN_TARGET,
+    ])
+
+    expect([...endpointColumnIds.sourceColumnIds]).toEqual([
+      'table:public.posts.column:user_id',
+      'table:public.comments.column:post_id',
+    ])
+    expect([...endpointColumnIds.referenceColumnIds]).toEqual([
+      'table:public.users.column:id',
+      'table:public.posts.column:id',
     ])
   })
 })
