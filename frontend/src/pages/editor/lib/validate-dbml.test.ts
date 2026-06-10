@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DBML_PRESETS } from './dbml-presets'
 import { validateDbml } from './validate-dbml'
 
 describe('validateDbml', () => {
@@ -10,6 +11,15 @@ describe('validateDbml', () => {
 
     expect(result.valid).toBe(true)
     expect(result.diagnostics).toEqual([])
+  })
+
+  it('keeps every DBML preset valid', () => {
+    for (const preset of DBML_PRESETS) {
+      const result = validateDbml(preset.document)
+
+      expect(result.diagnostics, preset.id).toEqual([])
+      expect(result.valid, preset.id).toBe(true)
+    }
   })
 
   it('normalizes parser errors for invalid DBML', () => {
