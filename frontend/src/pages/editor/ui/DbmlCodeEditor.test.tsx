@@ -19,7 +19,12 @@ const monacoApi = vi.hoisted(() => ({
 }))
 
 const editorInstance = vi.hoisted(() => ({
+  focus: vi.fn(),
   getModel: vi.fn(() => ({ uri: 'workspace.dbml' })),
+  revealRangeInCenter: vi.fn(),
+  revealPositionInCenter: vi.fn(),
+  setPosition: vi.fn(),
+  setSelection: vi.fn(),
 }))
 
 vi.mock('@dbml/core', () => ({

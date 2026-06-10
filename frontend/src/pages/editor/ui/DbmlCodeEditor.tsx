@@ -1,6 +1,12 @@
 import Editor from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
-import { useCallback, useEffect, useRef } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from 'react'
 import {
   DBML_LANGUAGE_ID,
   type MonacoApi,
@@ -13,6 +19,20 @@ type DbmlCodeEditorProps = {
   value: string
   diagnostics: readonly DbmlDiagnostic[]
   onChange: (value: string) => void
+}
+
+type DbmlEditorSourcePosition = {
+  lineNumber: number
+  column: number
+}
+
+export type DbmlEditorSourceRange = DbmlEditorSourcePosition & {
+  endLineNumber?: number
+  endColumn?: number
+}
+
+export type DbmlCodeEditorHandle = {
+  revealSourceRange: (range: DbmlEditorSourceRange) => void
 }
 
 const EDITOR_OPTIONS: editor.IStandaloneEditorConstructionOptions = {
@@ -33,11 +53,10 @@ const EDITOR_OPTIONS: editor.IStandaloneEditorConstructionOptions = {
   wordWrap: 'on',
 }
 
-export function DbmlCodeEditor({
-  value,
-  diagnostics,
-  onChange,
-}: DbmlCodeEditorProps) {
+export const DbmlCodeEditor = forwardRef<
+  DbmlCodeEditorHandle,
+  DbmlCodeEditorProps
+>(function DbmlCodeEditor({ value, diagnostics, onChange }, ref) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<MonacoApi | null>(null)
 
@@ -68,6 +87,37 @@ export function DbmlCodeEditor({
     publishDbmlMarkers(monacoRef.current, editorRef.current, diagnostics)
   }, [diagnostics])
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      revealSourceRange(range) {
+        const editorInstance = editorRef.current
+
+        if (!editorInstance) {
+          return
+        }
+
+        if (isCompleteSourceRange(range)) {
+          const selection = {
+            startLineNumber: range.lineNumber,
+            startColumn: range.column,
+            endLineNumber: range.endLineNumber,
+            endColumn: range.endColumn,
+          }
+
+          editorInstance.setSelection(selection)
+          editorInstance.revealRangeInCenter(selection)
+        } else {
+          editorInstance.setPosition(range)
+          editorInstance.revealPositionInCenter(range)
+        }
+
+        editorInstance.focus()
+      },
+    }),
+    [],
+  )
+
   return (
     <Editor
       beforeMount={handleBeforeMount}
@@ -80,5 +130,14 @@ export function DbmlCodeEditor({
       theme="vs-dark"
       value={value}
     />
+  )
+})
+
+function isCompleteSourceRange(
+  range: DbmlEditorSourceRange,
+): range is Required<DbmlEditorSourceRange> {
+  return (
+    typeof range.endLineNumber === 'number' &&
+    typeof range.endColumn === 'number'
   )
 }

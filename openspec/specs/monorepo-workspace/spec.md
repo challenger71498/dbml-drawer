@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define the repository workspace boundaries for a language-neutral monorepo with separate frontend and backend services and repository-level orchestration through mise.
+
+## Requirements
 
 ### Requirement: Workspace package boundaries
 

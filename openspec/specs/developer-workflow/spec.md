@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Define repository-level development workflows, setup commands, and quality gates that orchestrate project-local tooling through mise without introducing repository-root language ownership.
+
+## Requirements
 
 ### Requirement: Root development workflow
 
