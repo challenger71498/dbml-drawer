@@ -6,10 +6,21 @@ import {
 } from '@xyflow/react'
 import type { CSSProperties } from 'react'
 import type { DbmlRelationEdgeData } from '../lib/map-dbml-diagram-flow'
+import { useDbmlDiagramSelectionView } from '../model/dbml-diagram-selection-view'
 
 const RELATION_EDGE_STYLE = {
   stroke: '#3b6ea8',
   strokeWidth: 1.5,
+} satisfies CSSProperties
+
+const ACTIVE_RELATION_EDGE_STYLE = {
+  stroke: '#e05d2f',
+  strokeWidth: 2.5,
+} satisfies CSSProperties
+
+const DIMMED_RELATION_EDGE_STYLE = {
+  ...RELATION_EDGE_STYLE,
+  opacity: 0.28,
 } satisfies CSSProperties
 
 export function DbmlRelationEdge({
@@ -22,6 +33,9 @@ export function DbmlRelationEdge({
   targetPosition,
   markerEnd,
 }: EdgeProps<Edge<DbmlRelationEdgeData>>) {
+  const { activeRelationIds, activeTarget } = useDbmlDiagramSelectionView()
+  const isActive = data ? activeRelationIds.has(data.relation.id) : false
+  const isDimmed = activeTarget !== null && !isActive
   const path = getRelationPath({
     lineStyle: data?.lineStyle ?? 'bezier',
     sourceX,
@@ -33,8 +47,33 @@ export function DbmlRelationEdge({
   })
 
   return (
-    <BaseEdge path={path} markerEnd={markerEnd} style={RELATION_EDGE_STYLE} />
+    <BaseEdge
+      path={path}
+      markerEnd={markerEnd}
+      style={getRelationEdgeStyle({
+        isActive,
+        isDimmed,
+      })}
+    />
   )
+}
+
+function getRelationEdgeStyle({
+  isActive,
+  isDimmed,
+}: {
+  isActive: boolean
+  isDimmed: boolean
+}) {
+  if (isActive) {
+    return ACTIVE_RELATION_EDGE_STYLE
+  }
+
+  if (isDimmed) {
+    return DIMMED_RELATION_EDGE_STYLE
+  }
+
+  return RELATION_EDGE_STYLE
 }
 
 type RelationPathParams = {

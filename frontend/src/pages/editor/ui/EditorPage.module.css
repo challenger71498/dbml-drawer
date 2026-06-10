@@ -196,6 +196,17 @@
   box-shadow: 0 10px 24px rgb(23 32 51 / 12%);
 }
 
+.diagramTableNodeActive {
+  border-color: #e05d2f;
+  box-shadow:
+    0 0 0 2px rgb(224 93 47 / 18%),
+    0 14px 30px rgb(23 32 51 / 18%);
+}
+
+.diagramTableNodeDimmed {
+  opacity: 0.62;
+}
+
 .diagramTableHeader {
   display: flex;
   min-height: 44px;
@@ -207,6 +218,10 @@
   background: #22324a;
   color: #ffffff;
   font-weight: 800;
+}
+
+.diagramTableHeaderActive {
+  background: #172033;
 }
 
 .diagramTableHeader small {
@@ -232,10 +247,30 @@
   border-bottom: 1px solid #edf1f5;
   color: #263245;
   font-size: 0.78rem;
+  cursor: pointer;
 }
 
 .diagramColumnRow:last-child {
   border-bottom: 0;
+}
+
+.diagramColumnRow:hover {
+  background: #f8fafc;
+}
+
+.diagramColumnRowActive {
+  z-index: 1;
+  background: #fff1e8;
+  color: #172033;
+  box-shadow: inset 3px 0 0 #e05d2f;
+}
+
+.diagramColumnRowActive:hover {
+  background: #fff1e8;
+}
+
+.diagramColumnRowDimmed {
+  color: #7b8494;
 }
 
 .diagramColumnName,

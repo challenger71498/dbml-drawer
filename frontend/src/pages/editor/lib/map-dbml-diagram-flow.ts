@@ -7,6 +7,10 @@ import type {
 } from '../model/dbml-layout'
 import type { DbmlRelationLineStyle } from '../model/dbml-diagram-rendering'
 
+export type DbmlDiagramFlowOptions = {
+  lineStyle: DbmlRelationLineStyle
+}
+
 export type DbmlTableNodeData = {
   table: LayoutedDbmlDiagramTable
 }
@@ -24,7 +28,7 @@ export type DbmlDiagramFlowElements = {
 
 export function mapDbmlDiagramToFlow(
   diagram: LayoutedDbmlDiagram,
-  lineStyle: DbmlRelationLineStyle,
+  { lineStyle }: DbmlDiagramFlowOptions,
 ): DbmlDiagramFlowElements {
   return {
     nodes: diagram.tables.map((table) => ({
