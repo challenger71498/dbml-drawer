@@ -10,16 +10,8 @@ export function DiagnosticsPanel({ diagnostics }: DiagnosticsPanelProps) {
     diagnostics.length === 1 ? '1 issue' : `${diagnostics.length} issues`
 
   return (
-    <section
-      className={styles.diagnosticsPanel}
-      aria-labelledby="diagnostics-heading"
-      aria-live="polite"
-    >
-      <div className={styles.panelHeader}>
-        <p className={styles.eyebrow}>Validation</p>
-        <h2 id="diagnostics-heading">Diagnostics</h2>
-        <span className={styles.diagnosticsCount}>{issueLabel}</span>
-      </div>
+    <section className={styles.diagnosticsPanel} aria-live="polite">
+      <span className={styles.diagnosticsCount}>{issueLabel}</span>
 
       {diagnostics.length === 0 ? (
         <p className={styles.diagnosticsEmpty}>No diagnostics</p>

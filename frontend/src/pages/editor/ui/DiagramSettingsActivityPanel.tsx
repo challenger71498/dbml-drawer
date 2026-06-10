@@ -61,15 +61,7 @@ export function DiagramSettingsActivityPanel({
   }
 
   return (
-    <section
-      className={styles.diagramSettingsPanel}
-      aria-labelledby="diagram-settings-heading"
-    >
-      <div>
-        <p className={styles.eyebrow}>Development</p>
-        <h2 id="diagram-settings-heading">Diagram settings</h2>
-      </div>
-
+    <section className={styles.diagramSettingsPanel}>
       <label className={styles.presetField}>
         <span>Layout algorithm</span>
         <select

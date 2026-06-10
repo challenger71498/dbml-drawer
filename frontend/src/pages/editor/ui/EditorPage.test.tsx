@@ -211,6 +211,21 @@ describe('EditorPage', () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode />)
 
+    const inspector = screen.getByRole('complementary', {
+      name: 'Editor inspector',
+    })
+    const inspectorActivityBar =
+      within(inspector).getByLabelText('Editor activities')
+    const diagnosticsButton = within(inspectorActivityBar).getByRole('button', {
+      name: 'Diagnostics',
+    })
+
+    expect(diagnosticsButton).toHaveAttribute(
+      'aria-controls',
+      'editor-inspector-panel-diagnostics',
+    )
+    expect(diagnosticsButton).toHaveAttribute('aria-expanded', 'false')
+    expect(diagnosticsButton).toHaveAttribute('aria-pressed', 'false')
     expect(
       screen.getByRole('button', { name: 'Diagnostics' }),
     ).toBeInTheDocument()
@@ -245,6 +260,9 @@ describe('EditorPage', () => {
     expect(editorButton).toHaveAttribute('aria-expanded', 'true')
     expect(editorButton).toHaveAttribute('aria-pressed', 'true')
     expect(
+      within(editorPanel).getByRole('button', { name: 'Close DBML editor' }),
+    ).toBeInTheDocument()
+    expect(
       within(editorPanel).getByLabelText('DBML editor'),
     ).toBeInTheDocument()
     expect(await screen.findByLabelText('Diagram canvas')).toBeInTheDocument()
@@ -259,19 +277,43 @@ describe('EditorPage', () => {
     expect(screen.getByLabelText('Diagram canvas')).toBeInTheDocument()
   })
 
+  it('closes the DBML editor sidebar from the shared panel header', () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    const closeButton = screen.getByRole('button', {
+      name: 'Close DBML editor',
+    })
+
+    closeButton.focus()
+    fireEvent.click(closeButton)
+
+    expect(
+      screen.queryByRole('region', { name: 'DBML editor' }),
+    ).not.toBeInTheDocument()
+    expect(closeButton).not.toHaveFocus()
+    expect(screen.getByRole('button', { name: 'DBML editor' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  })
+
   it('resizes the DBML editor sidebar with drag and keyboard controls', () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
-    const page = screen.getByRole('main')
+    const editorSidebar = screen.getByRole('complementary', {
+      name: 'Editor authoring activities',
+    })
     const resizeHandle = screen.getByRole('separator', {
       name: 'Resize DBML editor',
     })
 
-    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
-      '384px',
-    )
+    expect(
+      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('384px')
     expect(resizeHandle).toHaveAttribute('aria-valuenow', '384')
+    expect(resizeHandle).not.toHaveAttribute('aria-valuemax')
 
     fireEvent.pointerDown(resizeHandle, {
       clientX: 400,
@@ -286,28 +328,98 @@ describe('EditorPage', () => {
       pointerId: 1,
     })
 
-    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
-      '504px',
-    )
+    expect(
+      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('504px')
     expect(resizeHandle).toHaveAttribute('aria-valuenow', '504')
 
     fireEvent.keyDown(resizeHandle, { key: 'ArrowLeft' })
 
-    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
-      '480px',
-    )
+    expect(
+      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('480px')
 
     fireEvent.keyDown(resizeHandle, { key: 'Home' })
 
-    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
-      '320px',
-    )
+    expect(
+      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('320px')
 
-    fireEvent.keyDown(resizeHandle, { key: 'End' })
+    fireEvent.pointerDown(resizeHandle, {
+      clientX: 400,
+      pointerId: 2,
+    })
+    fireEvent.pointerMove(resizeHandle, {
+      clientX: 1000,
+      pointerId: 2,
+    })
+    fireEvent.pointerUp(resizeHandle, {
+      clientX: 1000,
+      pointerId: 2,
+    })
 
-    expect(page.style.getPropertyValue('--editor-left-sidebar-width')).toBe(
-      '672px',
-    )
+    expect(
+      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('920px')
+  })
+
+  it('resizes the inspector sidebar toward the workspace', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Diagnostics' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'Diagnostics' }),
+    ).toBeInTheDocument()
+
+    const inspector = screen.getByRole('complementary', {
+      name: 'Editor inspector',
+    })
+    const resizeHandle = screen.getByRole('separator', {
+      name: 'Resize inspector',
+    })
+
+    expect(
+      within(
+        screen.getByRole('region', {
+          name: 'Diagnostics',
+        }),
+      ).getByRole('button', { name: 'Close inspector' }),
+    ).toBeInTheDocument()
+    expect(
+      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('384px')
+    expect(resizeHandle).not.toHaveAttribute('aria-valuemax')
+
+    fireEvent.pointerDown(resizeHandle, {
+      clientX: 500,
+      pointerId: 1,
+    })
+    fireEvent.pointerMove(resizeHandle, {
+      clientX: 260,
+      pointerId: 1,
+    })
+    fireEvent.pointerUp(resizeHandle, {
+      clientX: 260,
+      pointerId: 1,
+    })
+
+    expect(
+      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('624px')
+
+    fireEvent.keyDown(resizeHandle, { key: 'ArrowRight' })
+
+    expect(
+      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('600px')
+
+    fireEvent.keyDown(resizeHandle, { key: 'ArrowLeft' })
+
+    expect(
+      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('624px')
   })
 
   it('opens diagnostics and presets through inspector activities', async () => {
@@ -319,6 +431,13 @@ describe('EditorPage', () => {
     expect(
       await screen.findByRole('heading', { name: 'Diagnostics' }),
     ).toBeInTheDocument()
+    expect(
+      within(
+        screen.getByRole('region', {
+          name: 'Diagnostics',
+        }),
+      ).getAllByRole('heading'),
+    ).toHaveLength(1)
     expect(
       within(
         screen.getByRole('region', {

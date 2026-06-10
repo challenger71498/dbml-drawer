@@ -5,8 +5,8 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent,
+  type MouseEvent,
   type PointerEvent,
 } from 'react'
 import {
@@ -21,6 +21,7 @@ import {
   DiagnosticsIcon,
   PresetsIcon,
 } from './EditorInspectorIcons'
+import { EditorSidebarShell } from './EditorSidebarShell'
 import { isEditorDevModeEnabled } from '../lib/editor-dev-mode'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
@@ -64,7 +65,6 @@ type EditorPageProps = {
 
 const EDITOR_SIDEBAR_DEFAULT_WIDTH = 384
 const EDITOR_SIDEBAR_MIN_WIDTH = 320
-const EDITOR_SIDEBAR_MAX_WIDTH = 672
 const EDITOR_SIDEBAR_KEYBOARD_STEP = 24
 
 export function EditorPage({
@@ -262,17 +262,17 @@ export function EditorPage({
     .filter(Boolean)
     .join(' ')
 
-  const pageStyle = useMemo(
-    () =>
-      ({
-        '--editor-left-sidebar-width': `${editorSidebarWidth}px`,
-      }) as CSSProperties,
-    [editorSidebarWidth],
-  )
-
   const handleEditorSidebarToggle = useCallback(() => {
     setEditorSidebarExpanded((isExpanded) => !isExpanded)
   }, [])
+
+  const handleEditorSidebarClose = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      setEditorSidebarExpanded(false)
+      event.currentTarget.blur()
+    },
+    [],
+  )
 
   const handleEditorSidebarResizePointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -336,72 +336,57 @@ export function EditorPage({
       }
 
       if (event.key === 'End') {
-        event.preventDefault()
-        setEditorSidebarWidth(EDITOR_SIDEBAR_MAX_WIDTH)
+        return
       }
     },
     [],
   )
 
   return (
-    <main className={pageClassName} style={pageStyle}>
-      <aside
-        className={styles.editorLeftActivityBar}
-        aria-label="Editor authoring activities"
+    <main className={pageClassName}>
+      <EditorSidebarShell
+        side="left"
+        panelPlacement="after-activity-bar"
+        label="Editor authoring activities"
+        activityBarLabel="Editor authoring activities"
+        activities={[
+          {
+            id: 'dbml-editor',
+            label: 'DBML editor',
+            icon: <DbmlEditorIcon className={styles.editorActivityIcon} />,
+            panelId: editorPanelId,
+            isActive: isEditorSidebarExpanded,
+            isExpanded: isEditorSidebarExpanded,
+            onSelect: handleEditorSidebarToggle,
+          },
+        ]}
+        isExpanded={isEditorSidebarExpanded}
+        panelWidth={editorSidebarWidth}
+        panelId={editorPanelId}
+        panelLabel="DBML editor"
+        closeLabel="Close DBML editor"
+        onClose={handleEditorSidebarClose}
+        resizeHandle={{
+          label: 'Resize DBML editor',
+          min: EDITOR_SIDEBAR_MIN_WIDTH,
+          value: editorSidebarWidth,
+          valueText: `${editorSidebarWidth}px`,
+          onKeyDown: handleEditorSidebarResizeKeyDown,
+          onPointerCancel: handleEditorSidebarResizePointerEnd,
+          onPointerDown: handleEditorSidebarResizePointerDown,
+          onPointerMove: handleEditorSidebarResizePointerMove,
+          onPointerUp: handleEditorSidebarResizePointerEnd,
+        }}
       >
-        <button
-          className={`${styles.editorActivityButton} ${
-            isEditorSidebarExpanded ? styles.editorActivityButtonActive : ''
-          }`}
-          type="button"
-          aria-controls={editorPanelId}
-          aria-expanded={isEditorSidebarExpanded}
-          aria-label="DBML editor"
-          aria-pressed={isEditorSidebarExpanded}
-          title="DBML editor"
-          onClick={handleEditorSidebarToggle}
-        >
-          <DbmlEditorIcon className={styles.editorActivityIcon} />
-        </button>
-      </aside>
-
-      {isEditorSidebarExpanded ? (
-        <section
-          className={styles.editorLeftSidebar}
-          id={editorPanelId}
-          aria-label="DBML editor"
-        >
-          <div className={styles.editorLeftSidebarHeader}>
-            <p>DBML editor</p>
-          </div>
-          <div className={styles.editorLeftSidebarPanel}>
-            <div className={styles.editorSurface}>
-              <DbmlCodeEditor
-                ref={editorRef}
-                value={documentText}
-                diagnostics={diagnostics}
-                onChange={setDocumentText}
-              />
-            </div>
-          </div>
-          <div
-            className={styles.editorLeftSidebarResizeHandle}
-            role="separator"
-            aria-label="Resize DBML editor"
-            aria-orientation="vertical"
-            aria-valuemin={EDITOR_SIDEBAR_MIN_WIDTH}
-            aria-valuemax={EDITOR_SIDEBAR_MAX_WIDTH}
-            aria-valuenow={editorSidebarWidth}
-            aria-valuetext={`${editorSidebarWidth}px`}
-            tabIndex={0}
-            onKeyDown={handleEditorSidebarResizeKeyDown}
-            onPointerCancel={handleEditorSidebarResizePointerEnd}
-            onPointerDown={handleEditorSidebarResizePointerDown}
-            onPointerMove={handleEditorSidebarResizePointerMove}
-            onPointerUp={handleEditorSidebarResizePointerEnd}
+        <div className={styles.editorSurface}>
+          <DbmlCodeEditor
+            ref={editorRef}
+            value={documentText}
+            diagnostics={diagnostics}
+            onChange={setDocumentText}
           />
-        </section>
-      ) : null}
+        </div>
+      </EditorSidebarShell>
 
       <section
         className={styles.editorWorkspace}
@@ -456,10 +441,7 @@ export function EditorPage({
 }
 
 function clampEditorSidebarWidth(width: number) {
-  return Math.min(
-    EDITOR_SIDEBAR_MAX_WIDTH,
-    Math.max(EDITOR_SIDEBAR_MIN_WIDTH, Math.round(width)),
-  )
+  return Math.max(EDITOR_SIDEBAR_MIN_WIDTH, Math.round(width))
 }
 
 function isSameDiagramSelectionTarget(

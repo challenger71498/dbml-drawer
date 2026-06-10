@@ -17,12 +17,7 @@ export function DbmlPresetSelector({
   )
 
   return (
-    <section className={styles.presetPanel} aria-labelledby="preset-heading">
-      <div>
-        <p className={styles.eyebrow}>Development</p>
-        <h2 id="preset-heading">DBML presets</h2>
-      </div>
-
+    <section className={styles.presetPanel}>
       <div className={styles.presetList} role="group" aria-label="DBML presets">
         {presets.map((preset) => (
           <button

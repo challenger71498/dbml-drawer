@@ -1,22 +1,39 @@
-import { useState, type MouseEvent } from 'react'
+import {
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react'
 import type {
   EditorInspectorActivity,
   EditorInspectorActivityId,
 } from '../model/editor-inspector'
-import styles from './EditorPage.module.css'
+import { EditorSidebarShell } from './EditorSidebarShell'
 
 type EditorInspectorProps = {
   activities: readonly EditorInspectorActivity[]
   onExpandedChange?: (isExpanded: boolean) => void
 }
 
+const INSPECTOR_SIDEBAR_DEFAULT_WIDTH = 384
+const INSPECTOR_SIDEBAR_MIN_WIDTH = 320
+const INSPECTOR_SIDEBAR_KEYBOARD_STEP = 24
+
 export function EditorInspector({
   activities,
   onExpandedChange,
 }: EditorInspectorProps) {
+  const resizeRef = useRef<{
+    startX: number
+    startWidth: number
+  } | null>(null)
   const [activeActivityId, setActiveActivityId] =
     useState<EditorInspectorActivityId | null>(null)
   const [isExpanded, setExpanded] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(
+    INSPECTOR_SIDEBAR_DEFAULT_WIDTH,
+  )
 
   if (activities.length === 0) {
     return null
@@ -59,64 +76,110 @@ export function EditorInspector({
     event.currentTarget.blur()
   }
 
+  const handleResizePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    resizeRef.current = {
+      startX: event.clientX,
+      startWidth: sidebarWidth,
+    }
+  }
+
+  const handleResizePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const resizeState = resizeRef.current
+
+    if (!resizeState) {
+      return
+    }
+
+    setSidebarWidth(
+      clampInspectorSidebarWidth(
+        resizeState.startWidth + resizeState.startX - event.clientX,
+      ),
+    )
+  }
+
+  const handleResizePointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+    resizeRef.current = null
+  }
+
+  const handleResizeKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      setSidebarWidth((currentWidth) =>
+        clampInspectorSidebarWidth(
+          currentWidth + INSPECTOR_SIDEBAR_KEYBOARD_STEP,
+        ),
+      )
+      return
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      setSidebarWidth((currentWidth) =>
+        clampInspectorSidebarWidth(
+          currentWidth - INSPECTOR_SIDEBAR_KEYBOARD_STEP,
+        ),
+      )
+      return
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault()
+      setSidebarWidth(INSPECTOR_SIDEBAR_MIN_WIDTH)
+    }
+  }
+
   return (
-    <aside
-      aria-label="Editor inspector"
-      className={`${styles.editorInspector} ${
-        isSidebarVisible ? styles.editorInspectorExpanded : ''
-      }`}
+    <EditorSidebarShell
+      side="right"
+      panelPlacement="before-activity-bar"
+      label="Editor inspector"
+      activityBarLabel="Editor activities"
+      activities={activities.map((activity) => {
+        const isActive = activity.id === activeActivityId
+
+        return {
+          id: activity.id,
+          label: activity.label,
+          icon: activity.icon,
+          panelId: getActivityPanelId(activity.id),
+          isActive,
+          isExpanded: isActive && isExpanded,
+          onSelect: (event: MouseEvent<HTMLButtonElement>) =>
+            handleActivitySelect(activity.id, event),
+        }
+      })}
+      isExpanded={Boolean(isSidebarVisible)}
+      panelWidth={sidebarWidth}
+      panelId={
+        activeActivity ? getActivityPanelId(activeActivity.id) : undefined
+      }
+      panelLabel={activeActivity?.panelLabel}
+      closeLabel="Close inspector"
+      onClose={closeSidebar}
+      resizeHandle={{
+        label: 'Resize inspector',
+        min: INSPECTOR_SIDEBAR_MIN_WIDTH,
+        value: sidebarWidth,
+        valueText: `${sidebarWidth}px`,
+        onKeyDown: handleResizeKeyDown,
+        onPointerCancel: handleResizePointerEnd,
+        onPointerDown: handleResizePointerDown,
+        onPointerMove: handleResizePointerMove,
+        onPointerUp: handleResizePointerEnd,
+      }}
     >
-      <div className={styles.editorActivityBar} aria-label="Editor activities">
-        {activities.map((activity) => {
-          const isActive = activity.id === activeActivityId
-          const panelId = getActivityPanelId(activity.id)
-
-          return (
-            <button
-              className={`${styles.editorActivityButton} ${
-                isActive ? styles.editorActivityButtonActive : ''
-              }`}
-              type="button"
-              aria-controls={panelId}
-              aria-expanded={isActive && isExpanded}
-              aria-label={activity.label}
-              aria-pressed={isActive}
-              key={activity.id}
-              title={activity.label}
-              onClick={(event) => handleActivitySelect(activity.id, event)}
-            >
-              {activity.icon}
-            </button>
-          )
-        })}
-      </div>
-
-      {isSidebarVisible ? (
-        <section
-          className={styles.editorInspectorSidebar}
-          id={getActivityPanelId(activeActivity.id)}
-          aria-label={activeActivity.panelLabel}
-        >
-          <div className={styles.editorInspectorHeader}>
-            <p>{activeActivity.panelLabel}</p>
-            <button
-              className={styles.editorInspectorClose}
-              type="button"
-              aria-label="Close inspector"
-              onClick={closeSidebar}
-            >
-              x
-            </button>
-          </div>
-          <div className={styles.editorInspectorPanel}>
-            {activeActivity.renderPanel()}
-          </div>
-        </section>
-      ) : null}
-    </aside>
+      {activeActivity?.renderPanel()}
+    </EditorSidebarShell>
   )
 }
 
 function getActivityPanelId(activityId: EditorInspectorActivityId) {
   return `editor-inspector-panel-${activityId}`
+}
+
+function clampInspectorSidebarWidth(width: number) {
+  return Math.max(INSPECTOR_SIDEBAR_MIN_WIDTH, Math.round(width))
 }
