@@ -1,7 +1,10 @@
-import { Suspense, lazy, useState } from 'react'
+import { Suspense, lazy, useMemo, useState } from 'react'
 import { DbmlCodeEditor } from './DbmlCodeEditor'
+import { EditorInspector } from './EditorInspector'
+import { DiagnosticsIcon, PresetsIcon } from './EditorInspectorIcons'
 import { isEditorDevModeEnabled } from '../lib/editor-dev-mode'
 import { useDbmlDocument } from '../model/dbml-document'
+import type { EditorInspectorActivity } from '../model/editor-inspector'
 import styles from './EditorPage.module.css'
 
 const DbmlDiagramPreview = lazy(() =>
@@ -10,9 +13,15 @@ const DbmlDiagramPreview = lazy(() =>
   })),
 )
 
-const EditorDevTools = lazy(() =>
-  import('./EditorDevTools').then((module) => ({
-    default: module.EditorDevTools,
+const DiagnosticsPanel = lazy(() =>
+  import('./DiagnosticsPanel').then((module) => ({
+    default: module.DiagnosticsPanel,
+  })),
+)
+
+const DbmlPresetActivityPanel = lazy(() =>
+  import('./DbmlPresetActivityPanel').then((module) => ({
+    default: module.DbmlPresetActivityPanel,
   })),
 )
 
@@ -23,7 +32,7 @@ type EditorPageProps = {
 export function EditorPage({
   isEditorDevMode = isEditorDevModeEnabled(),
 }: EditorPageProps) {
-  const [isDiagnosticsCollapsed, setDiagnosticsCollapsed] = useState(false)
+  const [isInspectorExpanded, setInspectorExpanded] = useState(false)
   const {
     documentText,
     setDocumentText,
@@ -33,15 +42,50 @@ export function EditorPage({
     isDiagramPaused,
   } = useDbmlDocument()
 
-  const toggleDiagnostics = () => {
-    setDiagnosticsCollapsed((currentValue) => !currentValue)
-  }
+  const inspectorActivities = useMemo<
+    readonly EditorInspectorActivity[]
+  >(() => {
+    if (!isEditorDevMode) {
+      return []
+    }
+
+    return [
+      {
+        id: 'diagnostics',
+        label: 'Diagnostics',
+        panelLabel: 'Diagnostics',
+        icon: <DiagnosticsIcon className={styles.editorActivityIcon} />,
+        renderPanel: () => (
+          <Suspense
+            fallback={<div className={styles.inspectorPanelFallback} />}
+          >
+            <DiagnosticsPanel diagnostics={diagnostics} />
+          </Suspense>
+        ),
+      },
+      {
+        id: 'presets',
+        label: 'DBML presets',
+        panelLabel: 'DBML presets',
+        icon: <PresetsIcon className={styles.editorActivityIcon} />,
+        renderPanel: () => (
+          <Suspense
+            fallback={<div className={styles.inspectorPanelFallback} />}
+          >
+            <DbmlPresetActivityPanel onPresetSelect={setDocumentText} />
+          </Suspense>
+        ),
+      },
+    ]
+  }, [diagnostics, isEditorDevMode, setDocumentText])
+
+  const hasInspectorActivities = inspectorActivities.length > 0
 
   const pageClassName = [
     styles.editorPage,
-    isEditorDevMode ? styles.editorPageDevMode : '',
-    isEditorDevMode && isDiagnosticsCollapsed
-      ? styles.editorPageInspectorCollapsed
+    hasInspectorActivities ? styles.editorPageWithInspector : '',
+    hasInspectorActivities && isInspectorExpanded
+      ? styles.editorPageInspectorExpanded
       : '',
   ]
     .filter(Boolean)
@@ -82,15 +126,11 @@ export function EditorPage({
         </div>
       </section>
 
-      {isEditorDevMode ? (
-        <Suspense fallback={<div className={styles.inspectorFallback} />}>
-          <EditorDevTools
-            diagnostics={diagnostics}
-            isDiagnosticsCollapsed={isDiagnosticsCollapsed}
-            onToggleDiagnostics={toggleDiagnostics}
-            onPresetSelect={setDocumentText}
-          />
-        </Suspense>
+      {hasInspectorActivities ? (
+        <EditorInspector
+          activities={inspectorActivities}
+          onExpandedChange={setInspectorExpanded}
+        />
       ) : null}
     </main>
   )

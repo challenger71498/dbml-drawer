@@ -6,12 +6,12 @@
   color: #172033;
 }
 
-.editorPageDevMode {
-  grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
+.editorPageWithInspector {
+  grid-template-columns: minmax(0, 1fr) 3rem;
 }
 
-.editorPageInspectorCollapsed {
-  grid-template-columns: minmax(0, 1fr) 3.75rem;
+.editorPageInspectorExpanded {
+  grid-template-columns: minmax(0, 1fr) minmax(23rem, 27rem);
 }
 
 .editorWorkspace {
@@ -21,7 +21,7 @@
   background: #f8fafc;
 }
 
-.editorPageDevMode .editorWorkspace {
+.editorPageWithInspector .editorWorkspace {
   border-right: 1px solid #d7dde6;
 }
 
@@ -232,44 +232,119 @@
   background: #3b6ea8;
 }
 
-.inspectorSidebar {
+.editorInspector {
+  display: grid;
+  min-width: 0;
+  min-height: 100vh;
+  grid-template-columns: 3rem;
+  background: #ffffff;
+}
+
+.editorInspectorExpanded {
+  grid-template-columns: 3rem minmax(20rem, 24rem);
+}
+
+.editorActivityBar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border-left: 1px solid #d7dde6;
+  background: #f8fafc;
+  flex-direction: column;
+}
+
+.editorActivityButton {
+  display: inline-flex;
+  width: 100%;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #5d6678;
+  cursor: pointer;
+}
+
+.editorActivityButton:hover {
+  border-color: #cbd4e1;
+  background: #e8eef5;
+  color: #22324a;
+}
+
+.editorActivityButtonActive {
+  border-color: #22324a;
+  background: #22324a;
+  color: #ffffff;
+}
+
+.editorActivityButtonActive:hover {
+  border-color: #172033;
+  background: #172033;
+  color: #ffffff;
+}
+
+.editorActivityIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.editorInspectorSidebar {
   display: flex;
   min-width: 0;
   min-height: 0;
   flex-direction: column;
+  border-left: 1px solid #d7dde6;
   background: #ffffff;
 }
 
-.inspectorSidebarCollapsed {
-  align-items: stretch;
+.editorInspectorHeader {
+  display: flex;
+  min-height: 3.75rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #d7dde6;
 }
 
-.inspectorFallback {
-  background: #ffffff;
+.editorInspectorHeader p {
+  margin: 0;
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 800;
 }
 
-.inspectorToggle {
-  min-height: 2.5rem;
-  margin: 0.75rem;
+.editorInspectorClose {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #cbd4e1;
   border-radius: 6px;
   background: #f8fafc;
   color: #344056;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 800;
   cursor: pointer;
 }
 
-.inspectorToggle:hover {
+.editorInspectorClose:hover {
   background: #eef3f8;
 }
 
-.inspectorContent {
-  display: flex;
+.editorInspectorPanel {
   min-height: 0;
-  flex: 1;
-  flex-direction: column;
+  overflow: auto;
+}
+
+.inspectorPanelFallback {
+  min-height: 8rem;
+  background: #ffffff;
 }
 
 .diagnosticsPanel {
@@ -295,7 +370,6 @@
   display: grid;
   gap: 0.85rem;
   padding: 1rem;
-  border-bottom: 1px solid #d7dde6;
 }
 
 .presetPanel h2 {
@@ -392,6 +466,11 @@
     grid-template-columns: 1fr;
   }
 
+  .editorPageWithInspector,
+  .editorPageInspectorExpanded {
+    grid-template-columns: 1fr;
+  }
+
   .editorWorkspace {
     min-height: 70vh;
     border-right: 0;
@@ -408,8 +487,27 @@
     border-top: 1px solid #d7dde6;
   }
 
-  .inspectorSidebar {
+  .editorInspector {
+    width: 100%;
+    min-height: 3rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: 3rem;
+  }
+
+  .editorInspectorExpanded {
+    grid-template-rows: 3rem minmax(16rem, auto);
+  }
+
+  .editorActivityBar {
+    flex-direction: row;
+    border-top: 1px solid #d7dde6;
+    border-left: 0;
+    border-bottom: 1px solid #d7dde6;
+  }
+
+  .editorInspectorSidebar {
     min-height: 16rem;
+    border-left: 0;
   }
 }
 

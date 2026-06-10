@@ -61,13 +61,32 @@ describe('EditorPage', () => {
     vi.useRealTimers()
   })
 
-  it('shows development diagnostics and preset controls when editor dev mode is enabled', async () => {
+  it('shows development inspector activity controls when editor dev mode is enabled', () => {
     render(<EditorPage isEditorDevMode />)
+
+    expect(
+      screen.getByRole('button', { name: 'Diagnostics' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'DBML presets' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Diagnostics' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('opens diagnostics and presets through inspector activities', async () => {
+    render(<EditorPage isEditorDevMode />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Diagnostics' }))
 
     expect(
       await screen.findByRole('heading', { name: 'Diagnostics' }),
     ).toBeInTheDocument()
-    expect(screen.getByLabelText('DBML preset')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'DBML presets' }))
+
+    expect(await screen.findByLabelText('DBML preset')).toBeInTheDocument()
     expect(screen.getByText('Simple')).toBeInTheDocument()
     expect(screen.getByText('Complex')).toBeInTheDocument()
     expect(screen.getByText('Very complex')).toBeInTheDocument()
@@ -77,7 +96,7 @@ describe('EditorPage', () => {
     render(<EditorPage isEditorDevMode={false} />)
 
     expect(
-      screen.queryByRole('heading', { name: 'Diagnostics' }),
+      screen.queryByRole('button', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()
     expect(screen.queryByLabelText('DBML preset')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Editor' })).toBeInTheDocument()
@@ -101,31 +120,62 @@ describe('EditorPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('collapses and expands the development diagnostics sidebar', async () => {
+  it('collapses and expands the active inspector activity', async () => {
     render(<EditorPage isEditorDevMode />)
+
+    const diagnosticsButton = screen.getByRole('button', {
+      name: 'Diagnostics',
+    })
+
+    expect(diagnosticsButton).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(diagnosticsButton)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Diagnostics' }),
+    ).toBeInTheDocument()
+    expect(diagnosticsButton).toHaveAttribute('aria-expanded', 'true')
+    expect(diagnosticsButton).toHaveAttribute('aria-pressed', 'true')
+
+    diagnosticsButton.focus()
+    fireEvent.click(diagnosticsButton)
+
+    expect(
+      screen.queryByRole('heading', { name: 'Diagnostics' }),
+    ).not.toBeInTheDocument()
+    expect(diagnosticsButton).toHaveAttribute('aria-expanded', 'false')
+    expect(diagnosticsButton).toHaveAttribute('aria-pressed', 'false')
+    expect(diagnosticsButton).not.toHaveFocus()
+
+    fireEvent.click(diagnosticsButton)
+
+    expect(
+      screen.getByRole('heading', { name: 'Diagnostics' }),
+    ).toBeInTheDocument()
+    expect(diagnosticsButton).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('closes the inspector sidebar from the active panel', async () => {
+    render(<EditorPage isEditorDevMode />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Diagnostics' }))
 
     expect(
       await screen.findByRole('heading', { name: 'Diagnostics' }),
     ).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Hide' }))
+    const closeButton = screen.getByRole('button', { name: 'Close inspector' })
+
+    closeButton.focus()
+    fireEvent.click(closeButton)
 
     expect(
       screen.queryByRole('heading', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Show' })).toHaveAttribute(
-      'aria-expanded',
+    expect(closeButton).not.toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Diagnostics' })).toHaveAttribute(
+      'aria-pressed',
       'false',
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: 'Show' }))
-
-    expect(
-      screen.getByRole('heading', { name: 'Diagnostics' }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Hide' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
     )
   })
 
@@ -139,6 +189,8 @@ describe('EditorPage', () => {
     }
 
     expect(editor.value).toContain('Project dbml_drawer')
+
+    fireEvent.click(screen.getByRole('button', { name: 'DBML presets' }))
 
     fireEvent.change(await screen.findByLabelText('DBML preset'), {
       target: { value: 'very-complex' },
