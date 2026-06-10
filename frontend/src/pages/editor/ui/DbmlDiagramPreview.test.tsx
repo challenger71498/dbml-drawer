@@ -364,6 +364,7 @@ describe('DbmlDiagramPreview', () => {
     )[0]
 
     expect(shortDots).toHaveLength(1)
+    expect(shortDots[0].tagName.toLowerCase()).toBe('ellipse')
     expect(shortAnimation).toHaveAttribute('dur', '0.5s')
 
     shortEdge.unmount()
@@ -908,11 +909,15 @@ function expectDynamicEdge(edge: HTMLElement) {
   expect(motionPath).toHaveAttribute('d', edge.getAttribute('d'))
   expect(dots).toHaveLength(2)
   expect(animations).toHaveLength(2)
+  expect(dots?.[0]).toHaveAttribute('fill', edge.getAttribute('data-stroke'))
+  expect(dots?.[0]).toHaveAttribute('rx', '7')
+  expect(dots?.[0]).toHaveAttribute('ry', '3.2')
   expect(animations?.[0]).toHaveAttribute('begin', '0s')
   expect(animations?.[1]).toHaveAttribute('begin', '-0.57s')
   expect(animations?.[0]).toHaveAttribute('dur', '1.14s')
   expect(animations?.[0]).toHaveAttribute('keyPoints', '1;0')
   expect(animations?.[0]).toHaveAttribute('keyTimes', '0;1')
+  expect(animations?.[0]).toHaveAttribute('rotate', 'auto')
 }
 
 function isGradientStroke(stroke: string | null) {

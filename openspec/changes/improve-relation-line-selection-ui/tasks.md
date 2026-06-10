@@ -47,3 +47,9 @@
 - [x] 7.3 Update dynamic mode tests and run verification.
 - [x] 7.4 Reverse dynamic dot direction to flow from source to reference.
 - [x] 7.5 Derive dynamic dot count and motion duration from rendered path length so dot speed stays consistent across edge lengths.
+
+## 8. Dynamic Flow Marker Detail
+
+- [x] 8.1 Render dynamic flow markers as flattened football-shaped ellipses that rotate along the relation path.
+- [x] 8.2 Fill dynamic flow markers with the active relation gradient so marker color follows the visible line color.
+- [x] 8.3 Update dynamic mode tests and run verification.

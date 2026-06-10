@@ -17,12 +17,17 @@ The diagram preview SHALL render active relation lines with directional color so
 #### Scenario: Active relation line uses dynamic flow
 
 - **WHEN** a relation line is active because a connected table or column is hovered or focused and the dynamic relation highlight mode is selected
-- **THEN** the visible relation line MUST render small dots that move along the relation path from source to reference at a consistent interval
+- **THEN** the visible relation line MUST render flattened football-shaped markers that move along the relation path from source to reference at a consistent interval
+
+#### Scenario: Dynamic flow marker follows relation color
+
+- **WHEN** a dynamic flow marker moves along an active gradient relation line
+- **THEN** the marker fill MUST use the same active relation gradient as the line so the marker color visually matches its position on the relation
 
 #### Scenario: Dynamic flow speed is path-length independent
 
 - **WHEN** active relation lines have different rendered path lengths and the dynamic relation highlight mode is selected
-- **THEN** dynamic dots MUST move at the same visual speed, with longer relation lines showing more dots than shorter relation lines
+- **THEN** dynamic flow markers MUST move at the same visual speed, with longer relation lines showing more markers than shorter relation lines
 
 #### Scenario: Direction follows relation endpoints
 

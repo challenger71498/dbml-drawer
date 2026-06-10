@@ -24,6 +24,8 @@ const ACTIVE_RELATION_EDGE_STYLE = {
 
 const DYNAMIC_DOT_SPACING = 72
 const DYNAMIC_DOT_SPEED = 120
+const DYNAMIC_DOT_RADIUS_X = 7
+const DYNAMIC_DOT_RADIUS_Y = 3.2
 const BEZIER_LENGTH_SAMPLE_COUNT = 16
 
 const DIMMED_RELATION_EDGE_STYLE = {
@@ -117,11 +119,16 @@ export function DbmlRelationEdge({
             stroke="none"
           />
           {dynamicFlow?.beginTimes.map((begin) => (
-            <circle
+            <ellipse
               data-testid="relation-edge-flow-dot"
-              fill={DBML_RELATION_REFERENCE_COLOR}
+              fill={
+                gradientId
+                  ? `url(#${gradientId})`
+                  : DBML_RELATION_REFERENCE_COLOR
+              }
               key={begin}
-              r="3.6"
+              rx={DYNAMIC_DOT_RADIUS_X}
+              ry={DYNAMIC_DOT_RADIUS_Y}
             >
               <animateMotion
                 begin={begin}
@@ -131,10 +138,11 @@ export function DbmlRelationEdge({
                 keyPoints="1;0"
                 keyTimes="0;1"
                 repeatCount="indefinite"
+                rotate="auto"
               >
                 <mpath href={`#${motionPathId}`} />
               </animateMotion>
-            </circle>
+            </ellipse>
           ))}
         </>
       ) : null}
