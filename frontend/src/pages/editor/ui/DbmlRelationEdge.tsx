@@ -26,7 +26,7 @@ const ACTIVE_RELATION_EDGE_STYLE = {
 const DYNAMIC_DOT_SPACING = 72
 const DYNAMIC_DOT_SPEED = 120
 const DYNAMIC_DOT_RADIUS = 3.2
-const DYNAMIC_MARKER_FILL_KEY_TIMES = '0;0.67;1'
+const DYNAMIC_MARKER_FILL_KEY_TIMES = '0;0.2;1'
 const BEZIER_LENGTH_SAMPLE_COUNT = 16
 
 const DIMMED_RELATION_EDGE_STYLE = {
@@ -94,7 +94,7 @@ export function DbmlRelationEdge({
             y2={targetY}
           >
             <stop offset="0%" stopColor={DBML_RELATION_SOURCE_COLOR} />
-            <stop offset="33%" stopColor={DBML_RELATION_SOURCE_COLOR} />
+            <stop offset="80%" stopColor={DBML_RELATION_REFERENCE_COLOR} />
             <stop offset="100%" stopColor={DBML_RELATION_REFERENCE_COLOR} />
           </linearGradient>
         </defs>
@@ -127,7 +127,7 @@ export function DbmlRelationEdge({
                 dur={dynamicFlow.duration}
                 keyTimes={DYNAMIC_MARKER_FILL_KEY_TIMES}
                 repeatCount="indefinite"
-                values={`${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`}
+                values={`${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`}
               />
               <animateMotion
                 begin={begin}

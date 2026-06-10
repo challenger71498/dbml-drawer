@@ -888,8 +888,8 @@ function expectActiveGradientEdge(edge: HTMLElement) {
 
   expect(stops?.[0]).toHaveAttribute('offset', '0%')
   expect(getStopColor(stops?.[0])).toBe(DBML_RELATION_SOURCE_COLOR)
-  expect(stops?.[1]).toHaveAttribute('offset', '33%')
-  expect(getStopColor(stops?.[1])).toBe(DBML_RELATION_SOURCE_COLOR)
+  expect(stops?.[1]).toHaveAttribute('offset', '80%')
+  expect(getStopColor(stops?.[1])).toBe(DBML_RELATION_REFERENCE_COLOR)
   expect(stops?.[2]).toHaveAttribute('offset', '100%')
   expect(getStopColor(stops?.[2])).toBe(DBML_RELATION_REFERENCE_COLOR)
 }
@@ -923,10 +923,10 @@ function expectDynamicEdge(edge: HTMLElement) {
   expect(fillAnimations?.[0]).toHaveAttribute('begin', '0s')
   expect(fillAnimations?.[1]).toHaveAttribute('begin', '-0.57s')
   expect(fillAnimations?.[0]).toHaveAttribute('dur', '1.14s')
-  expect(fillAnimations?.[0]).toHaveAttribute('keyTimes', '0;0.67;1')
+  expect(fillAnimations?.[0]).toHaveAttribute('keyTimes', '0;0.2;1')
   expect(fillAnimations?.[0]).toHaveAttribute(
     'values',
-    `${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`,
+    `${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`,
   )
 }
 
