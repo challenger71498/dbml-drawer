@@ -18,6 +18,43 @@ vi.mock('@monaco-editor/react', () => ({
   ),
 }))
 
+vi.mock('@xyflow/react', () => ({
+  Background: () => <div data-testid="diagram-background" />,
+  BaseEdge: ({ path }: { path: string }) => (
+    <path data-testid="diagram-edge" d={path} />
+  ),
+  Controls: () => <div data-testid="diagram-controls" />,
+  Handle: ({ id }: { id: string }) => <span data-handle-id={id} />,
+  Position: {
+    Left: 'left',
+    Right: 'right',
+  },
+  ReactFlow: ({
+    children,
+    nodeTypes,
+    nodes,
+  }: {
+    children: React.ReactNode
+    nodeTypes: Record<string, React.ComponentType<{ data: unknown }>>
+    nodes: Array<{ id: string; type?: string; data: unknown }>
+  }) => (
+    <div aria-label="Diagram canvas">
+      {nodes.map((node) => {
+        const NodeComponent = nodeTypes[node.type ?? '']
+
+        return NodeComponent ? (
+          <NodeComponent data={node.data} key={node.id} />
+        ) : null
+      })}
+      {children}
+    </div>
+  ),
+  ReactFlowProvider: ({ children }: { children: React.ReactNode }) => children,
+  useReactFlow: () => ({
+    fitView: vi.fn(),
+  }),
+}))
+
 describe('App', () => {
   beforeEach(() => {
     vi.useFakeTimers()

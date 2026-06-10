@@ -19,6 +19,8 @@
     "@dbml/core": "^8.2.5",
     "@monaco-editor/react": "^4.7.0",
     "@vitejs/plugin-react": "^6.0.2",
+    "@xyflow/react": "^12.11.0",
+    "elkjs": "^0.11.1",
     "monaco-editor": "^0.55.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

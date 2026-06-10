@@ -1,10 +1,24 @@
+import { Suspense, lazy } from 'react'
 import { DbmlCodeEditor } from './DbmlCodeEditor'
 import { DiagnosticsPanel } from './DiagnosticsPanel'
 import { useDbmlDocument } from '../model/dbml-document'
 import styles from './EditorPage.module.css'
 
+const DbmlDiagramPreview = lazy(() =>
+  import('./DbmlDiagramPreview').then((module) => ({
+    default: module.DbmlDiagramPreview,
+  })),
+)
+
 export function EditorPage() {
-  const { documentText, setDocumentText, diagnostics } = useDbmlDocument()
+  const {
+    documentText,
+    setDocumentText,
+    diagnostics,
+    layoutedDiagram,
+    isDiagramPending,
+    isDiagramPaused,
+  } = useDbmlDocument()
 
   return (
     <main className={styles.editorPage}>
@@ -22,12 +36,22 @@ export function EditorPage() {
           </span>
         </div>
 
-        <div className={styles.editorSurface}>
-          <DbmlCodeEditor
-            value={documentText}
-            diagnostics={diagnostics}
-            onChange={setDocumentText}
-          />
+        <div className={styles.editorContent}>
+          <div className={styles.editorSurface}>
+            <DbmlCodeEditor
+              value={documentText}
+              diagnostics={diagnostics}
+              onChange={setDocumentText}
+            />
+          </div>
+
+          <Suspense fallback={<div className={styles.diagramFallback} />}>
+            <DbmlDiagramPreview
+              diagram={layoutedDiagram}
+              isPending={isDiagramPending}
+              isPaused={isDiagramPaused}
+            />
+          </Suspense>
         </div>
       </section>
 
