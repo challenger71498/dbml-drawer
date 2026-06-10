@@ -5,6 +5,7 @@ import type { DbmlDiagramSelectionTarget } from './dbml-diagram-selection'
 export type DbmlDiagramSelectionViewState = {
   activeRelationIds: ReadonlySet<string>
   activeTarget: DbmlDiagramSelectionTarget | null
+  focusedRelationIds: ReadonlySet<string>
   focusedTableIds: ReadonlySet<string>
   focusedTarget: DbmlDiagramSelectionTarget | null
   sourceColumnIds: ReadonlySet<string>
@@ -19,6 +20,7 @@ const EMPTY_ENDPOINT_COLUMN_IDS = new Set<string>()
 const EMPTY_SELECTION_VIEW_STATE: DbmlDiagramSelectionViewState = {
   activeRelationIds: EMPTY_ACTIVE_RELATION_IDS,
   activeTarget: null,
+  focusedRelationIds: EMPTY_ACTIVE_RELATION_IDS,
   focusedTableIds: EMPTY_ACTIVE_RELATION_IDS,
   focusedTarget: null,
   sourceColumnIds: EMPTY_ENDPOINT_COLUMN_IDS,

@@ -36,6 +36,7 @@ type DbmlDiagramPreviewProps = {
   isPaused: boolean
   activeRelationIds?: ReadonlySet<string>
   activeTarget?: DbmlDiagramSelectionTarget | null
+  focusedRelationIds?: ReadonlySet<string>
   focusedTableIds?: ReadonlySet<string>
   focusedTarget?: DbmlDiagramSelectionTarget | null
   sourceColumnIds?: ReadonlySet<string>
@@ -109,6 +110,7 @@ export function DbmlDiagramPreview({
   isPaused,
   activeRelationIds = EMPTY_ACTIVE_RELATION_IDS,
   activeTarget = null,
+  focusedRelationIds = EMPTY_ACTIVE_RELATION_IDS,
   focusedTableIds = EMPTY_ACTIVE_RELATION_IDS,
   focusedTarget = null,
   sourceColumnIds = EMPTY_ENDPOINT_COLUMN_IDS,
@@ -137,6 +139,7 @@ export function DbmlDiagramPreview({
     () => ({
       activeRelationIds,
       activeTarget,
+      focusedRelationIds,
       focusedTableIds,
       focusedTarget,
       sourceColumnIds,
@@ -147,6 +150,7 @@ export function DbmlDiagramPreview({
     [
       activeRelationIds,
       activeTarget,
+      focusedRelationIds,
       focusedTableIds,
       focusedTarget,
       sourceColumnIds,

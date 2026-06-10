@@ -29,6 +29,7 @@ import {
   getActiveRelationIds,
   getActiveTableIds,
   getRelationEndpointColumnIdsForTargets,
+  getRelationIdsForTargets,
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
@@ -101,8 +102,16 @@ export function EditorPage({
     focusedTarget: focusedDiagramTarget,
   })
   const activeRelationIds = useMemo(
-    () => getActiveRelationIds(layoutedDiagram, activeDiagramTarget),
-    [activeDiagramTarget, layoutedDiagram],
+    () =>
+      getRelationIdsForTargets(layoutedDiagram, [
+        hoveredDiagramTarget,
+        focusedDiagramTarget,
+      ]),
+    [focusedDiagramTarget, hoveredDiagramTarget, layoutedDiagram],
+  )
+  const focusedRelationIds = useMemo(
+    () => getActiveRelationIds(layoutedDiagram, focusedDiagramTarget),
+    [focusedDiagramTarget, layoutedDiagram],
   )
   const focusedTableIds = useMemo(
     () => getActiveTableIds(layoutedDiagram, focusedDiagramTarget),
@@ -409,6 +418,7 @@ export function EditorPage({
                 activeRelationIds={activeRelationIds}
                 activeTarget={activeDiagramTarget}
                 diagram={layoutedDiagram}
+                focusedRelationIds={focusedRelationIds}
                 focusedTableIds={focusedTableIds}
                 focusedTarget={focusedDiagramTarget}
                 isPending={isDiagramPending}

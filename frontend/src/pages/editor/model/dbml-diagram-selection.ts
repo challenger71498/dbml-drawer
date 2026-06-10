@@ -35,15 +35,32 @@ export function getActiveRelationIds(
   diagram: LayoutedDbmlDiagram | null,
   activeTarget: DbmlDiagramSelectionTarget | null,
 ) {
-  if (!diagram || !activeTarget) {
+  return getRelationIdsForTargets(diagram, [activeTarget])
+}
+
+export function getRelationIdsForTargets(
+  diagram: LayoutedDbmlDiagram | null,
+  targets: readonly (DbmlDiagramSelectionTarget | null)[],
+) {
+  if (!diagram) {
     return new Set<string>()
   }
 
-  return new Set(
-    diagram.relations
-      .filter((relation) => isRelationConnectedToTarget(relation, activeTarget))
-      .map((relation) => relation.id),
-  )
+  const relationIds = new Set<string>()
+
+  for (const target of targets) {
+    if (!target) {
+      continue
+    }
+
+    for (const relation of diagram.relations) {
+      if (isRelationConnectedToTarget(relation, target)) {
+        relationIds.add(relation.id)
+      }
+    }
+  }
+
+  return relationIds
 }
 
 export function getActiveTableIds(

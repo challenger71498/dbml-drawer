@@ -44,9 +44,12 @@ export function DbmlRelationEdge({
   targetPosition,
   markerEnd,
 }: EdgeProps<Edge<DbmlRelationEdgeData>>) {
-  const { activeRelationIds, activeTarget } = useDbmlDiagramSelectionView()
+  const { activeRelationIds, focusedRelationIds, focusedTarget } =
+    useDbmlDiagramSelectionView()
   const isActive = data ? activeRelationIds.has(data.relation.id) : false
-  const isDimmed = activeTarget !== null && !isActive
+  const isDimmed = data
+    ? focusedTarget !== null && !focusedRelationIds.has(data.relation.id)
+    : false
   const highlightMode =
     data?.highlightMode ?? DEFAULT_DBML_RELATION_HIGHLIGHT_MODE
   const gradientId =
@@ -78,6 +81,7 @@ export function DbmlRelationEdge({
 
   return (
     <g
+      data-relation-edge-id={data?.relation.id}
       data-relation-edge-active={isActive ? 'true' : 'false'}
       data-relation-edge-dimmed={isDimmed ? 'true' : 'false'}
       data-relation-edge-highlight-mode={isActive ? highlightMode : 'inactive'}

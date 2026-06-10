@@ -6,6 +6,7 @@ import {
   getActiveRelationEndpointColumnIds,
   getActiveTableIds,
   getRelationEndpointColumnIdsForTargets,
+  getRelationIdsForTargets,
   type DbmlDiagramSelectionTarget,
 } from './dbml-diagram-selection'
 
@@ -75,6 +76,17 @@ describe('dbml diagram selection', () => {
     expect([...getActiveRelationIds(DIAGRAM, COLUMN_TARGET)]).toEqual([
       'relation:1:0',
     ])
+  })
+
+  it('combines relation ids for hovered and focused targets', () => {
+    expect(
+      [
+        ...getRelationIdsForTargets(DIAGRAM, [
+          TABLE_TARGET,
+          TARGET_SIDE_COLUMN_TARGET,
+        ]),
+      ],
+    ).toEqual(['relation:1:0', 'relation:2:0'])
   })
 
   it('derives active table ids for a table target', () => {

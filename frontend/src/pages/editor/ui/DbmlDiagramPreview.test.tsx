@@ -17,6 +17,7 @@ import {
   getActiveRelationIds,
   getActiveTableIds,
   getRelationEndpointColumnIdsForTargets,
+  getRelationIdsForTargets,
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
 import {
@@ -411,6 +412,21 @@ describe('DbmlDiagramPreview', () => {
     expect(getTableArticle('posts')).toHaveAttribute('data-active', 'false')
   })
 
+  it('does not dim unrelated relations while hovering a table', async () => {
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(ISOLATED_RELATION_SOURCE),
+    )
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.mouseEnter(screen.getByTestId('diagram-node-table:public.posts'))
+
+    expect(
+      getRelationEdgeDimmedStates().every((dimmed) => dimmed === 'false'),
+    ).toBe(true)
+  })
+
   it('dims only tables and relations unrelated to the focused table', async () => {
     const diagram = createDbmlDiagram(
       parseDbmlDocument(ISOLATED_RELATION_SOURCE),
@@ -450,6 +466,54 @@ describe('DbmlDiagramPreview', () => {
           'true',
       ),
     ).toBe(true)
+  })
+
+  it('keeps focused relation highlights while hovering another table', async () => {
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(ISOLATED_RELATION_SOURCE),
+    )
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+    const focusedRelationIds = getActiveRelationIds(layoutedDiagram, {
+      type: 'table',
+      tableId: 'table:public.posts',
+    })
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    for (const relationId of focusedRelationIds) {
+      expect(getRelationEdgeGroup(relationId)).toHaveAttribute(
+        'data-relation-edge-active',
+        'true',
+      )
+    }
+
+    fireEvent.mouseEnter(screen.getByTestId('diagram-node-table:public.teams'))
+
+    for (const relationId of focusedRelationIds) {
+      expect(getRelationEdgeGroup(relationId)).toHaveAttribute(
+        'data-relation-edge-active',
+        'true',
+      )
+    }
+  })
+
+  it('keeps relation dim states based on focus while hovering another table', async () => {
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(ISOLATED_RELATION_SOURCE),
+    )
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const focusedDimmedStates = getRelationEdgeDimmedStates()
+
+    fireEvent.mouseEnter(screen.getByTestId('diagram-node-table:public.teams'))
+
+    expect(getRelationEdgeDimmedStates()).toEqual(focusedDimmedStates)
   })
 
   it('keeps table focus after the pointer leaves', async () => {
@@ -726,9 +790,13 @@ function InteractivePreviewHarness({
 
   return (
     <DbmlDiagramPreview
-      activeRelationIds={getActiveRelationIds(diagram, activeTarget)}
+      activeRelationIds={getRelationIdsForTargets(diagram, [
+        hoveredTarget,
+        focusedTarget,
+      ])}
       activeTarget={activeTarget}
       diagram={diagram}
+      focusedRelationIds={getActiveRelationIds(diagram, focusedTarget)}
       focusedTableIds={getActiveTableIds(diagram, focusedTarget)}
       focusedTarget={focusedTarget}
       isPending={false}
@@ -775,6 +843,7 @@ function renderDynamicRelationEdge({
             tableId: 'table:public.posts',
             columnId: 'table:public.posts.column:user_id',
           },
+          focusedRelationIds: new Set(),
           focusedTableIds: new Set(),
           focusedTarget: null,
           onColumnFocus: () => undefined,
@@ -932,6 +1001,22 @@ function expectDynamicEdge(edge: HTMLElement) {
 
 function isGradientStroke(stroke: string | null) {
   return stroke?.startsWith('url(#dbml-relation-gradient-') ?? false
+}
+
+function getRelationEdgeDimmedStates() {
+  return screen
+    .getAllByTestId('diagram-edge')
+    .map((edge) => edge.closest('g')?.getAttribute('data-relation-edge-dimmed'))
+}
+
+function getRelationEdgeGroup(relationId: string) {
+  const edgeGroup = document.querySelector(
+    `[data-relation-edge-id="${relationId}"]`,
+  )
+
+  expect(edgeGroup).not.toBeNull()
+
+  return edgeGroup as HTMLElement
 }
 
 function getStopColor(stop: Element | undefined) {
