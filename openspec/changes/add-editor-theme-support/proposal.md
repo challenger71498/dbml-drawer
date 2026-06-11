@@ -5,7 +5,7 @@ The editor currently presents a fixed visual appearance, and the DBML Monaco edi
 ## What Changes
 
 - Add editor workspace theme selection with three modes: light, dark, and system.
-- Add DBML code editor theme selection with the same three modes, configured independently from the workspace theme.
+- Add DBML code editor theme selection with independently configurable modes plus an option to follow the resolved workspace theme.
 - Resolve each system mode from the browser `prefers-color-scheme` media query.
 - Apply the resolved theme to the editor page chrome, sidebars, diagram surface, panels, and controls using VS Code Light 2026 for light mode and Gruvbox Material medium/material for dark mode.
 - Make `DbmlCodeEditor` follow the resolved code editor theme with matching Monaco themes instead of using a fixed Monaco theme.

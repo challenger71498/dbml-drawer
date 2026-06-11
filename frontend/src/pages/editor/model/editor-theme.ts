@@ -3,13 +3,18 @@ import { EDITOR_MONACO_THEME_DEFINITIONS } from '../../../shared/design-tokens/g
 import type { MonacoApi } from '../lib/monaco-dbml-language'
 
 export type EditorThemeMode = 'light' | 'light-solarized' | 'dark' | 'system'
+export type CodeEditorThemeMode = EditorThemeMode | 'workspace'
 export type ResolvedEditorTheme = 'light' | 'light-solarized' | 'dark'
 
-export const EDITOR_THEME_MODES = [
+export const EDITOR_WORKSPACE_THEME_MODES = [
   'light',
   'light-solarized',
   'dark',
   'system',
+] as const
+export const EDITOR_CODE_EDITOR_THEME_MODES = [
+  'workspace',
+  ...EDITOR_WORKSPACE_THEME_MODES,
 ] as const
 export const PURE_WHITE_LIGHT_MONACO_THEME = 'dbml-drawer-light-pure-white'
 export const LIGHT_SOLARIZED_MONACO_THEME = 'dbml-drawer-light-solarized'
@@ -24,11 +29,11 @@ const SYSTEM_THEME_QUERY = '(prefers-color-scheme: dark)'
 
 export type EditorThemePreferences = {
   workspaceThemeMode: EditorThemeMode
-  codeEditorThemeMode: EditorThemeMode
+  codeEditorThemeMode: CodeEditorThemeMode
   resolvedWorkspaceTheme: ResolvedEditorTheme
   resolvedCodeEditorTheme: ResolvedEditorTheme
   setWorkspaceThemeMode: (mode: EditorThemeMode) => void
-  setCodeEditorThemeMode: (mode: EditorThemeMode) => void
+  setCodeEditorThemeMode: (mode: CodeEditorThemeMode) => void
 }
 
 export function useEditorThemePreferences(): EditorThemePreferences {
@@ -39,8 +44,8 @@ export function useEditorThemePreferences(): EditorThemePreferences {
       readStoredThemeMode(EDITOR_WORKSPACE_THEME_STORAGE_KEY),
     )
   const [codeEditorThemeMode, setCodeEditorThemeModeState] =
-    useState<EditorThemeMode>(() =>
-      readStoredThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
+    useState<CodeEditorThemeMode>(() =>
+      readStoredCodeEditorThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
     )
 
   useEffect(() => {
@@ -74,16 +79,25 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     writeStoredThemeMode(EDITOR_WORKSPACE_THEME_STORAGE_KEY, mode)
   }
 
-  const setCodeEditorThemeMode = (mode: EditorThemeMode) => {
+  const setCodeEditorThemeMode = (mode: CodeEditorThemeMode) => {
     setCodeEditorThemeModeState(mode)
     writeStoredThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY, mode)
   }
 
+  const resolvedWorkspaceTheme = resolveThemeMode(
+    workspaceThemeMode,
+    systemTheme,
+  )
+
   return {
     workspaceThemeMode,
     codeEditorThemeMode,
-    resolvedWorkspaceTheme: resolveThemeMode(workspaceThemeMode, systemTheme),
-    resolvedCodeEditorTheme: resolveThemeMode(codeEditorThemeMode, systemTheme),
+    resolvedWorkspaceTheme,
+    resolvedCodeEditorTheme: resolveCodeEditorThemeMode(
+      codeEditorThemeMode,
+      resolvedWorkspaceTheme,
+      systemTheme,
+    ),
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
   }
@@ -121,11 +135,29 @@ export function resolveThemeMode(
   return mode === 'system' ? systemTheme : mode
 }
 
+export function resolveCodeEditorThemeMode(
+  mode: CodeEditorThemeMode,
+  workspaceTheme: ResolvedEditorTheme,
+  systemTheme: ResolvedEditorTheme,
+): ResolvedEditorTheme {
+  return mode === 'workspace'
+    ? workspaceTheme
+    : resolveThemeMode(mode, systemTheme)
+}
+
 export function normalizeEditorThemeMode(
   value: string | null | undefined,
 ): EditorThemeMode {
-  return EDITOR_THEME_MODES.includes(value as EditorThemeMode)
+  return EDITOR_WORKSPACE_THEME_MODES.includes(value as EditorThemeMode)
     ? (value as EditorThemeMode)
+    : 'system'
+}
+
+export function normalizeCodeEditorThemeMode(
+  value: string | null | undefined,
+): CodeEditorThemeMode {
+  return EDITOR_CODE_EDITOR_THEME_MODES.includes(value as CodeEditorThemeMode)
+    ? (value as CodeEditorThemeMode)
     : 'system'
 }
 
@@ -137,7 +169,20 @@ export function readStoredThemeMode(storageKey: string): EditorThemeMode {
   }
 }
 
-function writeStoredThemeMode(storageKey: string, mode: EditorThemeMode) {
+export function readStoredCodeEditorThemeMode(
+  storageKey: string,
+): CodeEditorThemeMode {
+  try {
+    return normalizeCodeEditorThemeMode(window.localStorage.getItem(storageKey))
+  } catch {
+    return 'system'
+  }
+}
+
+function writeStoredThemeMode(
+  storageKey: string,
+  mode: EditorThemeMode | CodeEditorThemeMode,
+) {
   try {
     window.localStorage.setItem(storageKey, mode)
   } catch {

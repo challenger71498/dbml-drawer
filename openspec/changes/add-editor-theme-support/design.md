@@ -9,7 +9,7 @@ The change should remain page-local for now. There is no app-wide navigation she
 **Goals:**
 
 - Support light, dark, and system theme modes for the DBML editor workspace.
-- Support light, dark, and system theme modes for the DBML code editor independently from the workspace theme.
+- Support light, dark, and system theme modes for the DBML code editor independently from the workspace theme, plus a code editor option that follows the resolved workspace theme.
 - Resolve system mode from `prefers-color-scheme` and react to OS theme changes for each preference while that preference is set to system.
 - Persist both selected theme modes locally.
 - Apply VS Code Light 2026 workspace colors for light mode and Gruvbox Material medium/material colors for dark mode consistently to editor page chrome, sidebars, diagram preview, panels, and controls.
@@ -27,9 +27,9 @@ The change should remain page-local for now. There is no app-wide navigation she
 
 ### Use separate persisted theme modes plus resolved themes
 
-Store the user's selected workspace theme mode and code editor theme mode separately, each as `light | dark | system`. Derive a resolved workspace theme and a resolved code editor theme of `light | dark` from those selected modes and `window.matchMedia('(prefers-color-scheme: dark)')`.
+Store the user's selected workspace theme mode and code editor theme mode separately. Workspace theme modes are `light | dark | system`; code editor theme modes are those modes plus `workspace`. Derive a resolved workspace theme and a resolved code editor theme from those selected modes and `window.matchMedia('(prefers-color-scheme: dark)')`; when the code editor mode is `workspace`, derive its resolved theme from the resolved workspace theme.
 
-Rationale: the selected mode represents user intent, while the resolved theme is what rendering code needs. Keeping workspace and code editor modes separate supports intentional combinations such as a dark workspace with a light Monaco editor. Keeping selected and resolved values separate prevents system mode from being overwritten when the OS preference changes.
+Rationale: the selected mode represents user intent, while the resolved theme is what rendering code needs. Keeping workspace and code editor modes separate supports intentional combinations such as a dark workspace with a light Monaco editor, while `workspace` gives users a low-maintenance synchronized option. Keeping selected and resolved values separate prevents system mode from being overwritten when the OS preference changes.
 
 Alternative considered: persist only one editor theme mode and let Monaco inherit it. That would be simpler, but it would not support users who prefer different contrast between the UI chrome and code editing surface.
 
@@ -67,7 +67,7 @@ Alternative considered: built-in `vs` and `vs-dark`. These are reliable defaults
 
 ### Place both theme controls in existing editor chrome or settings
 
-Expose compact controls for both workspace theme mode and code editor theme mode in the editor workspace toolbar or an existing editor settings surface. Each control must clearly offer Light, Dark, and System modes, and the UI must make clear which surface the control affects.
+Expose compact controls for both workspace theme mode and code editor theme mode in the editor workspace toolbar or an existing editor settings surface. The workspace control must offer Light, Dark, and System modes; the code editor control must also offer Workspace. The UI must make clear which surface the control affects.
 
 Rationale: theme selection is a workspace preference, not DBML document content. It should live in the editor chrome or settings rather than inside the DBML code editor or diagram canvas. Grouping both controls reduces the chance that users assume Monaco is forced to follow the workspace theme.
 

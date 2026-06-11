@@ -363,6 +363,44 @@ describe('EditorPage', () => {
     ).toBe('light-solarized')
   })
 
+  it('can resolve the code editor theme from the workspace theme', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    fireEvent.click(
+      within(
+        screen.getByRole('group', { name: 'Code editor theme' }),
+      ).getByRole('button', { name: 'Workspace' }),
+    )
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Workspace theme' })).getByRole(
+        'button',
+        { name: 'Solarized' },
+      ),
+    )
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-workspace-theme',
+      'light-solarized',
+    )
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme-mode',
+      'workspace',
+    )
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme',
+      'light-solarized',
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'DBML editor' }),
+    ).toHaveAttribute('data-monaco-theme', LIGHT_SOLARIZED_MONACO_THEME)
+    expect(
+      window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
+    ).toBe('workspace')
+  })
+
   it('resolves system theme changes for workspace and code editor themes', () => {
     installLocalStorageMock()
     const mediaQuery = installMatchMediaMock(false)

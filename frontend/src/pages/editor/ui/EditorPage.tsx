@@ -34,7 +34,9 @@ import {
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
 import {
-  EDITOR_THEME_MODES,
+  EDITOR_CODE_EDITOR_THEME_MODES,
+  EDITOR_WORKSPACE_THEME_MODES,
+  type CodeEditorThemeMode,
   type EditorThemeMode,
   useEditorThemePreferences,
 } from '../model/editor-theme'
@@ -431,11 +433,13 @@ export function EditorPage({
           <div className={styles.editorToolbarActions}>
             <ThemeModeControl
               label="Workspace theme"
+              modes={EDITOR_WORKSPACE_THEME_MODES}
               value={workspaceThemeMode}
               onChange={setWorkspaceThemeMode}
             />
             <ThemeModeControl
               label="Code editor theme"
+              modes={EDITOR_CODE_EDITOR_THEME_MODES}
               value={codeEditorThemeMode}
               onChange={setCodeEditorThemeMode}
             />
@@ -485,20 +489,22 @@ export function EditorPage({
   )
 }
 
-function ThemeModeControl({
+function ThemeModeControl<TMode extends ThemeModeControlMode>({
   label,
+  modes,
   value,
   onChange,
 }: {
   label: string
-  value: EditorThemeMode
-  onChange: (mode: EditorThemeMode) => void
+  modes: readonly TMode[]
+  value: TMode
+  onChange: (mode: TMode) => void
 }) {
   return (
     <div className={styles.themeControl}>
       <span className={styles.themeControlLabel}>{label}</span>
       <div className={styles.themeModeGroup} role="group" aria-label={label}>
-        {EDITOR_THEME_MODES.map((mode) => (
+        {modes.map((mode) => (
           <button
             aria-pressed={value === mode}
             className={[
@@ -519,7 +525,13 @@ function ThemeModeControl({
   )
 }
 
-function getThemeModeLabel(mode: EditorThemeMode) {
+type ThemeModeControlMode = EditorThemeMode | CodeEditorThemeMode
+
+function getThemeModeLabel(mode: ThemeModeControlMode) {
+  if (mode === 'workspace') {
+    return 'Workspace'
+  }
+
   if (mode === 'system') {
     return 'System'
   }

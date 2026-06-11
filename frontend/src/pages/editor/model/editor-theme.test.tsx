@@ -3,7 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
   EDITOR_WORKSPACE_THEME_STORAGE_KEY,
+  normalizeCodeEditorThemeMode,
   normalizeEditorThemeMode,
+  readStoredCodeEditorThemeMode,
   readStoredThemeMode,
   useEditorThemePreferences,
 } from './editor-theme'
@@ -22,10 +24,18 @@ describe('editor theme preferences', () => {
     window.localStorage.setItem(EDITOR_WORKSPACE_THEME_STORAGE_KEY, 'sepia')
 
     expect(normalizeEditorThemeMode('light-solarized')).toBe('light-solarized')
+    expect(normalizeEditorThemeMode('workspace')).toBe('system')
+    expect(normalizeCodeEditorThemeMode('workspace')).toBe('workspace')
     expect(normalizeEditorThemeMode('unknown')).toBe('system')
     expect(readStoredThemeMode(EDITOR_WORKSPACE_THEME_STORAGE_KEY)).toBe(
       'system',
     )
+
+    window.localStorage.setItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY, 'invalid')
+
+    expect(
+      readStoredCodeEditorThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
+    ).toBe('system')
   })
 
   it('persists workspace and code editor theme modes independently', () => {
@@ -77,6 +87,26 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('workspace-resolved')).toHaveTextContent('dark')
     expect(screen.getByTestId('code-editor-resolved')).toHaveTextContent('dark')
   })
+
+  it('resolves code editor theme from the workspace theme mode', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+
+    render(<ThemeHarness />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Code workspace' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Workspace dark' }))
+
+    expect(screen.getByTestId('workspace-mode')).toHaveTextContent('dark')
+    expect(screen.getByTestId('code-editor-mode')).toHaveTextContent(
+      'workspace',
+    )
+    expect(screen.getByTestId('workspace-resolved')).toHaveTextContent('dark')
+    expect(screen.getByTestId('code-editor-resolved')).toHaveTextContent('dark')
+    expect(
+      window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
+    ).toBe('workspace')
+  })
 })
 
 function ThemeHarness() {
@@ -100,6 +130,9 @@ function ThemeHarness() {
       </button>
       <button type="button" onClick={() => setCodeEditorThemeMode('light')}>
         Code light
+      </button>
+      <button type="button" onClick={() => setCodeEditorThemeMode('workspace')}>
+        Code workspace
       </button>
     </div>
   )

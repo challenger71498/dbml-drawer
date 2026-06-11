@@ -31,7 +31,7 @@ The DBML editor workspace SHALL support user-selectable light, dark, and system 
 
 ### Requirement: DBML code editor theme selection
 
-The Monaco-backed DBML code editor SHALL support user-selectable light, dark, and system theme modes independently from the editor workspace theme using matching VS Code Light 2026 and Gruvbox Material dark medium Monaco themes.
+The Monaco-backed DBML code editor SHALL support user-selectable light, dark, and system theme modes independently from the editor workspace theme, and SHALL support a workspace-following mode that resolves from the editor workspace theme.
 
 #### Scenario: User selects light code editor theme
 
@@ -48,10 +48,20 @@ The Monaco-backed DBML code editor SHALL support user-selectable light, dark, an
 - **WHEN** a user selects the system code editor theme mode
 - **THEN** the DBML code editor MUST resolve its Monaco theme from the browser `prefers-color-scheme` preference
 
+#### Scenario: User selects workspace-following code editor theme
+
+- **WHEN** a user selects the workspace code editor theme mode
+- **THEN** the DBML code editor MUST resolve its Monaco theme from the currently resolved editor workspace theme
+
 #### Scenario: Code editor theme is independent from workspace theme
 
 - **WHEN** the user selects different non-system modes for the workspace theme and the code editor theme
 - **THEN** the workspace chrome MUST use the selected workspace theme and the DBML code editor MUST use the selected code editor theme
+
+#### Scenario: Workspace-following mode updates code editor theme
+
+- **WHEN** the selected code editor theme mode is workspace and the resolved workspace theme changes
+- **THEN** the DBML code editor MUST update to the corresponding Monaco theme without losing the current DBML document state
 
 #### Scenario: Code editor uses light Monaco theme
 
