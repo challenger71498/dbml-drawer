@@ -395,6 +395,29 @@
   flex: 1;
 }
 
+.diagramSurface :global(.react-flow__controls) {
+  overflow: hidden;
+  border: 1px solid var(--editor-color-border-control);
+  border-radius: 6px;
+  background: var(--editor-color-panel-bg);
+  box-shadow: 0 8px 18px var(--editor-color-floating-shadow);
+}
+
+.diagramSurface :global(.react-flow__controls-button) {
+  border-bottom: 1px solid var(--editor-color-border-control);
+  background: var(--editor-color-panel-bg);
+  color: var(--editor-color-text);
+}
+
+.diagramSurface :global(.react-flow__controls-button:hover) {
+  background: var(--editor-color-control-hover-soft-bg);
+  color: var(--editor-color-control-active-bg);
+}
+
+.diagramSurface :global(.react-flow__controls-button svg) {
+  fill: currentColor;
+}
+
 .diagramStatus,
 .diagramEmpty {
   position: absolute;
