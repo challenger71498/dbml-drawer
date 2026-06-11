@@ -17,6 +17,7 @@ type EditorSettingsPanelProps = {
   isCodeEditorThemeOverrideEnabled: boolean
   isOffscreenRelationProxiesEnabled: boolean
   shouldConnectOffscreenRelationProxyLines: boolean
+  shouldAvoidOffscreenRelationProxyActiveNodes: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
   onWorkspaceThemeModeChange: (mode: EditorThemeMode) => void
@@ -24,6 +25,7 @@ type EditorSettingsPanelProps = {
   onCodeEditorOverrideThemeModeChange: (mode: EditorThemeMode) => void
   onOffscreenRelationProxiesEnabledChange: (isEnabled: boolean) => void
   onConnectOffscreenRelationProxyLinesChange: (shouldConnect: boolean) => void
+  onAvoidOffscreenRelationProxyActiveNodesChange: (shouldAvoid: boolean) => void
   onOffscreenRelationProxyPlacementModeChange: (
     mode: OffscreenRelationProxyPlacementMode,
   ) => void
@@ -38,6 +40,7 @@ export function EditorSettingsPanel({
   isCodeEditorThemeOverrideEnabled,
   isOffscreenRelationProxiesEnabled,
   shouldConnectOffscreenRelationProxyLines,
+  shouldAvoidOffscreenRelationProxyActiveNodes,
   offscreenRelationProxyPlacementMode,
   offscreenRelationProxyVisibilityMode,
   onWorkspaceThemeModeChange,
@@ -45,6 +48,7 @@ export function EditorSettingsPanel({
   onCodeEditorOverrideThemeModeChange,
   onOffscreenRelationProxiesEnabledChange,
   onConnectOffscreenRelationProxyLinesChange,
+  onAvoidOffscreenRelationProxyActiveNodesChange,
   onOffscreenRelationProxyPlacementModeChange,
   onOffscreenRelationProxyVisibilityModeChange,
 }: EditorSettingsPanelProps) {
@@ -108,6 +112,19 @@ export function EditorSettingsPanel({
             }
           />
           <span>Connect relation lines to proxies</span>
+        </label>
+        <label className={styles.editorSettingsToggleField}>
+          <input
+            checked={shouldAvoidOffscreenRelationProxyActiveNodes}
+            disabled={!isOffscreenRelationProxiesEnabled}
+            type="checkbox"
+            onChange={(event) =>
+              onAvoidOffscreenRelationProxyActiveNodesChange(
+                event.currentTarget.checked,
+              )
+            }
+          />
+          <span>Avoid active nodes</span>
         </label>
         <ThemeModeControl
           isDisabled={!isOffscreenRelationProxiesEnabled}

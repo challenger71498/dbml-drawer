@@ -890,6 +890,32 @@ Table posts {
     expect(Number.parseFloat(bottomProxy.style.left)).toBeGreaterThan(14)
   })
 
+  it('moves offscreen relation proxies away from active visible nodes when enabled', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
+    const layoutedDiagram = moveTables(await layoutDbmlDiagram(diagram), {
+      'table:public.posts': { x: 340, y: 0 },
+      'table:public.users': { x: 1200, y: 0 },
+    })
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+        shouldAvoidOffscreenRelationProxyActiveNodes
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(Number.parseFloat(proxy.style.top)).toBeGreaterThan(100)
+  })
+
   it('scales offscreen relation proxy cards with the diagram viewport zoom', async () => {
     installDiagramSurfaceBounds()
     reactFlowProps.getViewport.mockReturnValue({ x: 0, y: 0, zoom: 1.5 })
@@ -1325,11 +1351,13 @@ function InteractivePreviewHarness({
   diagram,
   isOffscreenRelationProxiesEnabled = false,
   offscreenRelationProxyPlacementMode = 'line',
+  shouldAvoidOffscreenRelationProxyActiveNodes = false,
   shouldConnectOffscreenRelationProxyLines = false,
 }: {
   diagram: LayoutedDbmlDiagram
   isOffscreenRelationProxiesEnabled?: boolean
   offscreenRelationProxyPlacementMode?: 'line' | 'parallel'
+  shouldAvoidOffscreenRelationProxyActiveNodes?: boolean
   shouldConnectOffscreenRelationProxyLines?: boolean
 }) {
   const [hoveredTarget, setHoveredTarget] =
@@ -1361,6 +1389,9 @@ function InteractivePreviewHarness({
       isPending={false}
       isPaused={false}
       offscreenRelationProxyPlacementMode={offscreenRelationProxyPlacementMode}
+      shouldAvoidOffscreenRelationProxyActiveNodes={
+        shouldAvoidOffscreenRelationProxyActiveNodes
+      }
       shouldConnectOffscreenRelationProxyLines={
         shouldConnectOffscreenRelationProxyLines
       }

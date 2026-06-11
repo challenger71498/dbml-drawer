@@ -43,6 +43,8 @@ export const EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY =
   'dbml-drawer.editor.offscreen-relation-proxy-placement'
 export const EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY =
   'dbml-drawer.editor.offscreen-relation-proxy-visibility'
+export const EDITOR_OFFSCREEN_RELATION_PROXY_ACTIVE_NODE_AVOIDANCE_STORAGE_KEY =
+  'dbml-drawer.editor.offscreen-relation-proxy-active-node-avoidance'
 const SYSTEM_THEME_QUERY = '(prefers-color-scheme: dark)'
 
 export type EditorThemePreferences = {
@@ -52,12 +54,16 @@ export type EditorThemePreferences = {
   resolvedCodeEditorTheme: ResolvedEditorTheme
   isOffscreenRelationProxiesEnabled: boolean
   shouldConnectOffscreenRelationProxyLines: boolean
+  shouldAvoidOffscreenRelationProxyActiveNodes: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
   setWorkspaceThemeMode: (mode: EditorThemeMode) => void
   setCodeEditorThemeMode: (mode: CodeEditorThemeMode) => void
   setOffscreenRelationProxiesEnabled: (isEnabled: boolean) => void
   setShouldConnectOffscreenRelationProxyLines: (shouldConnect: boolean) => void
+  setShouldAvoidOffscreenRelationProxyActiveNodes: (
+    shouldAvoid: boolean,
+  ) => void
   setOffscreenRelationProxyPlacementMode: (
     mode: OffscreenRelationProxyPlacementMode,
   ) => void
@@ -88,6 +94,15 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     setShouldConnectOffscreenRelationProxyLinesState,
   ] = useState(() =>
     readStoredBoolean(EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY, false),
+  )
+  const [
+    shouldAvoidOffscreenRelationProxyActiveNodes,
+    setShouldAvoidOffscreenRelationProxyActiveNodesState,
+  ] = useState(() =>
+    readStoredBoolean(
+      EDITOR_OFFSCREEN_RELATION_PROXY_ACTIVE_NODE_AVOIDANCE_STORAGE_KEY,
+      false,
+    ),
   )
   const [
     offscreenRelationProxyPlacementMode,
@@ -157,6 +172,16 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     )
   }
 
+  const setShouldAvoidOffscreenRelationProxyActiveNodes = (
+    shouldAvoid: boolean,
+  ) => {
+    setShouldAvoidOffscreenRelationProxyActiveNodesState(shouldAvoid)
+    writeStoredBoolean(
+      EDITOR_OFFSCREEN_RELATION_PROXY_ACTIVE_NODE_AVOIDANCE_STORAGE_KEY,
+      shouldAvoid,
+    )
+  }
+
   const setOffscreenRelationProxyPlacementMode = (
     mode: OffscreenRelationProxyPlacementMode,
   ) => {
@@ -193,12 +218,14 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     ),
     isOffscreenRelationProxiesEnabled,
     shouldConnectOffscreenRelationProxyLines,
+    shouldAvoidOffscreenRelationProxyActiveNodes,
     offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
+    setShouldAvoidOffscreenRelationProxyActiveNodes,
     setOffscreenRelationProxyPlacementMode,
     setOffscreenRelationProxyVisibilityMode,
   }

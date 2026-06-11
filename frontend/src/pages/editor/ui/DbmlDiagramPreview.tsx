@@ -19,7 +19,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
   type RefObject,
 } from 'react'
 import {
@@ -43,6 +42,14 @@ import {
   type DbmlOffscreenRelationProxy,
   type DbmlOffscreenRelationProxyVisibilityMode,
 } from '../model/dbml-offscreen-relation-proxies'
+import {
+  getActiveTableProxyLayoutObstacles,
+  getScaledProxyCardWidth,
+  getScaledProxyColumnHeight,
+  getScaledProxyHeaderHeight,
+  legacyOffscreenRelationProxyLayoutStrategy,
+  type DbmlOffscreenRelationProxyLayout as OffscreenRelationProxyLayout,
+} from '../model/dbml-offscreen-relation-proxy-layout'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
 import type { OffscreenRelationProxyPlacementMode } from '../model/editor-theme'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
@@ -68,6 +75,7 @@ type DbmlDiagramPreviewProps = {
   offscreenRelationProxyPlacementMode?: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode?: DbmlOffscreenRelationProxyVisibilityMode
   shouldConnectOffscreenRelationProxyLines?: boolean
+  shouldAvoidOffscreenRelationProxyActiveNodes?: boolean
   onTableFocus?: (table: DbmlDiagramTable) => void
   onTableHover?: (target: DbmlDiagramSelectionTarget | null) => void
   onColumnFocus?: (column: DbmlDiagramColumn) => void
@@ -94,11 +102,6 @@ const EMPTY_ENDPOINT_COLUMN_IDS = new Set<string>()
 const NOOP_FOCUS_CLEAR = () => undefined
 const NOOP_COLUMN_FOCUS = () => undefined
 const NOOP_COLUMN_HOVER = () => undefined
-const PROXY_CARD_WIDTH = 184
-const PROXY_CARD_HEADER_HEIGHT = 30
-const PROXY_CARD_COLUMN_HEIGHT = 30
-const PROXY_CARD_GAP = 10
-const PROXY_CARD_EDGE_GAP = 14
 
 const RELATION_LINE_STYLE_OPTIONS = [
   {
@@ -152,6 +155,7 @@ export function DbmlDiagramPreview({
   offscreenRelationProxyPlacementMode = 'line',
   offscreenRelationProxyVisibilityMode = 'any-overlap',
   shouldConnectOffscreenRelationProxyLines = false,
+  shouldAvoidOffscreenRelationProxyActiveNodes = false,
   onTableFocus = () => undefined,
   onTableHover = () => undefined,
   onColumnFocus = NOOP_COLUMN_FOCUS,
@@ -282,6 +286,7 @@ export function DbmlDiagramPreview({
               diagram={diagram}
               diagramSurfaceRef={diagramSurfaceRef}
               elements={elements}
+              focusedTableIds={focusedTableIds}
               focusedTarget={focusedTarget}
               isOffscreenRelationProxiesEnabled={
                 isOffscreenRelationProxiesEnabled
@@ -294,6 +299,9 @@ export function DbmlDiagramPreview({
               }
               shouldConnectOffscreenRelationProxyLines={
                 shouldConnectOffscreenRelationProxyLines
+              }
+              shouldAvoidOffscreenRelationProxyActiveNodes={
+                shouldAvoidOffscreenRelationProxyActiveNodes
               }
               isEmpty={isEmpty}
               onColumnFocus={onColumnFocus}
@@ -322,11 +330,13 @@ type DiagramCanvasProps = {
   diagram: LayoutedDbmlDiagram | null
   diagramSurfaceRef: RefObject<HTMLDivElement | null>
   elements: DbmlDiagramFlowElements
+  focusedTableIds: ReadonlySet<string>
   focusedTarget: DbmlDiagramSelectionTarget | null
   isOffscreenRelationProxiesEnabled: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: DbmlOffscreenRelationProxyVisibilityMode
   shouldConnectOffscreenRelationProxyLines: boolean
+  shouldAvoidOffscreenRelationProxyActiveNodes: boolean
   isEmpty: boolean
   onColumnFocus: (column: DbmlDiagramColumn) => void
   onFocusClear: () => void
@@ -342,11 +352,13 @@ function DiagramCanvas({
   diagram,
   diagramSurfaceRef,
   elements,
+  focusedTableIds,
   focusedTarget,
   isOffscreenRelationProxiesEnabled,
   offscreenRelationProxyPlacementMode,
   offscreenRelationProxyVisibilityMode,
   shouldConnectOffscreenRelationProxyLines,
+  shouldAvoidOffscreenRelationProxyActiveNodes,
   isEmpty,
   onColumnFocus,
   onFocusClear,
@@ -410,16 +422,30 @@ function DiagramCanvas({
   const offscreenRelationProxyLayouts = useMemo(
     () =>
       diagramViewport
-        ? getProxyCardLayouts(
-            offscreenRelationProxies,
-            diagramViewport,
-            offscreenRelationProxyPlacementMode,
-          )
+        ? legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
+            proxies: offscreenRelationProxies,
+            viewport: diagramViewport,
+            obstacles: shouldAvoidOffscreenRelationProxyActiveNodes
+              ? getActiveTableProxyLayoutObstacles({
+                  diagram,
+                  focusedTableIds,
+                  viewport: diagramViewport,
+                })
+              : [],
+            options: {
+              placementMode: offscreenRelationProxyPlacementMode,
+              shouldAvoidActiveNodes:
+                shouldAvoidOffscreenRelationProxyActiveNodes,
+            },
+          })
         : [],
     [
       diagramViewport,
+      diagram,
+      focusedTableIds,
       offscreenRelationProxies,
       offscreenRelationProxyPlacementMode,
+      shouldAvoidOffscreenRelationProxyActiveNodes,
     ],
   )
   const flowElements = useMemo(
@@ -630,434 +656,6 @@ function OffscreenRelationProxyOverlay({
   )
 }
 
-function getProxyCardLayouts(
-  proxies: readonly DbmlOffscreenRelationProxy[],
-  viewport: DbmlDiagramViewport,
-  placementMode: OffscreenRelationProxyPlacementMode,
-) {
-  const rawLayouts = proxies.map((proxy) => ({
-    proxy,
-    ...getRawProxyCardPosition(proxy, viewport, placementMode),
-  }))
-  const sideResolvedLayouts = getNonOverlappingProxyLayoutsBySide(
-    rawLayouts,
-    viewport,
-    placementMode,
-  )
-  const adjacentResolvedLayouts = getNonOverlappingAdjacentProxyLayouts(
-    sideResolvedLayouts,
-    viewport,
-  )
-
-  return getNonOverlappingProxyLayoutsBySide(
-    adjacentResolvedLayouts.map((layout) => ({
-      proxy: layout.proxy,
-      left: Number(layout.style.left),
-      top: Number(layout.style.top),
-    })),
-    viewport,
-    placementMode,
-  )
-}
-
-function getNonOverlappingProxyLayoutsBySide(
-  rawLayouts: RawOffscreenRelationProxyLayout[],
-  viewport: DbmlDiagramViewport,
-  placementMode: OffscreenRelationProxyPlacementMode,
-) {
-  const layoutsBySide = new Map<
-    DbmlOffscreenRelationProxy['side'],
-    typeof rawLayouts
-  >()
-
-  for (const layout of rawLayouts) {
-    layoutsBySide.set(layout.proxy.side, [
-      ...(layoutsBySide.get(layout.proxy.side) ?? []),
-      layout,
-    ])
-  }
-
-  return [...layoutsBySide.values()].flatMap((layouts) =>
-    getNonOverlappingProxyLayouts(layouts, viewport, placementMode),
-  )
-}
-
-function getRawProxyCardPosition(
-  proxy: DbmlOffscreenRelationProxy,
-  viewport: DbmlDiagramViewport,
-  placementMode: OffscreenRelationProxyPlacementMode,
-) {
-  if (placementMode === 'parallel') {
-    return getParallelProxyCardPosition(proxy, viewport)
-  }
-
-  return getLineProxyCardPosition(proxy, viewport)
-}
-
-function getLineProxyCardPosition(
-  proxy: DbmlOffscreenRelationProxy,
-  viewport: DbmlDiagramViewport,
-) {
-  const anchorX = proxy.anchor.x * viewport.zoom + viewport.x
-  const anchorY = proxy.anchor.y * viewport.zoom + viewport.y
-  const cardWidth = getScaledProxyCardWidth(viewport)
-  const cardHeight = getScaledProxyCardHeight(proxy, viewport)
-
-  if (proxy.side === 'left' || proxy.side === 'right') {
-    return {
-      left:
-        proxy.side === 'left'
-          ? PROXY_CARD_EDGE_GAP
-          : Math.max(
-              PROXY_CARD_EDGE_GAP,
-              Math.min(
-                viewport.width - cardWidth - PROXY_CARD_EDGE_GAP,
-                anchorX - cardWidth,
-              ),
-            ),
-      top: Math.max(
-        PROXY_CARD_EDGE_GAP,
-        Math.min(
-          viewport.height - cardHeight - PROXY_CARD_EDGE_GAP,
-          anchorY - cardHeight / 2,
-        ),
-      ),
-    }
-  }
-
-  return {
-    left: Math.max(
-      PROXY_CARD_EDGE_GAP,
-      Math.min(
-        viewport.width - cardWidth - PROXY_CARD_EDGE_GAP,
-        anchorX - cardWidth / 2,
-      ),
-    ),
-    top:
-      proxy.side === 'top'
-        ? PROXY_CARD_EDGE_GAP
-        : Math.max(
-            PROXY_CARD_EDGE_GAP,
-            Math.min(
-              viewport.height - cardHeight - PROXY_CARD_EDGE_GAP,
-              anchorY - cardHeight,
-            ),
-          ),
-  }
-}
-
-function getParallelProxyCardPosition(
-  proxy: DbmlOffscreenRelationProxy,
-  viewport: DbmlDiagramViewport,
-) {
-  const cardWidth = getScaledProxyCardWidth(viewport)
-  const cardHeight = getScaledProxyCardHeight(proxy, viewport)
-  const tableCenterX =
-    (proxy.table.position.x + proxy.table.size.width / 2) * viewport.zoom +
-    viewport.x
-  const tableTop = proxy.table.position.y * viewport.zoom + viewport.y
-
-  if (proxy.side === 'left' || proxy.side === 'right') {
-    return {
-      left:
-        proxy.side === 'left'
-          ? PROXY_CARD_EDGE_GAP
-          : viewport.width - cardWidth - PROXY_CARD_EDGE_GAP,
-      top: clampProxyPosition({
-        max: viewport.height - cardHeight - PROXY_CARD_EDGE_GAP,
-        min: PROXY_CARD_EDGE_GAP,
-        value: tableTop,
-      }),
-    }
-  }
-
-  return {
-    left: clampProxyPosition({
-      max: viewport.width - cardWidth - PROXY_CARD_EDGE_GAP,
-      min: PROXY_CARD_EDGE_GAP,
-      value: tableCenterX - cardWidth / 2,
-    }),
-    top:
-      proxy.side === 'top'
-        ? PROXY_CARD_EDGE_GAP
-        : viewport.height - cardHeight - PROXY_CARD_EDGE_GAP,
-  }
-}
-
-function getNonOverlappingProxyLayouts(
-  layouts: RawOffscreenRelationProxyLayout[],
-  viewport: DbmlDiagramViewport,
-  placementMode: OffscreenRelationProxyPlacementMode,
-): OffscreenRelationProxyLayout[] {
-  const side = layouts[0]?.proxy.side
-  const isVerticalStack =
-    placementMode === 'parallel' || side === 'left' || side === 'right'
-  const collisionGroups = getOverlappingProxyLayoutGroups({
-    layouts,
-    viewport,
-    isVerticalStack,
-  })
-
-  return collisionGroups.flatMap((collisionGroup) =>
-    getNonOverlappingProxyLayoutGroup(
-      collisionGroup,
-      viewport,
-      isVerticalStack,
-    ),
-  )
-}
-
-function getNonOverlappingProxyLayoutGroup(
-  layouts: RawOffscreenRelationProxyLayout[],
-  viewport: DbmlDiagramViewport,
-  isVerticalStack: boolean,
-): OffscreenRelationProxyLayout[] {
-  const side = layouts[0]?.proxy.side
-  const shouldSortByTop = side === 'left' || side === 'right'
-  const cardWidth = getScaledProxyCardWidth(viewport)
-  const sortedLayouts = [...layouts].sort((first, second) =>
-    shouldSortByTop ? first.top - second.top : first.left - second.left,
-  )
-  const itemSizes = sortedLayouts.map((layout) =>
-    isVerticalStack
-      ? getScaledProxyCardHeight(layout.proxy, viewport)
-      : cardWidth,
-  )
-  const stackPositions = getNonOverlappingStackPositions({
-    desiredPositions: sortedLayouts.map((layout) =>
-      isVerticalStack ? layout.top : layout.left,
-    ),
-    itemSizes,
-    maxEndPosition:
-      (isVerticalStack ? viewport.height : viewport.width) -
-      PROXY_CARD_EDGE_GAP,
-    minPosition: PROXY_CARD_EDGE_GAP,
-  })
-
-  return sortedLayouts.map((layout, index) => {
-    const nextTop = isVerticalStack ? stackPositions[index] : layout.top
-    const nextLeft = isVerticalStack ? layout.left : stackPositions[index]
-
-    return {
-      proxy: layout.proxy,
-      style: {
-        left: nextLeft,
-        top: nextTop,
-        transform: `scale(${viewport.zoom})`,
-      },
-    }
-  })
-}
-
-function getOverlappingProxyLayoutGroups({
-  layouts,
-  viewport,
-  isVerticalStack,
-}: {
-  layouts: RawOffscreenRelationProxyLayout[]
-  viewport: DbmlDiagramViewport
-  isVerticalStack: boolean
-}) {
-  const cardWidth = getScaledProxyCardWidth(viewport)
-  const sortedLayouts = [...layouts].sort(
-    (first, second) =>
-      getProxyLayoutCrossAxisStart(first, viewport, isVerticalStack) -
-      getProxyLayoutCrossAxisStart(second, viewport, isVerticalStack),
-  )
-  const groups: RawOffscreenRelationProxyLayout[][] = []
-  let activeGroupEnd = Number.NEGATIVE_INFINITY
-
-  for (const layout of sortedLayouts) {
-    const crossAxisStart = getProxyLayoutCrossAxisStart(
-      layout,
-      viewport,
-      isVerticalStack,
-    )
-    const crossAxisSize = isVerticalStack
-      ? cardWidth
-      : getScaledProxyCardHeight(layout.proxy, viewport)
-    const crossAxisEnd = crossAxisStart + crossAxisSize
-
-    if (groups.length === 0 || crossAxisStart >= activeGroupEnd) {
-      groups.push([layout])
-      activeGroupEnd = crossAxisEnd
-      continue
-    }
-
-    groups[groups.length - 1].push(layout)
-    activeGroupEnd = Math.max(activeGroupEnd, crossAxisEnd)
-  }
-
-  return groups
-}
-
-function getProxyLayoutCrossAxisStart(
-  layout: RawOffscreenRelationProxyLayout,
-  _viewport: DbmlDiagramViewport,
-  isVerticalStack: boolean,
-) {
-  return isVerticalStack ? layout.left : layout.top
-}
-
-function getNonOverlappingAdjacentProxyLayouts(
-  layouts: OffscreenRelationProxyLayout[],
-  viewport: DbmlDiagramViewport,
-) {
-  const edgeLayouts = layouts.filter(
-    (layout) => layout.proxy.side === 'left' || layout.proxy.side === 'right',
-  )
-
-  if (edgeLayouts.length === 0) {
-    return layouts
-  }
-
-  return layouts.map((layout) => {
-    if (layout.proxy.side !== 'top' && layout.proxy.side !== 'bottom') {
-      return layout
-    }
-
-    return getLayoutWithoutAdjacentSideOverlap(layout, edgeLayouts, viewport)
-  })
-}
-
-function getLayoutWithoutAdjacentSideOverlap(
-  layout: OffscreenRelationProxyLayout,
-  edgeLayouts: OffscreenRelationProxyLayout[],
-  viewport: DbmlDiagramViewport,
-) {
-  const cardWidth = getScaledProxyCardWidth(viewport)
-  let nextLeft = Number(layout.style.left)
-  const top = Number(layout.style.top)
-  const maxLeft = viewport.width - cardWidth - PROXY_CARD_EDGE_GAP
-
-  for (const edgeLayout of edgeLayouts) {
-    const edgeRect = getProxyLayoutRect(edgeLayout, viewport)
-    const nextRect = {
-      left: nextLeft,
-      top,
-      width: cardWidth,
-      height: getScaledProxyCardHeight(layout.proxy, viewport),
-    }
-
-    if (!rectanglesOverlap(nextRect, edgeRect)) {
-      continue
-    }
-
-    nextLeft =
-      edgeLayout.proxy.side === 'left'
-        ? edgeRect.left + edgeRect.width + PROXY_CARD_GAP
-        : edgeRect.left - cardWidth - PROXY_CARD_GAP
-    nextLeft = clampProxyPosition({
-      max: maxLeft,
-      min: PROXY_CARD_EDGE_GAP,
-      value: nextLeft,
-    })
-  }
-
-  if (nextLeft === Number(layout.style.left)) {
-    return layout
-  }
-
-  return {
-    ...layout,
-    style: {
-      ...layout.style,
-      left: nextLeft,
-    },
-  }
-}
-
-function getProxyLayoutRect(
-  layout: OffscreenRelationProxyLayout,
-  viewport: DbmlDiagramViewport,
-) {
-  return {
-    left: Number(layout.style.left),
-    top: Number(layout.style.top),
-    width: getScaledProxyCardWidth(viewport),
-    height: getScaledProxyCardHeight(layout.proxy, viewport),
-  }
-}
-
-function rectanglesOverlap(
-  first: { left: number; top: number; width: number; height: number },
-  second: { left: number; top: number; width: number; height: number },
-) {
-  return (
-    first.left < second.left + second.width &&
-    first.left + first.width > second.left &&
-    first.top < second.top + second.height &&
-    first.top + first.height > second.top
-  )
-}
-
-function clampProxyPosition({
-  max,
-  min,
-  value,
-}: {
-  max: number
-  min: number
-  value: number
-}) {
-  return Math.max(min, Math.min(max, value))
-}
-
-function getNonOverlappingStackPositions({
-  desiredPositions,
-  itemSizes,
-  maxEndPosition,
-  minPosition,
-}: {
-  desiredPositions: readonly number[]
-  itemSizes: readonly number[]
-  maxEndPosition: number
-  minPosition: number
-}) {
-  const positions: number[] = []
-
-  for (const [index, position] of desiredPositions.entries()) {
-    const previousPosition = positions.at(-1) ?? null
-    const minAllowedPosition =
-      previousPosition === null
-        ? minPosition
-        : previousPosition + itemSizes[index - 1] + PROXY_CARD_GAP
-
-    positions.push(Math.max(position, minAllowedPosition))
-  }
-
-  const lastPosition = positions.at(-1)
-  const lastItemSize = itemSizes.at(-1)
-  const overflow =
-    lastPosition === undefined || lastItemSize === undefined
-      ? 0
-      : lastPosition + lastItemSize - maxEndPosition
-
-  if (overflow <= 0) {
-    return positions
-  }
-
-  const shiftedPositions = positions.map((position) => position - overflow)
-  const underflow = minPosition - shiftedPositions[0]
-
-  if (underflow <= 0) {
-    return shiftedPositions
-  }
-
-  return shiftedPositions.map((position) => position + underflow)
-}
-
-type OffscreenRelationProxyLayout = {
-  proxy: DbmlOffscreenRelationProxy
-  style: CSSProperties
-}
-
-type RawOffscreenRelationProxyLayout = {
-  proxy: DbmlOffscreenRelationProxy
-  left: number
-  top: number
-}
-
 function getFlowElementsWithProxyLineEndpoints({
   elements,
   proxyLayouts,
@@ -1174,29 +772,6 @@ function getProxyRelationEndpoint({
     y: (screenEndpoint.y - viewport.y) / viewport.zoom,
     position: screenEndpoint.position,
   }
-}
-
-function getScaledProxyCardWidth(viewport: DbmlDiagramViewport) {
-  return PROXY_CARD_WIDTH * viewport.zoom
-}
-
-function getScaledProxyCardHeight(
-  proxy: DbmlOffscreenRelationProxy,
-  viewport: DbmlDiagramViewport,
-) {
-  return (
-    (PROXY_CARD_HEADER_HEIGHT +
-      proxy.columns.length * PROXY_CARD_COLUMN_HEIGHT) *
-    viewport.zoom
-  )
-}
-
-function getScaledProxyHeaderHeight(viewport: DbmlDiagramViewport) {
-  return PROXY_CARD_HEADER_HEIGHT * viewport.zoom
-}
-
-function getScaledProxyColumnHeight(viewport: DbmlDiagramViewport) {
-  return PROXY_CARD_COLUMN_HEIGHT * viewport.zoom
 }
 
 function areDiagramViewportsEqual(

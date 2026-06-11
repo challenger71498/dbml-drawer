@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXY_ACTIVE_NODE_AVOIDANCE_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
@@ -164,6 +165,12 @@ describe('editor theme preferences', () => {
         false,
       ),
     ).toBe(false)
+    expect(
+      readStoredBoolean(
+        EDITOR_OFFSCREEN_RELATION_PROXY_ACTIVE_NODE_AVOIDANCE_STORAGE_KEY,
+        false,
+      ),
+    ).toBe(false)
 
     const { unmount } = render(<ThemeHarness />)
 
@@ -173,6 +180,9 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('offscreen-proxy-lines')).toHaveTextContent(
       'disconnected',
     )
+    expect(
+      screen.getByTestId('offscreen-proxy-active-node-avoidance'),
+    ).toHaveTextContent('unavoided')
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'line',
     )
@@ -182,6 +192,7 @@ describe('editor theme preferences', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Enable proxies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Connect proxies' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Avoid active nodes' }))
     fireEvent.click(screen.getByRole('button', { name: 'Place parallel' }))
     fireEvent.click(screen.getByRole('button', { name: 'Visible at center' }))
 
@@ -189,6 +200,9 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('offscreen-proxy-lines')).toHaveTextContent(
       'connected',
     )
+    expect(
+      screen.getByTestId('offscreen-proxy-active-node-avoidance'),
+    ).toHaveTextContent('avoided')
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'parallel',
     )
@@ -203,6 +217,11 @@ describe('editor theme preferences', () => {
     expect(
       window.localStorage.getItem(
         EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
+      ),
+    ).toBe('true')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXY_ACTIVE_NODE_AVOIDANCE_STORAGE_KEY,
       ),
     ).toBe('true')
     expect(
@@ -223,6 +242,9 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('offscreen-proxy-lines')).toHaveTextContent(
       'connected',
     )
+    expect(
+      screen.getByTestId('offscreen-proxy-active-node-avoidance'),
+    ).toHaveTextContent('avoided')
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'parallel',
     )
@@ -240,12 +262,14 @@ function ThemeHarness() {
     resolvedCodeEditorTheme,
     isOffscreenRelationProxiesEnabled,
     shouldConnectOffscreenRelationProxyLines,
+    shouldAvoidOffscreenRelationProxyActiveNodes,
     offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
+    setShouldAvoidOffscreenRelationProxyActiveNodes,
     setOffscreenRelationProxyPlacementMode,
     setOffscreenRelationProxyVisibilityMode,
   } = useEditorThemePreferences()
@@ -263,6 +287,9 @@ function ThemeHarness() {
         {shouldConnectOffscreenRelationProxyLines
           ? 'connected'
           : 'disconnected'}
+      </span>
+      <span data-testid="offscreen-proxy-active-node-avoidance">
+        {shouldAvoidOffscreenRelationProxyActiveNodes ? 'avoided' : 'unavoided'}
       </span>
       <span data-testid="offscreen-proxy-placement">
         {offscreenRelationProxyPlacementMode}
@@ -290,6 +317,12 @@ function ThemeHarness() {
         onClick={() => setShouldConnectOffscreenRelationProxyLines(true)}
       >
         Connect proxies
+      </button>
+      <button
+        type="button"
+        onClick={() => setShouldAvoidOffscreenRelationProxyActiveNodes(true)}
+      >
+        Avoid active nodes
       </button>
       <button
         type="button"
