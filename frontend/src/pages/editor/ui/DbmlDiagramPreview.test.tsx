@@ -338,7 +338,7 @@ describe('DbmlDiagramPreview', () => {
     )
     expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
       'data-stroke',
-      DBML_RELATION_REFERENCE_COLOR,
+      DBML_RELATION_SOURCE_COLOR,
     )
     expect(
       screen.queryByTestId('relation-edge-gradient'),
@@ -365,7 +365,7 @@ describe('DbmlDiagramPreview', () => {
     )[0]
 
     expect(shortDots).toHaveLength(1)
-    expect(shortDots[0].tagName.toLowerCase()).toBe('circle')
+    expect(shortDots[0].tagName.toLowerCase()).toBe('g')
     expect(shortAnimation).toHaveAttribute('dur', '0.5s')
 
     shortEdge.unmount()
@@ -607,13 +607,13 @@ describe('DbmlDiagramPreview', () => {
     fireEvent.mouseEnter(userIdColumn)
 
     expect(userIdColumn).toHaveAttribute('data-active', 'false')
-    expect(userIdColumn).toHaveAttribute('data-source', 'false')
-    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
+    expect(userIdColumn).toHaveAttribute('data-source', 'true')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'false')
     expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
-    expect(getColumnRow('id', 'users')).toHaveAttribute('data-source', 'true')
+    expect(getColumnRow('id', 'users')).toHaveAttribute('data-source', 'false')
     expect(getColumnRow('id', 'users')).toHaveAttribute(
       'data-reference',
-      'false',
+      'true',
     )
 
     fireEvent.mouseLeave(userIdColumn)
@@ -670,13 +670,13 @@ describe('DbmlDiagramPreview', () => {
     fireEvent.mouseLeave(userIdColumn)
 
     expect(userIdColumn).toHaveAttribute('data-active', 'true')
-    expect(userIdColumn).toHaveAttribute('data-source', 'false')
-    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
+    expect(userIdColumn).toHaveAttribute('data-source', 'true')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'false')
     expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
-    expect(getColumnRow('id', 'users')).toHaveAttribute('data-source', 'true')
+    expect(getColumnRow('id', 'users')).toHaveAttribute('data-source', 'false')
     expect(getColumnRow('id', 'users')).toHaveAttribute(
       'data-reference',
-      'false',
+      'true',
     )
   })
 
@@ -692,13 +692,13 @@ describe('DbmlDiagramPreview', () => {
     fireEvent.click(postIdColumn)
 
     expect(postIdColumn).toHaveAttribute('data-active', 'true')
-    expect(postIdColumn).toHaveAttribute('data-source', 'true')
-    expect(postIdColumn).toHaveAttribute('data-reference', 'false')
-    expect(commentPostIdColumn).toHaveAttribute('data-source', 'false')
-    expect(commentPostIdColumn).toHaveAttribute('data-reference', 'true')
+    expect(postIdColumn).toHaveAttribute('data-source', 'false')
+    expect(postIdColumn).toHaveAttribute('data-reference', 'true')
+    expect(commentPostIdColumn).toHaveAttribute('data-source', 'true')
+    expect(commentPostIdColumn).toHaveAttribute('data-reference', 'false')
   })
 
-  it('keeps focused reference column role while another column is hovered', async () => {
+  it('keeps focused destination column role while another column is hovered', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
 
@@ -710,13 +710,14 @@ describe('DbmlDiagramPreview', () => {
     fireEvent.click(userIdColumn)
 
     expect(userIdColumn).toHaveAttribute('data-active', 'true')
-    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
+    expect(userIdColumn).toHaveAttribute('data-source', 'true')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'false')
 
     fireEvent.mouseEnter(unrelatedPostIdColumn)
 
     expect(userIdColumn).toHaveAttribute('data-active', 'true')
-    expect(userIdColumn).toHaveAttribute('data-source', 'false')
-    expect(userIdColumn).toHaveAttribute('data-reference', 'true')
+    expect(userIdColumn).toHaveAttribute('data-source', 'true')
+    expect(userIdColumn).toHaveAttribute('data-reference', 'false')
   })
 
   it('shows a paused state while keeping the last valid diagram', async () => {
@@ -956,11 +957,11 @@ function expectActiveGradientEdge(edge: HTMLElement) {
   const stops = gradient?.querySelectorAll('stop')
 
   expect(stops?.[0]).toHaveAttribute('offset', '0%')
-  expect(getStopColor(stops?.[0])).toBe(DBML_RELATION_SOURCE_COLOR)
-  expect(stops?.[1]).toHaveAttribute('offset', '80%')
-  expect(getStopColor(stops?.[1])).toBe(DBML_RELATION_REFERENCE_COLOR)
+  expect(getStopColor(stops?.[0])).toBe(DBML_RELATION_REFERENCE_COLOR)
+  expect(stops?.[1]).toHaveAttribute('offset', '90%')
+  expect(getStopColor(stops?.[1])).toBe(DBML_RELATION_SOURCE_COLOR)
   expect(stops?.[2]).toHaveAttribute('offset', '100%')
-  expect(getStopColor(stops?.[2])).toBe(DBML_RELATION_REFERENCE_COLOR)
+  expect(getStopColor(stops?.[2])).toBe(DBML_RELATION_SOURCE_COLOR)
 }
 
 function expectDynamicEdge(edge: HTMLElement) {
@@ -970,18 +971,40 @@ function expectDynamicEdge(edge: HTMLElement) {
   const dots = edge
     .closest('g')
     ?.querySelectorAll('[data-testid="relation-edge-flow-dot"]')
-  const fillAnimations = edge
+  const referenceDots = edge
     .closest('g')
-    ?.querySelectorAll('[data-testid="relation-edge-flow-fill-animation"]')
+    ?.querySelectorAll('[data-testid="relation-edge-flow-dot-reference"]')
+  const sourceDots = edge
+    .closest('g')
+    ?.querySelectorAll('[data-testid="relation-edge-flow-dot-source"]')
+  const sourceOpacityAnimations = edge
+    .closest('g')
+    ?.querySelectorAll(
+      '[data-testid="relation-edge-flow-source-opacity-animation"]',
+    )
   const animations = edge.closest('g')?.querySelectorAll('animateMotion')
 
   expect(dots).toHaveLength(2)
-  expect(fillAnimations).toHaveLength(2)
+  expect(referenceDots).toHaveLength(2)
+  expect(sourceDots).toHaveLength(2)
+  expect(sourceOpacityAnimations).toHaveLength(2)
   expect(animations).toHaveLength(2)
-  expect(dots?.[0]).toHaveAttribute('fill', DBML_RELATION_REFERENCE_COLOR)
-  expect(dots?.[0]).toHaveAttribute('cx', '0')
-  expect(dots?.[0]).toHaveAttribute('cy', '0')
-  expect(dots?.[0]).toHaveAttribute('r', '3.2')
+  expect(referenceDots?.[0]).toHaveAttribute(
+    'fill',
+    DBML_RELATION_REFERENCE_COLOR,
+  )
+  expect(sourceDots?.[0]).toHaveAttribute('fill', DBML_RELATION_SOURCE_COLOR)
+  expect(referenceDots?.[0]).toHaveAttribute('cx', '0')
+  expect(referenceDots?.[0]).toHaveAttribute('cy', '0')
+  expect(referenceDots?.[0]).toHaveAttribute('r', '3.2')
+  expect(sourceDots?.[0]).toHaveAttribute('cx', '0')
+  expect(sourceDots?.[0]).toHaveAttribute('cy', '0')
+  expect(sourceDots?.[0]).toHaveAttribute('r', '3.2')
+  expect(sourceOpacityAnimations?.[0]).toHaveAttribute('begin', '0s')
+  expect(sourceOpacityAnimations?.[1]).toHaveAttribute('begin', '-0.57s')
+  expect(sourceOpacityAnimations?.[0]).toHaveAttribute('dur', '1.14s')
+  expect(sourceOpacityAnimations?.[0]).toHaveAttribute('keyTimes', '0;0.1;1')
+  expect(sourceOpacityAnimations?.[0]).toHaveAttribute('values', '1;1;0')
   expect(animations?.[0]).toHaveAttribute('begin', '0s')
   expect(animations?.[1]).toHaveAttribute('begin', '-0.57s')
   expect(animations?.[0]).toHaveAttribute('dur', '1.14s')
@@ -989,14 +1012,6 @@ function expectDynamicEdge(edge: HTMLElement) {
   expect(animations?.[0]).toHaveAttribute('keyTimes', '0;1')
   expect(animations?.[0]).toHaveAttribute('path', edge.getAttribute('d'))
   expect(animations?.[0]).not.toHaveAttribute('rotate')
-  expect(fillAnimations?.[0]).toHaveAttribute('begin', '0s')
-  expect(fillAnimations?.[1]).toHaveAttribute('begin', '-0.57s')
-  expect(fillAnimations?.[0]).toHaveAttribute('dur', '1.14s')
-  expect(fillAnimations?.[0]).toHaveAttribute('keyTimes', '0;0.2;1')
-  expect(fillAnimations?.[0]).toHaveAttribute(
-    'values',
-    `${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`,
-  )
 }
 
 function isGradientStroke(stroke: string | null) {

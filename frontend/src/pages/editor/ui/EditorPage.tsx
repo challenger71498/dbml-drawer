@@ -33,6 +33,12 @@ import {
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
+import {
+  EDITOR_THEME_MODES,
+  type EditorThemeMode,
+  type ResolvedEditorTheme,
+  useEditorThemePreferences,
+} from '../model/editor-theme'
 import type { EditorInspectorActivity } from '../model/editor-inspector'
 import styles from './EditorPage.module.css'
 
@@ -85,6 +91,14 @@ export function EditorPage({
     useState<DbmlDiagramSelectionTarget | null>(null)
   const [focusedDiagramTarget, setFocusedDiagramTarget] =
     useState<DbmlDiagramSelectionTarget | null>(null)
+  const {
+    workspaceThemeMode,
+    codeEditorThemeMode,
+    resolvedWorkspaceTheme,
+    resolvedCodeEditorTheme,
+    setWorkspaceThemeMode,
+    setCodeEditorThemeMode,
+  } = useEditorThemePreferences()
   const {
     documentText,
     setDocumentText,
@@ -352,7 +366,13 @@ export function EditorPage({
   )
 
   return (
-    <main className={pageClassName}>
+    <main
+      className={pageClassName}
+      data-code-editor-theme={resolvedCodeEditorTheme}
+      data-code-editor-theme-mode={codeEditorThemeMode}
+      data-workspace-theme={resolvedWorkspaceTheme}
+      data-workspace-theme-mode={workspaceThemeMode}
+    >
       <EditorSidebarShell
         side="left"
         panelPlacement="after-activity-bar"
@@ -392,6 +412,7 @@ export function EditorPage({
             ref={editorRef}
             value={documentText}
             diagnostics={diagnostics}
+            theme={resolvedCodeEditorTheme}
             onChange={setDocumentText}
           />
         </div>
@@ -406,9 +427,21 @@ export function EditorPage({
             <p className={styles.eyebrow}>DBML</p>
             <h1 id="editor-heading">Editor</h1>
           </div>
-          <span className={styles.documentState}>
-            {diagnostics.length === 0 ? 'Valid' : 'Needs attention'}
-          </span>
+          <div className={styles.editorToolbarActions}>
+            <ThemeModeControl
+              label="Workspace theme"
+              value={workspaceThemeMode}
+              onChange={setWorkspaceThemeMode}
+            />
+            <ThemeModeControl
+              label="Code editor theme"
+              value={codeEditorThemeMode}
+              onChange={setCodeEditorThemeMode}
+            />
+            <span className={styles.documentState}>
+              {diagnostics.length === 0 ? 'Valid' : 'Needs attention'}
+            </span>
+          </div>
         </div>
 
         <div className={styles.editorContent}>
@@ -417,6 +450,9 @@ export function EditorPage({
               <DbmlDiagramPreview
                 activeRelationIds={activeRelationIds}
                 activeTarget={activeDiagramTarget}
+                backgroundColor={getDiagramBackgroundColor(
+                  resolvedWorkspaceTheme,
+                )}
                 diagram={layoutedDiagram}
                 focusedRelationIds={focusedRelationIds}
                 focusedTableIds={focusedTableIds}
@@ -448,6 +484,48 @@ export function EditorPage({
       ) : null}
     </main>
   )
+}
+
+function ThemeModeControl({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: EditorThemeMode
+  onChange: (mode: EditorThemeMode) => void
+}) {
+  return (
+    <div className={styles.themeControl}>
+      <span className={styles.themeControlLabel}>{label}</span>
+      <div className={styles.themeModeGroup} role="group" aria-label={label}>
+        {EDITOR_THEME_MODES.map((mode) => (
+          <button
+            aria-pressed={value === mode}
+            className={[
+              styles.themeModeButton,
+              value === mode ? styles.themeModeButtonActive : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            key={mode}
+            onClick={() => onChange(mode)}
+            type="button"
+          >
+            {getThemeModeLabel(mode)}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function getThemeModeLabel(mode: EditorThemeMode) {
+  return mode === 'system' ? 'System' : mode === 'dark' ? 'Dark' : 'Light'
+}
+
+function getDiagramBackgroundColor(theme: ResolvedEditorTheme) {
+  return theme === 'dark' ? '#45403d' : '#f7f7f7'
 }
 
 function clampEditorSidebarWidth(width: number) {

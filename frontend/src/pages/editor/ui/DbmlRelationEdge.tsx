@@ -26,7 +26,8 @@ const ACTIVE_RELATION_EDGE_STYLE = {
 const DYNAMIC_DOT_SPACING = 72
 const DYNAMIC_DOT_SPEED = 120
 const DYNAMIC_DOT_RADIUS = 3.2
-const DYNAMIC_MARKER_FILL_KEY_TIMES = '0;0.2;1'
+const DYNAMIC_DOT_SOURCE_OPACITY_KEY_TIMES = '0;0.1;1'
+const DYNAMIC_DOT_SOURCE_OPACITY_VALUES = '1;1;0'
 const BEZIER_LENGTH_SAMPLE_COUNT = 16
 
 const DIMMED_RELATION_EDGE_STYLE = {
@@ -97,9 +98,9 @@ export function DbmlRelationEdge({
             y1={sourceY}
             y2={targetY}
           >
-            <stop offset="0%" stopColor={DBML_RELATION_SOURCE_COLOR} />
-            <stop offset="80%" stopColor={DBML_RELATION_REFERENCE_COLOR} />
-            <stop offset="100%" stopColor={DBML_RELATION_REFERENCE_COLOR} />
+            <stop offset="0%" stopColor={DBML_RELATION_REFERENCE_COLOR} />
+            <stop offset="90%" stopColor={DBML_RELATION_SOURCE_COLOR} />
+            <stop offset="100%" stopColor={DBML_RELATION_SOURCE_COLOR} />
           </linearGradient>
         </defs>
       ) : null}
@@ -115,24 +116,32 @@ export function DbmlRelationEdge({
       {dynamicFlow ? (
         <>
           {dynamicFlow?.beginTimes.map((begin) => (
-            <circle
-              cx={0}
-              cy={0}
-              data-testid="relation-edge-flow-dot"
-              fill={DBML_RELATION_REFERENCE_COLOR}
-              key={begin}
-              r={DYNAMIC_DOT_RADIUS}
-            >
-              <animate
-                attributeName="fill"
-                begin={begin}
-                calcMode="linear"
-                data-testid="relation-edge-flow-fill-animation"
-                dur={dynamicFlow.duration}
-                keyTimes={DYNAMIC_MARKER_FILL_KEY_TIMES}
-                repeatCount="indefinite"
-                values={`${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_REFERENCE_COLOR};${DBML_RELATION_SOURCE_COLOR}`}
+            <g data-testid="relation-edge-flow-dot" key={begin}>
+              <circle
+                cx={0}
+                cy={0}
+                data-testid="relation-edge-flow-dot-reference"
+                fill={DBML_RELATION_REFERENCE_COLOR}
+                r={DYNAMIC_DOT_RADIUS}
               />
+              <circle
+                cx={0}
+                cy={0}
+                data-testid="relation-edge-flow-dot-source"
+                fill={DBML_RELATION_SOURCE_COLOR}
+                r={DYNAMIC_DOT_RADIUS}
+              >
+                <animate
+                  attributeName="opacity"
+                  begin={begin}
+                  calcMode="linear"
+                  data-testid="relation-edge-flow-source-opacity-animation"
+                  dur={dynamicFlow.duration}
+                  keyTimes={DYNAMIC_DOT_SOURCE_OPACITY_KEY_TIMES}
+                  repeatCount="indefinite"
+                  values={DYNAMIC_DOT_SOURCE_OPACITY_VALUES}
+                />
+              </circle>
               <animateMotion
                 begin={begin}
                 calcMode="linear"
@@ -143,7 +152,7 @@ export function DbmlRelationEdge({
                 path={path}
                 repeatCount="indefinite"
               />
-            </circle>
+            </g>
           ))}
         </>
       ) : null}
@@ -163,9 +172,7 @@ function getRelationEdgeStyle({
   if (isActive) {
     return {
       ...ACTIVE_RELATION_EDGE_STYLE,
-      stroke: gradientId
-        ? `url(#${gradientId})`
-        : DBML_RELATION_REFERENCE_COLOR,
+      stroke: gradientId ? `url(#${gradientId})` : DBML_RELATION_SOURCE_COLOR,
     } satisfies CSSProperties
   }
 

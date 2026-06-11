@@ -14,10 +14,16 @@ import {
   registerDbmlLanguage,
 } from '../lib/monaco-dbml-language'
 import type { DbmlDiagnostic } from '../model/dbml-diagnostics'
+import {
+  defineEditorMonacoThemes,
+  getMonacoTheme,
+  type ResolvedEditorTheme,
+} from '../model/editor-theme'
 
 type DbmlCodeEditorProps = {
   value: string
   diagnostics: readonly DbmlDiagnostic[]
+  theme: ResolvedEditorTheme
   onChange: (value: string) => void
 }
 
@@ -56,12 +62,13 @@ const EDITOR_OPTIONS: editor.IStandaloneEditorConstructionOptions = {
 export const DbmlCodeEditor = forwardRef<
   DbmlCodeEditorHandle,
   DbmlCodeEditorProps
->(function DbmlCodeEditor({ value, diagnostics, onChange }, ref) {
+>(function DbmlCodeEditor({ value, diagnostics, theme, onChange }, ref) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<MonacoApi | null>(null)
 
   const handleBeforeMount = useCallback((monacoApi: MonacoApi) => {
     registerDbmlLanguage(monacoApi)
+    defineEditorMonacoThemes(monacoApi)
   }, [])
 
   const handleMount = useCallback(
@@ -127,7 +134,7 @@ export const DbmlCodeEditor = forwardRef<
       onMount={handleMount}
       options={EDITOR_OPTIONS}
       path="workspace.dbml"
-      theme="vs-dark"
+      theme={getMonacoTheme(theme)}
       value={value}
     />
   )

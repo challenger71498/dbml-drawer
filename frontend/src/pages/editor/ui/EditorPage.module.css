@@ -1,9 +1,115 @@
 .editorPage {
+  /* VS Code Light 2026 palette. */
+  --editor-color-page-bg: #fafafd;
+  --editor-color-workspace-bg: #ffffff;
+  --editor-color-panel-bg: #fafafd;
+  --editor-color-panel-muted-bg: #eaeaea;
+  --editor-color-diagram-bg: #f7f7f7;
+  --editor-color-border: #f0f1f2;
+  --editor-color-border-control: #d8d8d8;
+  --editor-color-border-strong: #868686;
+  --editor-color-text: #202020;
+  --editor-color-text-strong: #202020;
+  --editor-color-text-muted: #606060;
+  --editor-color-text-subtle: #999999;
+  --editor-color-text-faint: #bbbbbb;
+  --editor-color-title: #b69500;
+  --editor-color-control-hover-bg: #e3e3e5;
+  --editor-color-control-hover-soft-bg: #f1f1f3;
+  --editor-color-control-active-bg: #0069cc;
+  --editor-color-control-active-hover-bg: #0063c1;
+  --editor-color-control-active-text: #ffffff;
+  --editor-color-brand: #0069cc;
+  --editor-color-table-header-bg: #202020;
+  --editor-color-table-header-active-bg: #000000;
+  --editor-color-table-header-muted: #f2f3f4;
+  --editor-color-table-border: #d8d8d8;
+  --editor-color-table-shadow: rgb(32 32 32 / 12%);
+  --editor-color-table-active-shadow: rgb(32 32 32 / 18%);
+  --editor-color-floating-shadow: rgb(32 32 32 / 12%);
+  --editor-color-table-active-accent: #b69500;
+  --editor-color-table-active-ring: rgb(182 149 0 / 22%);
+  --editor-color-relation-line: var(--editor-color-text);
+  --editor-color-relation-source: #b69500;
+  --editor-color-relation-reference: #0069cc;
+  --editor-color-reference-accent: #0069cc;
+  --editor-color-reference-bg: #e6f6f8;
+  --editor-color-source-accent: #b69500;
+  --editor-color-source-bg: #fdf6e3;
+  --editor-color-column-border: #eeeeee;
+  --editor-color-badge-bg: #e6f2fa;
+  --editor-color-badge-text: #0069cc;
+  --editor-color-handle-bg: #0069cc;
+  --editor-color-handle-border: #d8d8d8;
+  --editor-color-diagnostics-empty-border: #e2e2e5;
+  --editor-color-diagnostics-empty-bg: #fafafd;
+  --editor-color-diagnostics-empty-text: #606060;
+  --editor-color-diagnostics-error-border: #ad0707;
+  --editor-color-diagnostics-error-bg: #fdeded;
+  --editor-color-diagnostics-text: #202020;
+  --editor-color-diagnostics-muted: #606060;
+  --editor-color-error: #ad0707;
+  --editor-color-warning: #667309;
+
   display: grid;
   min-height: 100vh;
   grid-template-columns: auto minmax(0, 1fr);
-  background: #edf1f5;
-  color: #172033;
+  background: var(--editor-color-page-bg);
+  color: var(--editor-color-text-strong);
+}
+
+.editorPage[data-workspace-theme='dark'] {
+  /* Gruvbox Material medium/material palette. */
+  --editor-color-page-bg: #1b1b1b;
+  --editor-color-workspace-bg: #282828;
+  --editor-color-panel-bg: #282828;
+  --editor-color-panel-muted-bg: #32302f;
+  --editor-color-diagram-bg: #1b1b1b;
+  --editor-color-border: #45403d;
+  --editor-color-border-control: #504945;
+  --editor-color-border-strong: #928374;
+  --editor-color-text: #d4be98;
+  --editor-color-text-strong: #ddc7a1;
+  --editor-color-text-muted: #a89984;
+  --editor-color-text-subtle: #928374;
+  --editor-color-text-faint: #7c6f64;
+  --editor-color-title: #d8a657;
+  --editor-color-control-hover-bg: #45403d;
+  --editor-color-control-hover-soft-bg: #32302f;
+  --editor-color-control-active-bg: #7daea3;
+  --editor-color-control-active-hover-bg: #89b482;
+  --editor-color-control-active-text: #ffffff;
+  --editor-color-brand: #7daea3;
+  --editor-color-table-header-bg: #32302f;
+  --editor-color-table-header-active-bg: #45403d;
+  --editor-color-table-header-muted: #a89984;
+  --editor-color-table-border: #504945;
+  --editor-color-table-shadow: rgb(0 0 0 / 26%);
+  --editor-color-table-active-shadow: rgb(0 0 0 / 32%);
+  --editor-color-floating-shadow: rgb(0 0 0 / 28%);
+  --editor-color-table-active-accent: #d8a657;
+  --editor-color-table-active-ring: rgb(216 166 87 / 24%);
+  --editor-color-relation-line: var(--editor-color-text);
+  --editor-color-relation-source: #d8a657;
+  --editor-color-relation-reference: #7daea3;
+  --editor-color-reference-accent: #7daea3;
+  --editor-color-reference-bg: #374141;
+  --editor-color-source-accent: #d8a657;
+  --editor-color-source-bg: #4f422e;
+  --editor-color-column-border: #32302f;
+  --editor-color-badge-bg: #374141;
+  --editor-color-badge-text: #7daea3;
+  --editor-color-handle-bg: #7daea3;
+  --editor-color-handle-border: #504945;
+  --editor-color-diagnostics-empty-border: #45403d;
+  --editor-color-diagnostics-empty-bg: #32302f;
+  --editor-color-diagnostics-empty-text: #a89984;
+  --editor-color-diagnostics-error-border: #633936;
+  --editor-color-diagnostics-error-bg: #402120;
+  --editor-color-diagnostics-text: #ddc7a1;
+  --editor-color-diagnostics-muted: #a89984;
+  --editor-color-error: #ea6962;
+  --editor-color-warning: #d8a657;
 }
 
 .editorPageLeftSidebarExpanded {
@@ -30,11 +136,11 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  background: #f8fafc;
+  background: var(--editor-color-workspace-bg);
 }
 
 .editorPageWithInspector .editorWorkspace {
-  border-right: 1px solid #d7dde6;
+  border-right: 1px solid var(--editor-color-border);
 }
 
 .editorToolbar {
@@ -44,13 +150,13 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid #d7dde6;
-  background: #ffffff;
+  border-bottom: 1px solid var(--editor-color-border);
+  background: var(--editor-color-panel-bg);
 }
 
 .eyebrow {
   margin: 0 0 0.25rem;
-  color: #5d6678;
+  color: var(--editor-color-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -58,9 +164,67 @@
 
 .editorToolbar h1 {
   margin: 0;
-  color: #172033;
+  color: var(--editor-color-title);
   font-size: 1.35rem;
   line-height: 1.2;
+}
+
+.editorToolbarActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.themeControl {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.themeControlLabel {
+  color: var(--editor-color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.themeModeGroup {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--editor-color-border-control);
+  border-radius: 6px;
+  background: var(--editor-color-panel-muted-bg);
+}
+
+.themeModeButton {
+  min-height: 1.75rem;
+  padding: 0 0.55rem;
+  border: 0;
+  border-right: 1px solid var(--editor-color-border-control);
+  background: transparent;
+  color: var(--editor-color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.themeModeButton:last-child {
+  border-right: 0;
+}
+
+.themeModeButton:hover {
+  background: var(--editor-color-control-hover-soft-bg);
+  color: var(--editor-color-control-active-bg);
+}
+
+.themeModeButtonActive,
+.themeModeButtonActive:hover {
+  background: var(--editor-color-control-active-bg);
+  color: var(--editor-color-control-active-text);
 }
 
 .documentState,
@@ -70,10 +234,10 @@
   justify-content: center;
   min-height: 1.75rem;
   padding: 0 0.65rem;
-  border: 1px solid #cbd4e1;
+  border: 1px solid var(--editor-color-border-control);
   border-radius: 999px;
-  background: #f8fafc;
-  color: #344056;
+  background: var(--editor-color-panel-muted-bg);
+  color: var(--editor-color-text);
   font-size: 0.8rem;
   font-weight: 700;
   white-space: nowrap;
@@ -98,7 +262,7 @@
   min-width: 0;
   min-height: 100vh;
   grid-template-columns: 3rem;
-  background: #ffffff;
+  background: var(--editor-color-panel-bg);
 }
 
 .editorSidebarDockExpanded.editorSidebarDockPanelAfter {
@@ -114,17 +278,17 @@
   align-items: center;
   gap: 0;
   padding: 0;
-  background: #f8fafc;
+  background: var(--editor-color-panel-muted-bg);
   flex-direction: column;
 }
 
 .editorSidebarActivityBarLeft {
   min-height: 100vh;
-  border-right: 1px solid #d7dde6;
+  border-right: 1px solid var(--editor-color-border);
 }
 
 .editorSidebarActivityBarRight {
-  border-left: 1px solid #d7dde6;
+  border-left: 1px solid var(--editor-color-border);
 }
 
 .editorSidebarPanel {
@@ -132,17 +296,17 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--editor-color-panel-bg);
 }
 
 .editorSidebarPanelLeft {
   min-height: 100vh;
-  border-right: 1px solid #d7dde6;
+  border-right: 1px solid var(--editor-color-border);
 }
 
 .editorSidebarPanelRight {
   min-height: 0;
-  border-left: 1px solid #d7dde6;
+  border-left: 1px solid var(--editor-color-border);
 }
 
 .editorSidebarHeader {
@@ -152,14 +316,14 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0 0 0 0.6rem;
-  border-bottom: 1px solid #d7dde6;
-  background: #f8fafc;
+  border-bottom: 1px solid var(--editor-color-border);
+  background: var(--editor-color-panel-muted-bg);
 }
 
 .editorSidebarHeader h2 {
   transform: translateY(0.5px);
   margin: 0;
-  color: #697486;
+  color: var(--editor-color-text-subtle);
   font-size: 0.68rem;
   line-height: 1;
   font-weight: 600;
@@ -185,14 +349,14 @@
   border: 1px solid transparent;
   border-radius: 0;
   background: transparent;
-  color: #5d6678;
+  color: var(--editor-color-text-muted);
   cursor: pointer;
 }
 
 .editorSidebarClose:hover {
-  border-color: #cbd4e1;
-  background: #e8eef5;
-  color: #22324a;
+  border-color: var(--editor-color-border-control);
+  background: var(--editor-color-control-hover-bg);
+  color: var(--editor-color-control-active-bg);
 }
 
 .editorSidebarResizeHandle {
@@ -234,11 +398,11 @@
 
 .editorSidebarResizeHandle:hover::before,
 .editorSidebarResizeHandle:focus-visible::before {
-  background: #3b6ea8;
+  background: var(--editor-color-brand);
 }
 
 .editorSidebarResizeHandle:focus-visible {
-  outline: 2px solid #3b6ea8;
+  outline: 2px solid var(--editor-color-brand);
   outline-offset: -2px;
 }
 
@@ -260,12 +424,12 @@
   min-width: 0;
   min-height: 0;
   flex-direction: column;
-  background: #f3f6fa;
+  background: var(--editor-color-diagram-bg);
 }
 
 .diagramFallback {
   min-height: 24rem;
-  background: #f3f6fa;
+  background: var(--editor-color-diagram-bg);
 }
 
 .diagramHeader {
@@ -275,13 +439,13 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #d7dde6;
-  background: #ffffff;
+  border-bottom: 1px solid var(--editor-color-border);
+  background: var(--editor-color-panel-bg);
 }
 
 .diagramHeader h2 {
   margin: 0;
-  color: #172033;
+  color: var(--editor-color-title);
   font-size: 1.05rem;
   line-height: 1.2;
 }
@@ -298,18 +462,18 @@
 .relationLineStyleControl {
   display: inline-flex;
   overflow: hidden;
-  border: 1px solid #cbd4e1;
+  border: 1px solid var(--editor-color-border-control);
   border-radius: 6px;
-  background: #f8fafc;
+  background: var(--editor-color-panel-muted-bg);
 }
 
 .relationLineStyleButton {
   min-height: 1.75rem;
   padding: 0 0.55rem;
   border: 0;
-  border-right: 1px solid #cbd4e1;
+  border-right: 1px solid var(--editor-color-border-control);
   background: transparent;
-  color: #5d6678;
+  color: var(--editor-color-text-muted);
   font: inherit;
   font-size: 0.75rem;
   font-weight: 800;
@@ -321,14 +485,14 @@
 }
 
 .relationLineStyleButton:hover {
-  background: #eef3f8;
-  color: #22324a;
+  background: var(--editor-color-control-hover-soft-bg);
+  color: var(--editor-color-control-active-bg);
 }
 
 .relationLineStyleButtonActive,
 .relationLineStyleButtonActive:hover {
-  background: #22324a;
-  color: #ffffff;
+  background: var(--editor-color-control-active-bg);
+  color: var(--editor-color-control-active-text);
 }
 
 .diagramSurface {
@@ -344,13 +508,13 @@
   left: 1rem;
   margin: 0;
   padding: 0.5rem 0.7rem;
-  border: 1px solid #cbd4e1;
+  border: 1px solid var(--editor-color-border-control);
   border-radius: 8px;
-  background: #ffffff;
-  color: #344056;
+  background: var(--editor-color-panel-bg);
+  color: var(--editor-color-text);
   font-size: 0.82rem;
   font-weight: 700;
-  box-shadow: 0 8px 18px rgb(23 32 51 / 10%);
+  box-shadow: 0 8px 18px var(--editor-color-floating-shadow);
 }
 
 .diagramStatus {
@@ -364,17 +528,17 @@
 .diagramTableNode {
   width: 260px;
   overflow: hidden;
-  border: 1px solid #bac6d6;
+  border: 1px solid var(--editor-color-table-border);
   border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 10px 24px rgb(23 32 51 / 12%);
+  background: var(--editor-color-panel-bg);
+  box-shadow: 0 10px 24px var(--editor-color-table-shadow);
 }
 
 .diagramTableNodeActive {
-  border-color: #e05d2f;
+  border-color: var(--editor-color-table-active-accent);
   box-shadow:
-    0 0 0 2px rgb(224 93 47 / 18%),
-    0 14px 30px rgb(23 32 51 / 18%);
+    0 0 0 2px var(--editor-color-table-active-ring),
+    0 14px 30px var(--editor-color-table-active-shadow);
 }
 
 .diagramTableNodeConnected {
@@ -417,19 +581,19 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0 0.85rem;
-  border-bottom: 1px solid #d7dde6;
-  background: #22324a;
-  color: #ffffff;
+  border-bottom: 1px solid var(--editor-color-border);
+  background: var(--editor-color-table-header-bg);
+  color: var(--editor-color-title);
   font-weight: 800;
 }
 
 .diagramTableHeaderActive {
-  background: #172033;
+  background: var(--editor-color-table-header-active-bg);
 }
 
 .diagramTableHeader small {
   overflow: hidden;
-  color: #c9d4e3;
+  color: var(--editor-color-table-header-muted);
   font-size: 0.72rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -447,8 +611,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0 0.75rem;
-  border-bottom: 1px solid #edf1f5;
-  color: #263245;
+  border-bottom: 1px solid var(--editor-color-page-bg);
+  color: var(--editor-color-text);
   font-size: 0.78rem;
   cursor: pointer;
 }
@@ -458,44 +622,44 @@
 }
 
 .diagramColumnRow:hover {
-  background: #f8fafc;
+  background: var(--editor-color-panel-muted-bg);
 }
 
 .diagramColumnRowActive {
   z-index: 1;
-  background: #fff1e8;
-  color: #172033;
-  box-shadow: inset 3px 0 0 #e05d2f;
+  background: var(--editor-color-reference-bg);
+  color: var(--editor-color-text-strong);
+  box-shadow: inset 3px 0 0 var(--editor-color-reference-accent);
 }
 
 .diagramColumnRowActive:hover {
-  background: #fff1e8;
+  background: var(--editor-color-reference-bg);
 }
 
 .diagramColumnRowSource {
   z-index: 1;
-  background: #eef2f7;
-  color: #172033;
-  box-shadow: inset 3px 0 0 #22324a;
+  background: var(--editor-color-source-bg);
+  color: var(--editor-color-text-strong);
+  box-shadow: inset 3px 0 0 var(--editor-color-source-accent);
 }
 
 .diagramColumnRowSource:hover {
-  background: #eef2f7;
+  background: var(--editor-color-source-bg);
 }
 
 .diagramColumnRowReference {
   z-index: 1;
-  background: #fff1e8;
-  color: #172033;
-  box-shadow: inset 3px 0 0 #e05d2f;
+  background: var(--editor-color-reference-bg);
+  color: var(--editor-color-text-strong);
+  box-shadow: inset 3px 0 0 var(--editor-color-reference-accent);
 }
 
 .diagramColumnRowReference:hover {
-  background: #fff1e8;
+  background: var(--editor-color-reference-bg);
 }
 
 .diagramColumnRowDimmed {
-  color: #7b8494;
+  color: var(--editor-color-text-faint);
 }
 
 .diagramColumnName,
@@ -514,7 +678,7 @@
 }
 
 .diagramColumnType {
-  color: #697486;
+  color: var(--editor-color-text-subtle);
 }
 
 .diagramColumnBadge {
@@ -523,8 +687,8 @@
   min-height: 1rem;
   padding: 0 0.3rem;
   border-radius: 4px;
-  background: #dfefff;
-  color: #24527d;
+  background: var(--editor-color-badge-bg);
+  color: var(--editor-color-badge-text);
   font-size: 0.65rem;
   font-weight: 800;
 }
@@ -532,8 +696,8 @@
 .diagramColumnHandle {
   width: 8px;
   height: 8px;
-  border: 1px solid #ffffff;
-  background: #3b6ea8;
+  border: 1px solid var(--editor-color-handle-border) !important;
+  background: var(--editor-color-handle-bg) !important;
 }
 
 .editorActivityButton {
@@ -545,26 +709,26 @@
   border: 1px solid transparent;
   border-radius: 0;
   background: transparent;
-  color: #5d6678;
+  color: var(--editor-color-text-muted);
   cursor: pointer;
 }
 
 .editorActivityButton:hover {
-  border-color: #cbd4e1;
-  background: #e8eef5;
-  color: #22324a;
+  border-color: var(--editor-color-border-control);
+  background: var(--editor-color-control-hover-bg);
+  color: var(--editor-color-control-active-bg);
 }
 
 .editorActivityButtonActive {
-  border-color: #22324a;
-  background: #22324a;
-  color: #ffffff;
+  border-color: var(--editor-color-control-active-bg);
+  background: var(--editor-color-control-active-bg);
+  color: var(--editor-color-control-active-text);
 }
 
 .editorActivityButtonActive:hover {
-  border-color: #172033;
-  background: #172033;
-  color: #ffffff;
+  border-color: var(--editor-color-control-active-hover-bg);
+  background: var(--editor-color-control-active-hover-bg);
+  color: var(--editor-color-control-active-text);
 }
 
 .editorActivityIcon {
@@ -574,7 +738,7 @@
 
 .inspectorPanelFallback {
   min-height: 8rem;
-  background: #ffffff;
+  background: var(--editor-color-panel-bg);
 }
 
 .diagnosticsPanel {
@@ -600,7 +764,7 @@
 .presetField {
   display: grid;
   gap: 0.35rem;
-  color: #344056;
+  color: var(--editor-color-text);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -609,10 +773,10 @@
 .presetField input {
   min-width: 0;
   min-height: 2.25rem;
-  border: 1px solid #cbd4e1;
+  border: 1px solid var(--editor-color-border-control);
   border-radius: 6px;
-  background: #ffffff;
-  color: #172033;
+  background: var(--editor-color-panel-bg);
+  color: var(--editor-color-text-strong);
   font: inherit;
   font-weight: 600;
 }
@@ -626,10 +790,10 @@
   display: grid;
   min-height: 2.4rem;
   place-items: center start;
-  border: 1px solid #cbd4e1;
+  border: 1px solid var(--editor-color-border-control);
   border-radius: 6px;
-  background: #ffffff;
-  color: #344056;
+  background: var(--editor-color-panel-bg);
+  color: var(--editor-color-text);
   font: inherit;
   font-size: 0.84rem;
   font-weight: 700;
@@ -637,8 +801,8 @@
 }
 
 .presetListButton:hover {
-  border-color: #97a7ba;
-  background: #f8fafc;
+  border-color: var(--editor-color-border-strong);
+  background: var(--editor-color-panel-muted-bg);
 }
 
 .diagramSettingsControls {
@@ -650,7 +814,7 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  color: #344056;
+  color: var(--editor-color-text);
   font-size: 0.82rem;
   font-weight: 700;
 }
@@ -662,7 +826,7 @@
 
 .presetDescription {
   margin: 0;
-  color: #5d6678;
+  color: var(--editor-color-text-muted);
   font-size: 0.82rem;
   line-height: 1.4;
 }
@@ -670,10 +834,10 @@
 .diagnosticsEmpty {
   margin: 0;
   padding: 1rem;
-  border: 1px solid #dbe3ed;
+  border: 1px solid var(--editor-color-diagnostics-empty-border);
   border-radius: 8px;
-  background: #f8fafc;
-  color: #556173;
+  background: var(--editor-color-diagnostics-empty-bg);
+  color: var(--editor-color-diagnostics-empty-text);
 }
 
 .diagnosticsList {
@@ -689,14 +853,14 @@
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.65rem;
   padding: 0.85rem;
-  border: 1px solid #f0c5c5;
+  border: 1px solid var(--editor-color-diagnostics-error-border);
   border-radius: 8px;
-  background: #fff7f7;
+  background: var(--editor-color-diagnostics-error-bg);
 }
 
 .diagnosticsItem p {
   margin: 0;
-  color: #2d3545;
+  color: var(--editor-color-diagnostics-text);
   font-size: 0.9rem;
   line-height: 1.4;
 }
@@ -704,7 +868,7 @@
 .diagnosticsItem span {
   display: block;
   margin-top: 0.35rem;
-  color: #6d7687;
+  color: var(--editor-color-diagnostics-muted);
   font-size: 0.8rem;
 }
 
@@ -716,11 +880,11 @@
 }
 
 .severityDotError {
-  background: #d83b3b;
+  background: var(--editor-color-error);
 }
 
 .severityDotWarning {
-  background: #d99a1e;
+  background: var(--editor-color-warning);
 }
 
 @media (max-width: 840px) {
@@ -739,7 +903,7 @@
   .editorWorkspace {
     min-height: 70vh;
     border-right: 0;
-    border-bottom: 1px solid #d7dde6;
+    border-bottom: 1px solid var(--editor-color-border);
   }
 
   .editorContent {
@@ -758,13 +922,13 @@
 
   .editorSidebarActivityBarLeft {
     border-right: 0;
-    border-bottom: 1px solid #d7dde6;
+    border-bottom: 1px solid var(--editor-color-border);
   }
 
   .editorSidebarPanelLeft {
     min-height: 24rem;
     border-right: 0;
-    border-bottom: 1px solid #d7dde6;
+    border-bottom: 1px solid var(--editor-color-border);
   }
 
   .editorSidebarResizeHandle {
@@ -790,9 +954,9 @@
 
   .editorSidebarActivityBarRight {
     flex-direction: row;
-    border-top: 1px solid #d7dde6;
+    border-top: 1px solid var(--editor-color-border);
     border-left: 0;
-    border-bottom: 1px solid #d7dde6;
+    border-bottom: 1px solid var(--editor-color-border);
   }
 
   .editorSidebarPanelRight {

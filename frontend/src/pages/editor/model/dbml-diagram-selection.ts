@@ -116,8 +116,8 @@ export function getRelationEndpointColumnIdsForTargets(
         continue
       }
 
-      sourceColumnIds.add(relation.sourceColumnId)
-      referenceColumnIds.add(relation.targetColumnId)
+      sourceColumnIds.add(relation.targetColumnId)
+      referenceColumnIds.add(relation.sourceColumnId)
     }
   }
 

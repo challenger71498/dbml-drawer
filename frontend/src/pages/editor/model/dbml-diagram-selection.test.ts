@@ -79,14 +79,12 @@ describe('dbml diagram selection', () => {
   })
 
   it('combines relation ids for hovered and focused targets', () => {
-    expect(
-      [
-        ...getRelationIdsForTargets(DIAGRAM, [
-          TABLE_TARGET,
-          TARGET_SIDE_COLUMN_TARGET,
-        ]),
-      ],
-    ).toEqual(['relation:1:0', 'relation:2:0'])
+    expect([
+      ...getRelationIdsForTargets(DIAGRAM, [
+        TABLE_TARGET,
+        TARGET_SIDE_COLUMN_TARGET,
+      ]),
+    ]).toEqual(['relation:1:0', 'relation:2:0'])
   })
 
   it('derives active table ids for a table target', () => {
@@ -110,10 +108,10 @@ describe('dbml diagram selection', () => {
     )
 
     expect([...endpointColumnIds.sourceColumnIds]).toEqual([
-      'table:public.posts.column:user_id',
+      'table:public.users.column:id',
     ])
     expect([...endpointColumnIds.referenceColumnIds]).toEqual([
-      'table:public.users.column:id',
+      'table:public.posts.column:user_id',
     ])
   })
 
@@ -124,10 +122,10 @@ describe('dbml diagram selection', () => {
     )
 
     expect([...endpointColumnIds.sourceColumnIds]).toEqual([
-      'table:public.comments.column:post_id',
+      'table:public.posts.column:id',
     ])
     expect([...endpointColumnIds.referenceColumnIds]).toEqual([
-      'table:public.posts.column:id',
+      'table:public.comments.column:post_id',
     ])
   })
 
@@ -148,12 +146,12 @@ describe('dbml diagram selection', () => {
     ])
 
     expect([...endpointColumnIds.sourceColumnIds]).toEqual([
-      'table:public.posts.column:user_id',
-      'table:public.comments.column:post_id',
-    ])
-    expect([...endpointColumnIds.referenceColumnIds]).toEqual([
       'table:public.users.column:id',
       'table:public.posts.column:id',
+    ])
+    expect([...endpointColumnIds.referenceColumnIds]).toEqual([
+      'table:public.posts.column:user_id',
+      'table:public.comments.column:post_id',
     ])
   })
 })

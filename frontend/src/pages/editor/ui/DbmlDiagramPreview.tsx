@@ -34,6 +34,7 @@ type DbmlDiagramPreviewProps = {
   diagram: LayoutedDbmlDiagram | null
   isPending: boolean
   isPaused: boolean
+  backgroundColor?: string
   activeRelationIds?: ReadonlySet<string>
   activeTarget?: DbmlDiagramSelectionTarget | null
   focusedRelationIds?: ReadonlySet<string>
@@ -108,6 +109,7 @@ export function DbmlDiagramPreview({
   diagram,
   isPending,
   isPaused,
+  backgroundColor = '#d7dde6',
   activeRelationIds = EMPTY_ACTIVE_RELATION_IDS,
   activeTarget = null,
   focusedRelationIds = EMPTY_ACTIVE_RELATION_IDS,
@@ -235,6 +237,7 @@ export function DbmlDiagramPreview({
         <ReactFlowProvider>
           <DbmlDiagramSelectionViewProvider value={selectionViewState}>
             <DiagramCanvas
+              backgroundColor={backgroundColor}
               elements={elements}
               fitViewKey={fitViewKey}
               isEmpty={isEmpty}
@@ -258,6 +261,7 @@ export function DbmlDiagramPreview({
 }
 
 type DiagramCanvasProps = {
+  backgroundColor: string
   elements: DbmlDiagramFlowElements
   fitViewKey: string
   isEmpty: boolean
@@ -269,6 +273,7 @@ type DiagramCanvasProps = {
 type DbmlTableFlowNode = Node<DbmlTableNodeData>
 
 function DiagramCanvas({
+  backgroundColor,
   elements,
   fitViewKey,
   isEmpty,
@@ -338,7 +343,7 @@ function DiagramCanvas({
       zoomActivationKeyCode={null}
       proOptions={{ hideAttribution: true }}
     >
-      <Background color="#d7dde6" gap={20} />
+      <Background color={backgroundColor} gap={20} />
       <Controls showInteractive={false} />
     </ReactFlow>
   )

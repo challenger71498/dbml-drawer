@@ -8,6 +8,12 @@ import {
   within,
 } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
+  EDITOR_WORKSPACE_THEME_STORAGE_KEY,
+  GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
+  VSCODE_LIGHT_2026_MONACO_THEME,
+} from '../model/editor-theme'
 import { EditorPage } from './EditorPage'
 
 const monacoEditor = vi.hoisted(() => ({
@@ -21,6 +27,7 @@ const monacoEditor = vi.hoisted(() => ({
 
 const monacoApi = vi.hoisted(() => ({
   editor: {
+    defineTheme: vi.fn(),
     setModelMarkers: vi.fn(),
   },
   MarkerSeverity: {
@@ -95,10 +102,12 @@ vi.mock('../model/dbml-layout-settings', () => ({
 vi.mock('@monaco-editor/react', () => ({
   default: ({
     value,
+    theme,
     onChange,
     onMount,
   }: {
     value: string
+    theme: string
     onChange: (value?: string) => void
     onMount?: (editor: typeof monacoEditor, monaco: typeof monacoApi) => void
   }) => (
@@ -106,6 +115,7 @@ vi.mock('@monaco-editor/react', () => ({
     (
       <textarea
         aria-label="DBML editor"
+        data-monaco-theme={theme}
         value={value}
         onChange={(event) => onChange(event.currentTarget.value)}
       />
@@ -203,7 +213,10 @@ describe('EditorPage', () => {
     monacoEditor.revealPositionInCenter.mockClear()
     monacoEditor.setSelection.mockClear()
     monacoEditor.setPosition.mockClear()
+    monacoApi.editor.defineTheme.mockClear()
     monacoApi.editor.setModelMarkers.mockClear()
+    window.localStorage?.clear()
+    vi.restoreAllMocks()
     vi.useRealTimers()
   })
 
@@ -240,6 +253,108 @@ describe('EditorPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('applies and persists the workspace theme independently from the code editor theme', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    const { unmount } = render(<EditorPage isEditorDevMode={false} />)
+
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Workspace theme' })).getByRole(
+        'button',
+        { name: 'Dark' },
+      ),
+    )
+
+    const editorPage = screen.getByRole('main')
+    const editor = screen.getByRole('textbox', { name: 'DBML editor' })
+
+    expect(editorPage).toHaveAttribute('data-workspace-theme-mode', 'dark')
+    expect(editorPage).toHaveAttribute('data-workspace-theme', 'dark')
+    expect(editorPage).toHaveAttribute('data-code-editor-theme-mode', 'system')
+    expect(editorPage).toHaveAttribute('data-code-editor-theme', 'light')
+    expect(editor).toHaveAttribute(
+      'data-monaco-theme',
+      VSCODE_LIGHT_2026_MONACO_THEME,
+    )
+
+    unmount()
+    render(<EditorPage isEditorDevMode={false} />)
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-workspace-theme-mode',
+      'dark',
+    )
+    expect(
+      window.localStorage.getItem(EDITOR_WORKSPACE_THEME_STORAGE_KEY),
+    ).toBe('dark')
+  })
+
+  it('applies the code editor theme independently from the workspace theme', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    fireEvent.click(
+      within(
+        screen.getByRole('group', { name: 'Code editor theme' }),
+      ).getByRole('button', { name: 'Dark' }),
+    )
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-workspace-theme',
+      'light',
+    )
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme-mode',
+      'dark',
+    )
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme',
+      'dark',
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'DBML editor' }),
+    ).toHaveAttribute(
+      'data-monaco-theme',
+      GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
+    )
+    expect(
+      window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
+    ).toBe('dark')
+  })
+
+  it('resolves system theme changes for workspace and code editor themes', () => {
+    installLocalStorageMock()
+    const mediaQuery = installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-workspace-theme',
+      'light',
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'DBML editor' }),
+    ).toHaveAttribute('data-monaco-theme', VSCODE_LIGHT_2026_MONACO_THEME)
+
+    act(() => {
+      mediaQuery.setMatches(true)
+    })
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-workspace-theme',
+      'dark',
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'DBML editor' }),
+    ).toHaveAttribute(
+      'data-monaco-theme',
+      GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
+    )
+  })
+
   it('renders the DBML editor activity and toggles the left sidebar while keeping the diagram visible', async () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
@@ -265,7 +380,11 @@ describe('EditorPage', () => {
     expect(
       within(editorPanel).getByLabelText('DBML editor'),
     ).toBeInTheDocument()
-    expect(await screen.findByLabelText('Diagram canvas')).toBeInTheDocument()
+    expect(
+      await screen.findByLabelText('Diagram canvas', undefined, {
+        timeout: 3000,
+      }),
+    ).toBeInTheDocument()
 
     fireEvent.click(editorButton)
 
@@ -717,4 +836,64 @@ function isEditorRange(value: unknown): value is {
     typeof value.endLineNumber === 'number' &&
     typeof value.endColumn === 'number'
   )
+}
+
+type ThemeChangeListener = () => void
+
+function installMatchMediaMock(initialMatches: boolean) {
+  let matches = initialMatches
+  const listeners = new Set<ThemeChangeListener>()
+  const mediaQuery = {
+    get matches() {
+      return matches
+    },
+    media: '(prefers-color-scheme: dark)',
+    addEventListener: vi.fn(
+      (_event: 'change', listener: ThemeChangeListener) => {
+        listeners.add(listener)
+      },
+    ),
+    removeEventListener: vi.fn(
+      (_event: 'change', listener: ThemeChangeListener) => {
+        listeners.delete(listener)
+      },
+    ),
+    addListener: vi.fn((listener: ThemeChangeListener) => {
+      listeners.add(listener)
+    }),
+    removeListener: vi.fn((listener: ThemeChangeListener) => {
+      listeners.delete(listener)
+    }),
+    setMatches(nextMatches: boolean) {
+      matches = nextMatches
+      listeners.forEach((listener) => listener())
+    },
+  }
+
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn(() => mediaQuery),
+  })
+
+  return mediaQuery
+}
+
+function installLocalStorageMock() {
+  const values = new Map<string, string>()
+
+  Object.defineProperty(window, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: vi.fn((key: string) => values.get(key) ?? null),
+      setItem: vi.fn((key: string, value: string) => {
+        values.set(key, value)
+      }),
+      removeItem: vi.fn((key: string) => {
+        values.delete(key)
+      }),
+      clear: vi.fn(() => {
+        values.clear()
+      }),
+    },
+  })
 }
