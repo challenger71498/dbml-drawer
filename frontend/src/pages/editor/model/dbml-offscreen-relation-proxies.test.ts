@@ -132,6 +132,39 @@ describe('dbml offscreen relation proxies', () => {
       'relation:users:2',
     ])
   })
+
+  it('can keep proxies visible until the original table center enters the viewport', () => {
+    const partiallyVisibleUsers = createTable('users', 500, 0, ['id', 'email'])
+    const diagram: LayoutedDbmlDiagram = {
+      tables: [POSTS, partiallyVisibleUsers],
+      relations: [
+        createRelation({
+          id: 'relation:users:partial',
+          sourceTable: POSTS,
+          sourceColumn: 'user_id',
+          targetTable: partiallyVisibleUsers,
+          targetColumn: 'id',
+        }),
+      ],
+    }
+    const viewport = { x: 0, y: 0, zoom: 1, width: 600, height: 400 }
+
+    expect(
+      getOffscreenRelationProxies({
+        diagram,
+        focusedTarget: FOCUSED_TABLE_TARGET,
+        viewport,
+      }),
+    ).toHaveLength(0)
+    expect(
+      getOffscreenRelationProxies({
+        diagram,
+        focusedTarget: FOCUSED_TABLE_TARGET,
+        viewport,
+        visibilityMode: 'center',
+      }).map((proxy) => proxy.table.id),
+    ).toEqual([partiallyVisibleUsers.id])
+  })
 })
 
 function createTable(

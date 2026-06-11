@@ -4,14 +4,17 @@ import {
   EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
   EDITOR_WORKSPACE_THEME_STORAGE_KEY,
   normalizeCodeEditorThemeMode,
   normalizeEditorThemeMode,
   normalizeOffscreenRelationProxyPlacementMode,
+  normalizeOffscreenRelationProxyVisibilityMode,
   readStoredBoolean,
   readStoredCodeEditorThemeMode,
   readStoredOffscreenRelationProxyPlacementMode,
+  readStoredOffscreenRelationProxyVisibilityMode,
   readStoredThemeMode,
   useEditorThemePreferences,
 } from './editor-theme'
@@ -57,6 +60,23 @@ describe('editor theme preferences', () => {
         EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
       ),
     ).toBe('line')
+
+    window.localStorage.setItem(
+      EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
+      'invalid',
+    )
+
+    expect(normalizeOffscreenRelationProxyVisibilityMode('center')).toBe(
+      'center',
+    )
+    expect(normalizeOffscreenRelationProxyVisibilityMode('unknown')).toBe(
+      'any-overlap',
+    )
+    expect(
+      readStoredOffscreenRelationProxyVisibilityMode(
+        EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
+      ),
+    ).toBe('any-overlap')
   })
 
   it('persists workspace and code editor theme modes independently', () => {
@@ -156,10 +176,14 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'line',
     )
+    expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
+      'any-overlap',
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Enable proxies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Connect proxies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Place parallel' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Visible at center' }))
 
     expect(screen.getByTestId('offscreen-proxies')).toHaveTextContent('enabled')
     expect(screen.getByTestId('offscreen-proxy-lines')).toHaveTextContent(
@@ -167,6 +191,9 @@ describe('editor theme preferences', () => {
     )
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'parallel',
+    )
+    expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
+      'center',
     )
     expect(
       window.localStorage.getItem(
@@ -183,6 +210,11 @@ describe('editor theme preferences', () => {
         EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
       ),
     ).toBe('parallel')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
+      ),
+    ).toBe('center')
 
     unmount()
     render(<ThemeHarness />)
@@ -193,6 +225,9 @@ describe('editor theme preferences', () => {
     )
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'parallel',
+    )
+    expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
+      'center',
     )
   })
 })
@@ -206,11 +241,13 @@ function ThemeHarness() {
     isOffscreenRelationProxiesEnabled,
     shouldConnectOffscreenRelationProxyLines,
     offscreenRelationProxyPlacementMode,
+    offscreenRelationProxyVisibilityMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
     setOffscreenRelationProxyPlacementMode,
+    setOffscreenRelationProxyVisibilityMode,
   } = useEditorThemePreferences()
 
   return (
@@ -229,6 +266,9 @@ function ThemeHarness() {
       </span>
       <span data-testid="offscreen-proxy-placement">
         {offscreenRelationProxyPlacementMode}
+      </span>
+      <span data-testid="offscreen-proxy-visibility">
+        {offscreenRelationProxyVisibilityMode}
       </span>
       <button type="button" onClick={() => setWorkspaceThemeMode('dark')}>
         Workspace dark
@@ -256,6 +296,12 @@ function ThemeHarness() {
         onClick={() => setOffscreenRelationProxyPlacementMode('parallel')}
       >
         Place parallel
+      </button>
+      <button
+        type="button"
+        onClick={() => setOffscreenRelationProxyVisibilityMode('center')}
+      >
+        Visible at center
       </button>
     </div>
   )

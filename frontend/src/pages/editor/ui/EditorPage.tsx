@@ -102,11 +102,13 @@ export function EditorPage({
     isOffscreenRelationProxiesEnabled,
     shouldConnectOffscreenRelationProxyLines,
     offscreenRelationProxyPlacementMode,
+    offscreenRelationProxyVisibilityMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
     setOffscreenRelationProxyPlacementMode,
+    setOffscreenRelationProxyVisibilityMode,
   } = useEditorThemePreferences()
   const [codeEditorOverrideThemeMode, setCodeEditorOverrideThemeMode] =
     useState<EditorThemeMode>(() =>
@@ -338,6 +340,9 @@ export function EditorPage({
           offscreenRelationProxyPlacementMode={
             offscreenRelationProxyPlacementMode
           }
+          offscreenRelationProxyVisibilityMode={
+            offscreenRelationProxyVisibilityMode
+          }
           shouldConnectOffscreenRelationProxyLines={
             shouldConnectOffscreenRelationProxyLines
           }
@@ -357,6 +362,9 @@ export function EditorPage({
           onOffscreenRelationProxyPlacementModeChange={
             setOffscreenRelationProxyPlacementMode
           }
+          onOffscreenRelationProxyVisibilityModeChange={
+            setOffscreenRelationProxyVisibilityMode
+          }
           onWorkspaceThemeModeChange={setWorkspaceThemeMode}
         />
       ),
@@ -368,7 +376,9 @@ export function EditorPage({
       handleCodeEditorThemeOverrideEnabledChange,
       isOffscreenRelationProxiesEnabled,
       offscreenRelationProxyPlacementMode,
+      offscreenRelationProxyVisibilityMode,
       setOffscreenRelationProxyPlacementMode,
+      setOffscreenRelationProxyVisibilityMode,
       setOffscreenRelationProxiesEnabled,
       setShouldConnectOffscreenRelationProxyLines,
       shouldConnectOffscreenRelationProxyLines,
@@ -535,6 +545,9 @@ export function EditorPage({
                 }
                 offscreenRelationProxyPlacementMode={
                   offscreenRelationProxyPlacementMode
+                }
+                offscreenRelationProxyVisibilityMode={
+                  offscreenRelationProxyVisibilityMode
                 }
                 shouldConnectOffscreenRelationProxyLines={
                   shouldConnectOffscreenRelationProxyLines

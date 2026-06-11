@@ -6,6 +6,7 @@ export type EditorThemeMode = 'light' | 'light-solarized' | 'dark' | 'system'
 export type CodeEditorThemeMode = EditorThemeMode | 'workspace'
 export type ResolvedEditorTheme = 'light' | 'light-solarized' | 'dark'
 export type OffscreenRelationProxyPlacementMode = 'line' | 'parallel'
+export type OffscreenRelationProxyVisibilityMode = 'any-overlap' | 'center'
 
 export const EDITOR_WORKSPACE_THEME_MODES = [
   'light',
@@ -20,6 +21,10 @@ export const EDITOR_CODE_EDITOR_THEME_MODES = [
 export const OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES = [
   'line',
   'parallel',
+] as const
+export const OFFSCREEN_RELATION_PROXY_VISIBILITY_MODES = [
+  'any-overlap',
+  'center',
 ] as const
 export const PURE_WHITE_LIGHT_MONACO_THEME = 'dbml-drawer-light-pure-white'
 export const LIGHT_SOLARIZED_MONACO_THEME = 'dbml-drawer-light-solarized'
@@ -36,6 +41,8 @@ export const EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY =
   'dbml-drawer.editor.offscreen-relation-proxy-lines'
 export const EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY =
   'dbml-drawer.editor.offscreen-relation-proxy-placement'
+export const EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY =
+  'dbml-drawer.editor.offscreen-relation-proxy-visibility'
 const SYSTEM_THEME_QUERY = '(prefers-color-scheme: dark)'
 
 export type EditorThemePreferences = {
@@ -46,12 +53,16 @@ export type EditorThemePreferences = {
   isOffscreenRelationProxiesEnabled: boolean
   shouldConnectOffscreenRelationProxyLines: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
+  offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
   setWorkspaceThemeMode: (mode: EditorThemeMode) => void
   setCodeEditorThemeMode: (mode: CodeEditorThemeMode) => void
   setOffscreenRelationProxiesEnabled: (isEnabled: boolean) => void
   setShouldConnectOffscreenRelationProxyLines: (shouldConnect: boolean) => void
   setOffscreenRelationProxyPlacementMode: (
     mode: OffscreenRelationProxyPlacementMode,
+  ) => void
+  setOffscreenRelationProxyVisibilityMode: (
+    mode: OffscreenRelationProxyVisibilityMode,
   ) => void
 }
 
@@ -84,6 +95,14 @@ export function useEditorThemePreferences(): EditorThemePreferences {
   ] = useState(() =>
     readStoredOffscreenRelationProxyPlacementMode(
       EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+    ),
+  )
+  const [
+    offscreenRelationProxyVisibilityMode,
+    setOffscreenRelationProxyVisibilityModeState,
+  ] = useState(() =>
+    readStoredOffscreenRelationProxyVisibilityMode(
+      EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
     ),
   )
 
@@ -148,6 +167,16 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     )
   }
 
+  const setOffscreenRelationProxyVisibilityMode = (
+    mode: OffscreenRelationProxyVisibilityMode,
+  ) => {
+    setOffscreenRelationProxyVisibilityModeState(mode)
+    writeStoredOffscreenRelationProxyVisibilityMode(
+      EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
+      mode,
+    )
+  }
+
   const resolvedWorkspaceTheme = resolveThemeMode(
     workspaceThemeMode,
     systemTheme,
@@ -165,11 +194,13 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     isOffscreenRelationProxiesEnabled,
     shouldConnectOffscreenRelationProxyLines,
     offscreenRelationProxyPlacementMode,
+    offscreenRelationProxyVisibilityMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
     setOffscreenRelationProxyPlacementMode,
+    setOffscreenRelationProxyVisibilityMode,
   }
 }
 
@@ -241,6 +272,16 @@ export function normalizeOffscreenRelationProxyPlacementMode(
     : 'line'
 }
 
+export function normalizeOffscreenRelationProxyVisibilityMode(
+  value: string | null | undefined,
+): OffscreenRelationProxyVisibilityMode {
+  return OFFSCREEN_RELATION_PROXY_VISIBILITY_MODES.includes(
+    value as OffscreenRelationProxyVisibilityMode,
+  )
+    ? (value as OffscreenRelationProxyVisibilityMode)
+    : 'any-overlap'
+}
+
 export function readStoredThemeMode(storageKey: string): EditorThemeMode {
   try {
     return normalizeEditorThemeMode(window.localStorage.getItem(storageKey))
@@ -271,6 +312,18 @@ export function readStoredOffscreenRelationProxyPlacementMode(
   }
 }
 
+export function readStoredOffscreenRelationProxyVisibilityMode(
+  storageKey: string,
+): OffscreenRelationProxyVisibilityMode {
+  try {
+    return normalizeOffscreenRelationProxyVisibilityMode(
+      window.localStorage.getItem(storageKey),
+    )
+  } catch {
+    return 'any-overlap'
+  }
+}
+
 function writeStoredThemeMode(
   storageKey: string,
   mode: EditorThemeMode | CodeEditorThemeMode,
@@ -285,6 +338,17 @@ function writeStoredThemeMode(
 function writeStoredOffscreenRelationProxyPlacementMode(
   storageKey: string,
   mode: OffscreenRelationProxyPlacementMode,
+) {
+  try {
+    window.localStorage.setItem(storageKey, mode)
+  } catch {
+    // Ignore storage failures; the in-memory selection still applies.
+  }
+}
+
+function writeStoredOffscreenRelationProxyVisibilityMode(
+  storageKey: string,
+  mode: OffscreenRelationProxyVisibilityMode,
 ) {
   try {
     window.localStorage.setItem(storageKey, mode)

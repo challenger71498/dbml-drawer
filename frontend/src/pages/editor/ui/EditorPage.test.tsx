@@ -12,6 +12,7 @@ import {
   EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
   EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
   EDITOR_WORKSPACE_THEME_STORAGE_KEY,
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
@@ -479,6 +480,9 @@ describe('EditorPage', () => {
     const proxyPlacementGroup = screen.getByRole('group', {
       name: 'Proxy placement',
     })
+    const proxyVisibilityGroup = screen.getByRole('group', {
+      name: 'Proxy visibility',
+    })
 
     expect(proxyToggle).not.toBeChecked()
     expect(proxyLineToggle).not.toBeChecked()
@@ -489,11 +493,26 @@ describe('EditorPage', () => {
     expect(
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
     ).toBeDisabled()
+    expect(
+      within(proxyVisibilityGroup).getByRole('button', {
+        name: 'Any visible',
+      }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(proxyVisibilityGroup).getByRole('button', {
+        name: 'Center visible',
+      }),
+    ).toBeDisabled()
 
     fireEvent.click(proxyToggle)
     fireEvent.click(proxyLineToggle)
     fireEvent.click(
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
+    )
+    fireEvent.click(
+      within(proxyVisibilityGroup).getByRole('button', {
+        name: 'Center visible',
+      }),
     )
 
     expect(proxyToggle).toBeChecked()
@@ -501,6 +520,11 @@ describe('EditorPage', () => {
     expect(proxyLineToggle).not.toBeDisabled()
     expect(
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(proxyVisibilityGroup).getByRole('button', {
+        name: 'Center visible',
+      }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(
       window.localStorage.getItem(
@@ -517,6 +541,11 @@ describe('EditorPage', () => {
         EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
       ),
     ).toBe('parallel')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
+      ),
+    ).toBe('center')
 
     unmount()
     render(<EditorPage isEditorDevMode={false} />)
@@ -536,6 +565,12 @@ describe('EditorPage', () => {
       within(screen.getByRole('group', { name: 'Proxy placement' })).getByRole(
         'button',
         { name: 'Parallel' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(screen.getByRole('group', { name: 'Proxy visibility' })).getByRole(
+        'button',
+        { name: 'Center visible' },
       ),
     ).toHaveAttribute('aria-pressed', 'true')
   })

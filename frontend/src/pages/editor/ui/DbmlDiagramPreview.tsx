@@ -41,6 +41,7 @@ import {
   getOffscreenRelationProxies,
   type DbmlDiagramViewport,
   type DbmlOffscreenRelationProxy,
+  type DbmlOffscreenRelationProxyVisibilityMode,
 } from '../model/dbml-offscreen-relation-proxies'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
 import type { OffscreenRelationProxyPlacementMode } from '../model/editor-theme'
@@ -65,6 +66,7 @@ type DbmlDiagramPreviewProps = {
   referenceColumnIds?: ReadonlySet<string>
   isOffscreenRelationProxiesEnabled?: boolean
   offscreenRelationProxyPlacementMode?: OffscreenRelationProxyPlacementMode
+  offscreenRelationProxyVisibilityMode?: DbmlOffscreenRelationProxyVisibilityMode
   shouldConnectOffscreenRelationProxyLines?: boolean
   onTableFocus?: (table: DbmlDiagramTable) => void
   onTableHover?: (target: DbmlDiagramSelectionTarget | null) => void
@@ -148,6 +150,7 @@ export function DbmlDiagramPreview({
   referenceColumnIds = EMPTY_ENDPOINT_COLUMN_IDS,
   isOffscreenRelationProxiesEnabled = false,
   offscreenRelationProxyPlacementMode = 'line',
+  offscreenRelationProxyVisibilityMode = 'any-overlap',
   shouldConnectOffscreenRelationProxyLines = false,
   onTableFocus = () => undefined,
   onTableHover = () => undefined,
@@ -286,6 +289,9 @@ export function DbmlDiagramPreview({
               offscreenRelationProxyPlacementMode={
                 offscreenRelationProxyPlacementMode
               }
+              offscreenRelationProxyVisibilityMode={
+                offscreenRelationProxyVisibilityMode
+              }
               shouldConnectOffscreenRelationProxyLines={
                 shouldConnectOffscreenRelationProxyLines
               }
@@ -318,6 +324,7 @@ type DiagramCanvasProps = {
   focusedTarget: DbmlDiagramSelectionTarget | null
   isOffscreenRelationProxiesEnabled: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
+  offscreenRelationProxyVisibilityMode: DbmlOffscreenRelationProxyVisibilityMode
   shouldConnectOffscreenRelationProxyLines: boolean
   isEmpty: boolean
   onFocusClear: () => void
@@ -336,6 +343,7 @@ function DiagramCanvas({
   focusedTarget,
   isOffscreenRelationProxiesEnabled,
   offscreenRelationProxyPlacementMode,
+  offscreenRelationProxyVisibilityMode,
   shouldConnectOffscreenRelationProxyLines,
   isEmpty,
   onFocusClear,
@@ -385,6 +393,7 @@ function DiagramCanvas({
             diagram,
             focusedTarget,
             viewport: diagramViewport,
+            visibilityMode: offscreenRelationProxyVisibilityMode,
           })
         : [],
     [
@@ -392,6 +401,7 @@ function DiagramCanvas({
       diagramViewport,
       focusedTarget,
       isOffscreenRelationProxiesEnabled,
+      offscreenRelationProxyVisibilityMode,
     ],
   )
   const offscreenRelationProxyLayouts = useMemo(

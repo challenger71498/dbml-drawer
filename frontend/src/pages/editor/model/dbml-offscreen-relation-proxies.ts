@@ -22,6 +22,7 @@ export type DbmlDiagramBounds = {
 }
 
 export type DbmlOffscreenRelationProxySide = 'top' | 'right' | 'bottom' | 'left'
+export type DbmlOffscreenRelationProxyVisibilityMode = 'any-overlap' | 'center'
 
 export type DbmlOffscreenRelationProxy = {
   id: string
@@ -54,10 +55,12 @@ export function getOffscreenRelationProxies({
   diagram,
   focusedTarget,
   viewport,
+  visibilityMode = 'any-overlap',
 }: {
   diagram: LayoutedDbmlDiagram | null
   focusedTarget: DbmlDiagramSelectionTarget | null
   viewport: DbmlDiagramViewport | null
+  visibilityMode?: DbmlOffscreenRelationProxyVisibilityMode
 }): DbmlOffscreenRelationProxy[] {
   if (!diagram || !focusedTarget || !viewport || viewport.zoom <= 0) {
     return []
@@ -89,7 +92,10 @@ export function getOffscreenRelationProxies({
     const proxyColumnId = getColumnIdForTable(relation, proxyTableId)
     const proxyTable = tableById.get(proxyTableId)
 
-    if (!proxyTable || isTableVisible(proxyTable, viewportBounds)) {
+    if (
+      !proxyTable ||
+      isTableVisible(proxyTable, viewportBounds, visibilityMode)
+    ) {
       continue
     }
 
@@ -128,7 +134,12 @@ export function getOffscreenRelationProxies({
 export function isTableVisible(
   table: LayoutedDbmlDiagramTable,
   viewportBounds: DbmlDiagramBounds,
+  visibilityMode: DbmlOffscreenRelationProxyVisibilityMode = 'any-overlap',
 ) {
+  if (visibilityMode === 'center') {
+    return isPointInsideBounds(getTableCenter(table), viewportBounds)
+  }
+
   return rectanglesIntersect(getTableBounds(table), viewportBounds)
 }
 
@@ -345,5 +356,17 @@ function rectanglesIntersect(
     first.x + first.width > second.x &&
     first.y < second.y + second.height &&
     first.y + first.height > second.y
+  )
+}
+
+function isPointInsideBounds(
+  point: { x: number; y: number },
+  bounds: DbmlDiagramBounds,
+) {
+  return (
+    point.x >= bounds.x &&
+    point.x <= bounds.x + bounds.width &&
+    point.y >= bounds.y &&
+    point.y <= bounds.y + bounds.height
   )
 }
