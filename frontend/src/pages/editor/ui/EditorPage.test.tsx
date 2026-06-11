@@ -12,7 +12,8 @@ import {
   EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
   EDITOR_WORKSPACE_THEME_STORAGE_KEY,
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
-  VSCODE_LIGHT_2026_MONACO_THEME,
+  LIGHT_SOLARIZED_MONACO_THEME,
+  PURE_WHITE_LIGHT_MONACO_THEME,
 } from '../model/editor-theme'
 import { EditorPage } from './EditorPage'
 
@@ -275,7 +276,7 @@ describe('EditorPage', () => {
     expect(editorPage).toHaveAttribute('data-code-editor-theme', 'light')
     expect(editor).toHaveAttribute(
       'data-monaco-theme',
-      VSCODE_LIGHT_2026_MONACO_THEME,
+      PURE_WHITE_LIGHT_MONACO_THEME,
     )
 
     unmount()
@@ -325,6 +326,43 @@ describe('EditorPage', () => {
     ).toBe('dark')
   })
 
+  it('applies the solarized light theme independently from the pure white light theme', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Workspace theme' })).getByRole(
+        'button',
+        { name: 'Solarized' },
+      ),
+    )
+    fireEvent.click(
+      within(
+        screen.getByRole('group', { name: 'Code editor theme' }),
+      ).getByRole('button', { name: 'Solarized' }),
+    )
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-workspace-theme',
+      'light-solarized',
+    )
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme',
+      'light-solarized',
+    )
+    expect(
+      screen.getByRole('textbox', { name: 'DBML editor' }),
+    ).toHaveAttribute('data-monaco-theme', LIGHT_SOLARIZED_MONACO_THEME)
+    expect(
+      window.localStorage.getItem(EDITOR_WORKSPACE_THEME_STORAGE_KEY),
+    ).toBe('light-solarized')
+    expect(
+      window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
+    ).toBe('light-solarized')
+  })
+
   it('resolves system theme changes for workspace and code editor themes', () => {
     installLocalStorageMock()
     const mediaQuery = installMatchMediaMock(false)
@@ -337,7 +375,7 @@ describe('EditorPage', () => {
     )
     expect(
       screen.getByRole('textbox', { name: 'DBML editor' }),
-    ).toHaveAttribute('data-monaco-theme', VSCODE_LIGHT_2026_MONACO_THEME)
+    ).toHaveAttribute('data-monaco-theme', PURE_WHITE_LIGHT_MONACO_THEME)
 
     act(() => {
       mediaQuery.setMatches(true)

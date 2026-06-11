@@ -9,7 +9,7 @@ const GENERATED_FILE_HEADER = [
   '',
 ].join('\n')
 
-const THEME_NAMES = ['light', 'dark'] as const
+const THEME_NAMES = ['light', 'light-solarized', 'dark'] as const
 const TYPESCRIPT_PRETTIER_OPTIONS = {
   parser: 'typescript',
   semi: false,
@@ -91,7 +91,7 @@ async function formatMonacoThemes({ dictionary }: FormatFnArguments) {
       "import type { editor } from 'monaco-editor'",
       '',
       'export const EDITOR_MONACO_THEME_DEFINITIONS = ',
-      `${JSON.stringify(themes, null, 2)} satisfies Record<'light' | 'dark', editor.IStandaloneThemeData>`,
+      `${JSON.stringify(themes, null, 2)} satisfies Record<'light' | 'light-solarized' | 'dark', editor.IStandaloneThemeData>`,
       '',
     ].join('\n'),
     TYPESCRIPT_PRETTIER_OPTIONS,

@@ -2,11 +2,17 @@ import { useEffect, useState } from 'react'
 import { EDITOR_MONACO_THEME_DEFINITIONS } from '../../../shared/design-tokens/generated/monaco-themes'
 import type { MonacoApi } from '../lib/monaco-dbml-language'
 
-export type EditorThemeMode = 'light' | 'dark' | 'system'
-export type ResolvedEditorTheme = 'light' | 'dark'
+export type EditorThemeMode = 'light' | 'light-solarized' | 'dark' | 'system'
+export type ResolvedEditorTheme = 'light' | 'light-solarized' | 'dark'
 
-export const EDITOR_THEME_MODES = ['light', 'dark', 'system'] as const
-export const VSCODE_LIGHT_2026_MONACO_THEME = 'dbml-drawer-vscode-light-2026'
+export const EDITOR_THEME_MODES = [
+  'light',
+  'light-solarized',
+  'dark',
+  'system',
+] as const
+export const PURE_WHITE_LIGHT_MONACO_THEME = 'dbml-drawer-light-pure-white'
+export const LIGHT_SOLARIZED_MONACO_THEME = 'dbml-drawer-light-solarized'
 export const GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME =
   'dbml-drawer-gruvbox-material-dark-medium'
 
@@ -84,15 +90,23 @@ export function useEditorThemePreferences(): EditorThemePreferences {
 }
 
 export function getMonacoTheme(theme: ResolvedEditorTheme) {
-  return theme === 'dark'
-    ? GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME
-    : VSCODE_LIGHT_2026_MONACO_THEME
+  if (theme === 'dark') {
+    return GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME
+  }
+
+  return theme === 'light-solarized'
+    ? LIGHT_SOLARIZED_MONACO_THEME
+    : PURE_WHITE_LIGHT_MONACO_THEME
 }
 
 export function defineEditorMonacoThemes(monacoApi: MonacoApi) {
   monacoApi.editor.defineTheme(
-    VSCODE_LIGHT_2026_MONACO_THEME,
+    PURE_WHITE_LIGHT_MONACO_THEME,
     EDITOR_MONACO_THEME_DEFINITIONS.light,
+  )
+  monacoApi.editor.defineTheme(
+    LIGHT_SOLARIZED_MONACO_THEME,
+    EDITOR_MONACO_THEME_DEFINITIONS['light-solarized'],
   )
   monacoApi.editor.defineTheme(
     GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,

@@ -2,7 +2,8 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
-  VSCODE_LIGHT_2026_MONACO_THEME,
+  LIGHT_SOLARIZED_MONACO_THEME,
+  PURE_WHITE_LIGHT_MONACO_THEME,
 } from '../model/editor-theme'
 import { EDITOR_MONACO_THEME_DEFINITIONS } from '../../../shared/design-tokens/generated/monaco-themes'
 import { DbmlCodeEditor } from './DbmlCodeEditor'
@@ -101,7 +102,7 @@ describe('DbmlCodeEditor', () => {
     )
   })
 
-  it('registers editor Monaco themes and uses the VS Code Light 2026 theme', () => {
+  it('registers editor Monaco themes and uses the pure white light theme', () => {
     render(
       <DbmlCodeEditor
         value=""
@@ -112,8 +113,12 @@ describe('DbmlCodeEditor', () => {
     )
 
     expect(monacoApi.editor.defineTheme).toHaveBeenCalledWith(
-      VSCODE_LIGHT_2026_MONACO_THEME,
+      PURE_WHITE_LIGHT_MONACO_THEME,
       EDITOR_MONACO_THEME_DEFINITIONS.light,
+    )
+    expect(monacoApi.editor.defineTheme).toHaveBeenCalledWith(
+      LIGHT_SOLARIZED_MONACO_THEME,
+      EDITOR_MONACO_THEME_DEFINITIONS['light-solarized'],
     )
     expect(monacoApi.editor.defineTheme).toHaveBeenCalledWith(
       GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
@@ -121,7 +126,23 @@ describe('DbmlCodeEditor', () => {
     )
     expect(screen.getByLabelText('DBML editor')).toHaveAttribute(
       'data-monaco-theme',
-      VSCODE_LIGHT_2026_MONACO_THEME,
+      PURE_WHITE_LIGHT_MONACO_THEME,
+    )
+  })
+
+  it('uses the solarized light Monaco theme', () => {
+    render(
+      <DbmlCodeEditor
+        value=""
+        theme="light-solarized"
+        diagnostics={[]}
+        onChange={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByLabelText('DBML editor')).toHaveAttribute(
+      'data-monaco-theme',
+      LIGHT_SOLARIZED_MONACO_THEME,
     )
   })
 

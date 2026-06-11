@@ -16,7 +16,7 @@ The frontend SHALL define human-authored design token source files under `fronte
 - **THEN** those component tokens MUST be traceable to semantic tokens rather than requiring consumers to depend directly on raw primitive palette names
 
 ### Requirement: Theme tokenization
-The frontend SHALL use Style Dictionary tokens as the source of truth for both light and dark editor theme values.
+The frontend SHALL use Style Dictionary tokens as the source of truth for light, light-solarized, and dark editor theme values.
 
 #### Scenario: Dark theme values are token-authored
 - **WHEN** the editor workspace resolves to the dark workspace theme
@@ -24,6 +24,10 @@ The frontend SHALL use Style Dictionary tokens as the source of truth for both l
 
 #### Scenario: Light theme values are token-authored
 - **WHEN** the editor workspace resolves to the light workspace theme
+- **THEN** editor chrome, sidebars, diagram surfaces, DBML table styling, relation colors, selection highlights, and relevant control colors MUST use values generated from `frontend/design-tokens/`
+
+#### Scenario: Light-solarized theme values are token-authored
+- **WHEN** the editor workspace resolves to the light-solarized workspace theme
 - **THEN** editor chrome, sidebars, diagram surfaces, DBML table styling, relation colors, selection highlights, and relevant control colors MUST use values generated from `frontend/design-tokens/`
 
 #### Scenario: Dark Monaco theme values are token-authored
@@ -34,9 +38,17 @@ The frontend SHALL use Style Dictionary tokens as the source of truth for both l
 - **WHEN** the DBML code editor resolves to the light code editor theme
 - **THEN** its Monaco theme colors and token color rules MUST use values generated from `frontend/design-tokens/`
 
+#### Scenario: Light-solarized Monaco theme values are token-authored
+- **WHEN** the DBML code editor resolves to the light-solarized code editor theme
+- **THEN** its Monaco theme colors and token color rules MUST use values generated from `frontend/design-tokens/`
+
 #### Scenario: Light theme reinterprets dark semantic roles
 - **WHEN** a developer inspects the light theme token source
-- **THEN** the light token definitions MUST express the same semantic roles as the dark theme using light-compatible values rather than preserving the previous light palette verbatim
+- **THEN** the light token definitions MUST express the same semantic roles as the dark theme using pure white light-compatible values rather than preserving the previous yellow-tinted light palette verbatim
+
+#### Scenario: Light-solarized theme preserves the yellow-tinted light variant
+- **WHEN** a developer inspects the light-solarized theme token source
+- **THEN** the light-solarized token definitions MUST provide a named yellow-tinted light variant separate from the default pure white light theme
 
 ### Requirement: Generated design token artifacts
 The frontend SHALL generate app-consumable CSS and TypeScript artifacts from the design token source.

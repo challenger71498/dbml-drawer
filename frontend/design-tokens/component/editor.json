@@ -31,16 +31,24 @@
             "borderStrong": {
               "value": "{semantic.theme.light.color.border.strong}"
             },
-            "text": { "value": "{semantic.theme.light.color.text.default}" },
+            "text": {
+              "value": "{semantic.theme.light.color.text.default}"
+            },
             "textStrong": {
               "value": "{semantic.theme.light.color.text.strong}"
             },
-            "textMuted": { "value": "{semantic.theme.light.color.text.muted}" },
+            "textMuted": {
+              "value": "{semantic.theme.light.color.text.muted}"
+            },
             "textSubtle": {
               "value": "{semantic.theme.light.color.text.subtle}"
             },
-            "textFaint": { "value": "{semantic.theme.light.color.text.faint}" },
-            "title": { "value": "{semantic.theme.light.color.accent.title}" },
+            "textFaint": {
+              "value": "{semantic.theme.light.color.text.faint}"
+            },
+            "title": {
+              "value": "{semantic.theme.light.color.accent.title}"
+            },
             "controlHoverBg": {
               "value": "{semantic.theme.light.color.control.hoverBg}"
             },
@@ -56,7 +64,9 @@
             "controlActiveText": {
               "value": "{semantic.theme.light.color.control.activeText}"
             },
-            "brand": { "value": "{semantic.theme.light.color.accent.brand}" },
+            "brand": {
+              "value": "{semantic.theme.light.color.accent.brand}"
+            },
             "tableHeaderBg": {
               "value": "{semantic.theme.light.color.table.headerBg}"
             },
@@ -108,9 +118,15 @@
             "columnBorder": {
               "value": "{semantic.theme.light.color.border.column}"
             },
-            "badgeBg": { "value": "{semantic.theme.light.color.badge.bg}" },
-            "badgeText": { "value": "{semantic.theme.light.color.badge.text}" },
-            "handleBg": { "value": "{semantic.theme.light.color.handle.bg}" },
+            "badgeBg": {
+              "value": "{semantic.theme.light.color.badge.bg}"
+            },
+            "badgeText": {
+              "value": "{semantic.theme.light.color.badge.text}"
+            },
+            "handleBg": {
+              "value": "{semantic.theme.light.color.handle.bg}"
+            },
             "handleBorder": {
               "value": "{semantic.theme.light.color.handle.border}"
             },
@@ -135,31 +151,45 @@
             "diagnosticsMuted": {
               "value": "{semantic.theme.light.color.diagnostics.muted}"
             },
-            "error": { "value": "{semantic.theme.light.color.status.error}" },
+            "error": {
+              "value": "{semantic.theme.light.color.status.error}"
+            },
             "warning": {
               "value": "{semantic.theme.light.color.status.warning}"
             }
           }
         },
         "monaco": {
-          "base": { "value": "vs" },
+          "base": {
+            "value": "vs"
+          },
           "background": {
             "value": "{semantic.theme.light.color.background.workspace}"
           },
           "foreground": {
             "value": "{semantic.theme.light.color.text.default}"
           },
-          "lineNumber": { "value": "{semantic.theme.light.color.text.subtle}" },
+          "lineNumber": {
+            "value": "{semantic.theme.light.color.text.subtle}"
+          },
           "lineNumberActive": {
             "value": "{semantic.theme.light.color.text.strong}"
           },
-          "cursor": { "value": "{semantic.theme.light.color.accent.source}" },
-          "selection": { "value": "{primitive.color.gruvbox.light.bg3}" },
-          "inactiveSelection": {
-            "value": "{primitive.color.gruvbox.light.bg2}"
+          "cursor": {
+            "value": "{semantic.theme.light.color.accent.source}"
           },
-          "lineHighlight": { "value": "{primitive.color.gruvbox.light.bg1}" },
-          "whitespace": { "value": "{primitive.color.gruvbox.light.fg4}" },
+          "selection": {
+            "value": "{primitive.color.neutral.light.bg3}"
+          },
+          "inactiveSelection": {
+            "value": "{primitive.color.neutral.light.bg2}"
+          },
+          "lineHighlight": {
+            "value": "{primitive.color.neutral.light.bg1}"
+          },
+          "whitespace": {
+            "value": "{primitive.color.neutral.light.fg4}"
+          },
           "indentGuide": {
             "value": "{semantic.theme.light.color.border.default}"
           },
@@ -176,13 +206,17 @@
               "foreground": {
                 "value": "{semantic.theme.light.color.syntax.comment}"
               },
-              "fontStyle": { "value": "italic" }
+              "fontStyle": {
+                "value": "italic"
+              }
             },
             "keyword": {
               "foreground": {
                 "value": "{semantic.theme.light.color.syntax.keyword}"
               },
-              "fontStyle": { "value": "bold" }
+              "fontStyle": {
+                "value": "bold"
+              }
             },
             "string": {
               "foreground": {
@@ -217,6 +251,256 @@
           }
         }
       },
+      "light-solarized": {
+        "editor": {
+          "color": {
+            "pageBg": {
+              "value": "{semantic.theme.light-solarized.color.background.page}"
+            },
+            "workspaceBg": {
+              "value": "{semantic.theme.light-solarized.color.background.workspace}"
+            },
+            "panelBg": {
+              "value": "{semantic.theme.light-solarized.color.background.panel}"
+            },
+            "panelMutedBg": {
+              "value": "{semantic.theme.light-solarized.color.background.panelMuted}"
+            },
+            "diagramBg": {
+              "value": "{semantic.theme.light-solarized.color.background.diagram}"
+            },
+            "diagramGridDot": {
+              "value": "{semantic.theme.light-solarized.color.border.default}"
+            },
+            "border": {
+              "value": "{semantic.theme.light-solarized.color.border.default}"
+            },
+            "borderControl": {
+              "value": "{semantic.theme.light-solarized.color.border.control}"
+            },
+            "borderStrong": {
+              "value": "{semantic.theme.light-solarized.color.border.strong}"
+            },
+            "text": {
+              "value": "{semantic.theme.light-solarized.color.text.default}"
+            },
+            "textStrong": {
+              "value": "{semantic.theme.light-solarized.color.text.strong}"
+            },
+            "textMuted": {
+              "value": "{semantic.theme.light-solarized.color.text.muted}"
+            },
+            "textSubtle": {
+              "value": "{semantic.theme.light-solarized.color.text.subtle}"
+            },
+            "textFaint": {
+              "value": "{semantic.theme.light-solarized.color.text.faint}"
+            },
+            "title": {
+              "value": "{semantic.theme.light-solarized.color.accent.title}"
+            },
+            "controlHoverBg": {
+              "value": "{semantic.theme.light-solarized.color.control.hoverBg}"
+            },
+            "controlHoverSoftBg": {
+              "value": "{semantic.theme.light-solarized.color.control.hoverSoftBg}"
+            },
+            "controlActiveBg": {
+              "value": "{semantic.theme.light-solarized.color.control.activeBg}"
+            },
+            "controlActiveHoverBg": {
+              "value": "{semantic.theme.light-solarized.color.control.activeHoverBg}"
+            },
+            "controlActiveText": {
+              "value": "{semantic.theme.light-solarized.color.control.activeText}"
+            },
+            "brand": {
+              "value": "{semantic.theme.light-solarized.color.accent.brand}"
+            },
+            "tableHeaderBg": {
+              "value": "{semantic.theme.light-solarized.color.table.headerBg}"
+            },
+            "tableHeaderActiveBg": {
+              "value": "{semantic.theme.light-solarized.color.table.headerActiveBg}"
+            },
+            "tableHeaderMuted": {
+              "value": "{semantic.theme.light-solarized.color.table.headerMuted}"
+            },
+            "tableBorder": {
+              "value": "{semantic.theme.light-solarized.color.border.control}"
+            },
+            "tableShadow": {
+              "value": "{semantic.theme.light-solarized.color.table.shadow}"
+            },
+            "tableActiveShadow": {
+              "value": "{semantic.theme.light-solarized.color.table.activeShadow}"
+            },
+            "floatingShadow": {
+              "value": "{semantic.theme.light-solarized.color.floating.shadow}"
+            },
+            "tableActiveAccent": {
+              "value": "{semantic.theme.light-solarized.color.accent.source}"
+            },
+            "tableActiveRing": {
+              "value": "{semantic.theme.light-solarized.color.table.activeRing}"
+            },
+            "relationLine": {
+              "value": "{semantic.theme.light-solarized.color.relation.line}"
+            },
+            "relationSource": {
+              "value": "{semantic.theme.light-solarized.color.relation.source}"
+            },
+            "relationReference": {
+              "value": "{semantic.theme.light-solarized.color.relation.reference}"
+            },
+            "referenceAccent": {
+              "value": "{semantic.theme.light-solarized.color.relation.reference}"
+            },
+            "referenceBg": {
+              "value": "{semantic.theme.light-solarized.color.background.reference}"
+            },
+            "sourceAccent": {
+              "value": "{semantic.theme.light-solarized.color.accent.source}"
+            },
+            "sourceBg": {
+              "value": "{semantic.theme.light-solarized.color.background.source}"
+            },
+            "columnBorder": {
+              "value": "{semantic.theme.light-solarized.color.border.column}"
+            },
+            "badgeBg": {
+              "value": "{semantic.theme.light-solarized.color.badge.bg}"
+            },
+            "badgeText": {
+              "value": "{semantic.theme.light-solarized.color.badge.text}"
+            },
+            "handleBg": {
+              "value": "{semantic.theme.light-solarized.color.handle.bg}"
+            },
+            "handleBorder": {
+              "value": "{semantic.theme.light-solarized.color.handle.border}"
+            },
+            "diagnosticsEmptyBorder": {
+              "value": "{semantic.theme.light-solarized.color.diagnostics.emptyBorder}"
+            },
+            "diagnosticsEmptyBg": {
+              "value": "{semantic.theme.light-solarized.color.diagnostics.emptyBg}"
+            },
+            "diagnosticsEmptyText": {
+              "value": "{semantic.theme.light-solarized.color.diagnostics.emptyText}"
+            },
+            "diagnosticsErrorBorder": {
+              "value": "{semantic.theme.light-solarized.color.diagnostics.errorBorder}"
+            },
+            "diagnosticsErrorBg": {
+              "value": "{semantic.theme.light-solarized.color.diagnostics.errorBg}"
+            },
+            "diagnosticsText": {
+              "value": "{semantic.theme.light-solarized.color.diagnostics.text}"
+            },
+            "diagnosticsMuted": {
+              "value": "{semantic.theme.light-solarized.color.diagnostics.muted}"
+            },
+            "error": {
+              "value": "{semantic.theme.light-solarized.color.status.error}"
+            },
+            "warning": {
+              "value": "{semantic.theme.light-solarized.color.status.warning}"
+            }
+          }
+        },
+        "monaco": {
+          "base": {
+            "value": "vs"
+          },
+          "background": {
+            "value": "{semantic.theme.light-solarized.color.background.workspace}"
+          },
+          "foreground": {
+            "value": "{semantic.theme.light-solarized.color.text.default}"
+          },
+          "lineNumber": {
+            "value": "{semantic.theme.light-solarized.color.text.subtle}"
+          },
+          "lineNumberActive": {
+            "value": "{semantic.theme.light-solarized.color.text.strong}"
+          },
+          "cursor": {
+            "value": "{semantic.theme.light-solarized.color.accent.source}"
+          },
+          "selection": {
+            "value": "{primitive.color.gruvbox.light.bg3}"
+          },
+          "inactiveSelection": {
+            "value": "{primitive.color.gruvbox.light.bg2}"
+          },
+          "lineHighlight": {
+            "value": "{primitive.color.gruvbox.light.bg1}"
+          },
+          "whitespace": {
+            "value": "{primitive.color.gruvbox.light.fg4}"
+          },
+          "indentGuide": {
+            "value": "{semantic.theme.light-solarized.color.border.default}"
+          },
+          "indentGuideActive": {
+            "value": "{semantic.theme.light-solarized.color.border.control}"
+          },
+          "rule": {
+            "default": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.text.default}"
+              }
+            },
+            "comment": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.comment}"
+              },
+              "fontStyle": {
+                "value": "italic"
+              }
+            },
+            "keyword": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.keyword}"
+              },
+              "fontStyle": {
+                "value": "bold"
+              }
+            },
+            "string": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.string}"
+              }
+            },
+            "number": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.number}"
+              }
+            },
+            "type": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.type}"
+              }
+            },
+            "delimiter": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.delimiter}"
+              }
+            },
+            "operator": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.operator}"
+              }
+            },
+            "identifier": {
+              "foreground": {
+                "value": "{semantic.theme.light-solarized.color.syntax.identifier}"
+              }
+            }
+          }
+        }
+      },
       "dark": {
         "editor": {
           "color": {
@@ -238,23 +522,33 @@
             "diagramGridDot": {
               "value": "{semantic.theme.dark.color.border.default}"
             },
-            "border": { "value": "{semantic.theme.dark.color.border.default}" },
+            "border": {
+              "value": "{semantic.theme.dark.color.border.default}"
+            },
             "borderControl": {
               "value": "{semantic.theme.dark.color.border.control}"
             },
             "borderStrong": {
               "value": "{semantic.theme.dark.color.border.strong}"
             },
-            "text": { "value": "{semantic.theme.dark.color.text.default}" },
+            "text": {
+              "value": "{semantic.theme.dark.color.text.default}"
+            },
             "textStrong": {
               "value": "{semantic.theme.dark.color.text.strong}"
             },
-            "textMuted": { "value": "{semantic.theme.dark.color.text.muted}" },
+            "textMuted": {
+              "value": "{semantic.theme.dark.color.text.muted}"
+            },
             "textSubtle": {
               "value": "{semantic.theme.dark.color.text.subtle}"
             },
-            "textFaint": { "value": "{semantic.theme.dark.color.text.faint}" },
-            "title": { "value": "{semantic.theme.dark.color.accent.title}" },
+            "textFaint": {
+              "value": "{semantic.theme.dark.color.text.faint}"
+            },
+            "title": {
+              "value": "{semantic.theme.dark.color.accent.title}"
+            },
             "controlHoverBg": {
               "value": "{semantic.theme.dark.color.control.hoverBg}"
             },
@@ -270,7 +564,9 @@
             "controlActiveText": {
               "value": "{semantic.theme.dark.color.control.activeText}"
             },
-            "brand": { "value": "{semantic.theme.dark.color.accent.brand}" },
+            "brand": {
+              "value": "{semantic.theme.dark.color.accent.brand}"
+            },
             "tableHeaderBg": {
               "value": "{semantic.theme.dark.color.table.headerBg}"
             },
@@ -322,9 +618,15 @@
             "columnBorder": {
               "value": "{semantic.theme.dark.color.border.column}"
             },
-            "badgeBg": { "value": "{semantic.theme.dark.color.badge.bg}" },
-            "badgeText": { "value": "{semantic.theme.dark.color.badge.text}" },
-            "handleBg": { "value": "{semantic.theme.dark.color.handle.bg}" },
+            "badgeBg": {
+              "value": "{semantic.theme.dark.color.badge.bg}"
+            },
+            "badgeText": {
+              "value": "{semantic.theme.dark.color.badge.text}"
+            },
+            "handleBg": {
+              "value": "{semantic.theme.dark.color.handle.bg}"
+            },
             "handleBorder": {
               "value": "{semantic.theme.dark.color.handle.border}"
             },
@@ -349,30 +651,48 @@
             "diagnosticsMuted": {
               "value": "{semantic.theme.dark.color.diagnostics.muted}"
             },
-            "error": { "value": "{semantic.theme.dark.color.status.error}" },
-            "warning": { "value": "{semantic.theme.dark.color.status.warning}" }
+            "error": {
+              "value": "{semantic.theme.dark.color.status.error}"
+            },
+            "warning": {
+              "value": "{semantic.theme.dark.color.status.warning}"
+            }
           }
         },
         "monaco": {
-          "base": { "value": "vs-dark" },
+          "base": {
+            "value": "vs-dark"
+          },
           "background": {
             "value": "{semantic.theme.dark.color.background.workspace}"
           },
-          "foreground": { "value": "{semantic.theme.dark.color.text.default}" },
-          "lineNumber": { "value": "{semantic.theme.dark.color.text.faint}" },
+          "foreground": {
+            "value": "{semantic.theme.dark.color.text.default}"
+          },
+          "lineNumber": {
+            "value": "{semantic.theme.dark.color.text.faint}"
+          },
           "lineNumberActive": {
             "value": "{semantic.theme.dark.color.text.strong}"
           },
-          "cursor": { "value": "{primitive.color.gruvbox.dark.orange}" },
+          "cursor": {
+            "value": "{primitive.color.gruvbox.dark.orange}"
+          },
           "selection": {
             "value": "{semantic.theme.dark.color.background.reference}"
           },
           "inactiveSelection": {
             "value": "{primitive.color.gruvbox.dark.bg2}"
           },
-          "lineHighlight": { "value": "{primitive.color.gruvbox.dark.bg1}" },
-          "whitespace": { "value": "#5a524c" },
-          "indentGuide": { "value": "{primitive.color.gruvbox.dark.bg3}" },
+          "lineHighlight": {
+            "value": "{primitive.color.gruvbox.dark.bg1}"
+          },
+          "whitespace": {
+            "value": "#5a524c"
+          },
+          "indentGuide": {
+            "value": "{primitive.color.gruvbox.dark.bg3}"
+          },
           "indentGuideActive": {
             "value": "{primitive.color.gruvbox.dark.gray}"
           },
@@ -386,13 +706,17 @@
               "foreground": {
                 "value": "{semantic.theme.dark.color.syntax.comment}"
               },
-              "fontStyle": { "value": "italic" }
+              "fontStyle": {
+                "value": "italic"
+              }
             },
             "keyword": {
               "foreground": {
                 "value": "{semantic.theme.dark.color.syntax.keyword}"
               },
-              "fontStyle": { "value": "bold" }
+              "fontStyle": {
+                "value": "bold"
+              }
             },
             "string": {
               "foreground": {

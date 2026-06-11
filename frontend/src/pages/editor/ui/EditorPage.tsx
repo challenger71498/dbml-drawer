@@ -520,7 +520,15 @@ function ThemeModeControl({
 }
 
 function getThemeModeLabel(mode: EditorThemeMode) {
-  return mode === 'system' ? 'System' : mode === 'dark' ? 'Dark' : 'Light'
+  if (mode === 'system') {
+    return 'System'
+  }
+
+  if (mode === 'dark') {
+    return 'Dark'
+  }
+
+  return mode === 'light-solarized' ? 'Solarized' : 'Light'
 }
 
 function clampEditorSidebarWidth(width: number) {

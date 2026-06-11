@@ -49,6 +49,31 @@
           "redSurface": { "value": "#fae7e4" }
         }
       },
+      "neutral": {
+        "light": {
+          "bg0Hard": { "value": "#f4f6f8" },
+          "bg0": { "value": "#ffffff" },
+          "bg1": { "value": "#f8fafc" },
+          "bg2": { "value": "#eef2f6" },
+          "bg3": { "value": "#d9e2ec" },
+          "bg4": { "value": "#b9c6d3" },
+          "gray": { "value": "#7b8794" },
+          "fg4": { "value": "#9aa6b2" },
+          "fg3": { "value": "#6b7785" },
+          "fg2": { "value": "#4f5b67" },
+          "fg1": { "value": "#2f3742" },
+          "fg0": { "value": "#1f2933" },
+          "yellow": { "value": "#b7791f" },
+          "green": { "value": "#2f855a" },
+          "orange": { "value": "#c05621" },
+          "aqua": { "value": "#3f8f8f" },
+          "aquaHover": { "value": "#327a7a" },
+          "purple": { "value": "#805ad5" },
+          "red": { "value": "#c53030" },
+          "redMuted": { "value": "#e53e3e" },
+          "redSurface": { "value": "#fff5f5" }
+        }
+      },
       "base": {
         "white": { "value": "#ffffff" },
         "black": { "value": "#000000" }

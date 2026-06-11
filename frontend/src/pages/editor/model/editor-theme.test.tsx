@@ -21,6 +21,7 @@ describe('editor theme preferences', () => {
     installLocalStorageMock()
     window.localStorage.setItem(EDITOR_WORKSPACE_THEME_STORAGE_KEY, 'sepia')
 
+    expect(normalizeEditorThemeMode('light-solarized')).toBe('light-solarized')
     expect(normalizeEditorThemeMode('unknown')).toBe('system')
     expect(readStoredThemeMode(EDITOR_WORKSPACE_THEME_STORAGE_KEY)).toBe(
       'system',

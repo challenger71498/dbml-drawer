@@ -12,6 +12,63 @@ export const EDITOR_MONACO_THEME_DEFINITIONS = {
     rules: [
       {
         token: '',
+        foreground: '2f3742',
+      },
+      {
+        token: 'comment',
+        foreground: '7b8794',
+        fontStyle: 'italic',
+      },
+      {
+        token: 'keyword',
+        foreground: '3f8f8f',
+        fontStyle: 'bold',
+      },
+      {
+        token: 'string',
+        foreground: 'b7791f',
+      },
+      {
+        token: 'number',
+        foreground: 'c05621',
+      },
+      {
+        token: 'type',
+        foreground: '3f8f8f',
+      },
+      {
+        token: 'delimiter',
+        foreground: '6b7785',
+      },
+      {
+        token: 'operator',
+        foreground: '805ad5',
+      },
+      {
+        token: 'identifier',
+        foreground: '2f3742',
+      },
+    ],
+    colors: {
+      'editor.background': '#ffffff',
+      'editor.foreground': '#2f3742',
+      'editorLineNumber.foreground': '#6b7785',
+      'editorLineNumber.activeForeground': '#1f2933',
+      'editorCursor.foreground': '#b7791f',
+      'editor.selectionBackground': '#d9e2ec',
+      'editor.inactiveSelectionBackground': '#eef2f6',
+      'editor.lineHighlightBackground': '#f8fafc',
+      'editorWhitespace.foreground': '#9aa6b2',
+      'editorIndentGuide.background1': '#d9e2ec',
+      'editorIndentGuide.activeBackground1': '#b9c6d3',
+    },
+  },
+  'light-solarized': {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      {
+        token: '',
         foreground: '3c3836',
       },
       {
@@ -120,4 +177,7 @@ export const EDITOR_MONACO_THEME_DEFINITIONS = {
       'editorIndentGuide.activeBackground1': '#928374',
     },
   },
-} satisfies Record<'light' | 'dark', editor.IStandaloneThemeData>
+} satisfies Record<
+  'light' | 'light-solarized' | 'dark',
+  editor.IStandaloneThemeData
+>

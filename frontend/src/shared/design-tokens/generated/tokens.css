@@ -4,6 +4,60 @@
  */
 
 [data-workspace-theme='light'] {
+  --editor-color-page-bg: #f4f6f8;
+  --editor-color-workspace-bg: #ffffff;
+  --editor-color-panel-bg: #f8fafc;
+  --editor-color-panel-muted-bg: #eef2f6;
+  --editor-color-diagram-bg: #ffffff;
+  --editor-color-diagram-grid-dot: #d9e2ec;
+  --editor-color-border: #d9e2ec;
+  --editor-color-border-control: #b9c6d3;
+  --editor-color-border-strong: #7b8794;
+  --editor-color-text: #2f3742;
+  --editor-color-text-strong: #1f2933;
+  --editor-color-text-muted: #4f5b67;
+  --editor-color-text-subtle: #6b7785;
+  --editor-color-text-faint: #9aa6b2;
+  --editor-color-title: #1f2933;
+  --editor-color-control-hover-bg: #eef2f6;
+  --editor-color-control-hover-soft-bg: #f8fafc;
+  --editor-color-control-active-bg: #3f8f8f;
+  --editor-color-control-active-hover-bg: #327a7a;
+  --editor-color-control-active-text: #ffffff;
+  --editor-color-brand: #3f8f8f;
+  --editor-color-table-header-bg: #eef2f6;
+  --editor-color-table-header-active-bg: #d9e2ec;
+  --editor-color-table-header-muted: #6b7785;
+  --editor-color-table-border: #b9c6d3;
+  --editor-color-table-shadow: rgb(31 41 51 / 10%);
+  --editor-color-table-active-shadow: rgb(31 41 51 / 15%);
+  --editor-color-floating-shadow: rgb(31 41 51 / 12%);
+  --editor-color-table-active-accent: #b7791f;
+  --editor-color-table-active-ring: rgb(183 121 31 / 24%);
+  --editor-color-relation-line: #3f8f8f;
+  --editor-color-relation-source: #b7791f;
+  --editor-color-relation-reference: #3f8f8f;
+  --editor-color-reference-accent: #3f8f8f;
+  --editor-color-reference-bg: #e6f4f4;
+  --editor-color-source-accent: #b7791f;
+  --editor-color-source-bg: #fff7e8;
+  --editor-color-column-border: #e6ebf0;
+  --editor-color-badge-bg: #e6f4f4;
+  --editor-color-badge-text: #3f8f8f;
+  --editor-color-handle-bg: #3f8f8f;
+  --editor-color-handle-border: #b9c6d3;
+  --editor-color-diagnostics-empty-border: #d9e2ec;
+  --editor-color-diagnostics-empty-bg: #f8fafc;
+  --editor-color-diagnostics-empty-text: #4f5b67;
+  --editor-color-diagnostics-error-border: #e53e3e;
+  --editor-color-diagnostics-error-bg: #fff5f5;
+  --editor-color-diagnostics-text: #1f2933;
+  --editor-color-diagnostics-muted: #4f5b67;
+  --editor-color-error: #c53030;
+  --editor-color-warning: #b7791f;
+}
+
+[data-workspace-theme='light-solarized'] {
   --editor-color-page-bg: #f6f1e7;
   --editor-color-workspace-bg: #fffaf0;
   --editor-color-panel-bg: #fbf6ec;
@@ -34,11 +88,11 @@
   --editor-color-floating-shadow: rgb(60 56 54 / 14%);
   --editor-color-table-active-accent: #b57614;
   --editor-color-table-active-ring: rgb(181 118 20 / 24%);
-  --editor-color-relation-line: #3c3836;
+  --editor-color-relation-line: #4f8a8b;
   --editor-color-relation-source: #b57614;
-  --editor-color-relation-reference: #3c3836;
-  --editor-color-reference-accent: #3c3836;
-  --editor-color-reference-bg: #eee5d6;
+  --editor-color-relation-reference: #4f8a8b;
+  --editor-color-reference-accent: #4f8a8b;
+  --editor-color-reference-bg: #e3f0ef;
   --editor-color-source-accent: #b57614;
   --editor-color-source-bg: #f7ead2;
   --editor-color-column-border: #eadfce;
