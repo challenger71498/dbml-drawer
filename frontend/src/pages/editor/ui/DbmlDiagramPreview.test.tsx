@@ -33,6 +33,9 @@ import { DbmlRelationEdge } from './DbmlRelationEdge'
 const reactFlowProps = vi.hoisted(() => ({
   capture: vi.fn(),
   fitView: vi.fn(),
+  getViewport: vi.fn(() => ({ x: 0, y: 0, zoom: 1 })),
+  getZoom: vi.fn(() => 1),
+  setCenter: vi.fn(),
 }))
 
 vi.mock('@xyflow/react', () => ({
@@ -66,8 +69,10 @@ vi.mock('@xyflow/react', () => ({
   ],
   Handle: ({ id }: { id: string }) => <span data-handle-id={id} />,
   Position: {
+    Bottom: 'bottom',
     Left: 'left',
     Right: 'right',
+    Top: 'top',
   },
   ReactFlow: ({
     children,
@@ -154,7 +159,11 @@ vi.mock('@xyflow/react', () => ({
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => children,
   useReactFlow: () => ({
     fitView: reactFlowProps.fitView,
+    getViewport: reactFlowProps.getViewport,
+    getZoom: reactFlowProps.getZoom,
+    setCenter: reactFlowProps.setCenter,
   }),
+  useOnViewportChange: () => undefined,
 }))
 
 const SOURCE = `Table users {
@@ -169,6 +178,77 @@ const RELATION_SOURCE = `Table users {
 Table posts {
   id integer [pk]
   user_id integer [ref: > users.id]
+}
+`
+
+const PROXY_RELATION_SOURCE = `Table users {
+  id integer [pk]
+  email varchar
+  name varchar
+}
+
+Table accounts {
+  id integer [pk]
+  name varchar
+}
+
+Table posts {
+  id integer [pk]
+  user_id integer [ref: > users.id]
+  account_id integer [ref: > accounts.id]
+}
+`
+
+const STACKED_PROXY_RELATION_SOURCE = `Table audit_events {
+  id uuid [pk]
+  actor_member_id uuid
+}
+
+Table incidents {
+  id uuid [pk]
+  opened_by_member_id uuid
+}
+
+Table deployments {
+  id uuid [pk]
+  requested_by_member_id uuid
+}
+
+Table members {
+  id uuid [pk]
+  audit_event_id uuid [ref: > audit_events.id]
+  incident_id uuid [ref: > incidents.id]
+  deployment_id uuid [ref: > deployments.id]
+}
+`
+
+const MIXED_SIDE_PROXY_RELATION_SOURCE = `Table left_a {
+  id uuid [pk]
+}
+
+Table left_b {
+  id uuid [pk]
+}
+
+Table bottom_a {
+  id uuid [pk]
+}
+
+Table bottom_b {
+  id uuid [pk]
+}
+
+Table bottom_c {
+  id uuid [pk]
+}
+
+Table members {
+  id uuid [pk]
+  left_a_id uuid [ref: > left_a.id]
+  left_b_id uuid [ref: > left_b.id]
+  bottom_a_id uuid [ref: > bottom_a.id]
+  bottom_b_id uuid [ref: > bottom_b.id]
+  bottom_c_id uuid [ref: > bottom_c.id]
 }
 `
 
@@ -206,6 +286,12 @@ describe('DbmlDiagramPreview', () => {
     cleanup()
     reactFlowProps.capture.mockClear()
     reactFlowProps.fitView.mockClear()
+    reactFlowProps.getViewport.mockReset()
+    reactFlowProps.getViewport.mockReturnValue({ x: 0, y: 0, zoom: 1 })
+    reactFlowProps.getZoom.mockReset()
+    reactFlowProps.getZoom.mockReturnValue(1)
+    reactFlowProps.setCenter.mockClear()
+    vi.restoreAllMocks()
   })
 
   it('renders tables and columns for a layouted diagram', async () => {
@@ -620,6 +706,393 @@ Table posts {
     expect(reactFlowProps.fitView).not.toHaveBeenCalled()
   })
 
+  it('hides offscreen relation proxies when the setting is disabled', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 1200, y: 0 },
+    )
+
+    render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    expect(
+      screen.queryByTestId('offscreen-relation-proxy:table:public.users'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows compact offscreen relation proxies for focused targets', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTables(await layoutDbmlDiagram(diagram), {
+      'table:public.users': { x: 1200, y: 0 },
+      'table:public.accounts': { x: 1200, y: 20 },
+    })
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(within(proxy).getByText('users')).toBeInTheDocument()
+    expect(within(proxy).getByText('id')).toBeInTheDocument()
+    expect(within(proxy).queryByText('email')).not.toBeInTheDocument()
+    expect(within(proxy).queryByText('3 cols')).not.toBeInTheDocument()
+    expect(within(proxy).queryByText('...')).not.toBeInTheDocument()
+    expect(within(proxy).queryByText('↗')).not.toBeInTheDocument()
+  })
+
+  it('keeps offscreen relation proxy cards from overlapping each other', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTables(await layoutDbmlDiagram(diagram), {
+      'table:public.users': { x: 1200, y: 0 },
+      'table:public.accounts': { x: 1200, y: 20 },
+    })
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const usersProxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+    const accountsProxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.accounts',
+    )
+    const topValues = [usersProxy, accountsProxy]
+      .map((proxy) => Number.parseFloat(proxy.style.top))
+      .sort((first, second) => first - second)
+
+    expect(topValues[1] - topValues[0]).toBeCloseTo(70)
+  })
+
+  it('shifts a crowded offscreen relation proxy stack away from the viewport edge', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(STACKED_PROXY_RELATION_SOURCE),
+    )
+    const layoutedDiagram = moveTables(await layoutDbmlDiagram(diagram), {
+      'table:public.members': { x: 260, y: 120 },
+      'table:public.audit_events': { x: -1200, y: 900 },
+      'table:public.incidents': { x: -1200, y: 920 },
+      'table:public.deployments': { x: -1200, y: 940 },
+    })
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.members'))
+
+    const proxies = await Promise.all([
+      screen.findByTestId('offscreen-relation-proxy:table:public.audit_events'),
+      screen.findByTestId('offscreen-relation-proxy:table:public.incidents'),
+      screen.findByTestId('offscreen-relation-proxy:table:public.deployments'),
+    ])
+    const topValues = proxies
+      .map((proxy) => Number.parseFloat(proxy.style.top))
+      .sort((first, second) => first - second)
+
+    expect(topValues).toEqual([186, 256, 326])
+  })
+
+  it('stacks offscreen relation proxy cards independently per viewport side', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(MIXED_SIDE_PROXY_RELATION_SOURCE),
+    )
+    const layoutedDiagram = moveTables(await layoutDbmlDiagram(diagram), {
+      'table:public.members': { x: 260, y: 120 },
+      'table:public.left_a': { x: -1200, y: 120 },
+      'table:public.left_b': { x: -1200, y: 140 },
+      'table:public.bottom_a': { x: -100, y: 900 },
+      'table:public.bottom_b': { x: 170, y: 920 },
+      'table:public.bottom_c': { x: 364, y: 940 },
+    })
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.members'))
+
+    await Promise.all([
+      screen.findByTestId('offscreen-relation-proxy:table:public.left_a'),
+      screen.findByTestId('offscreen-relation-proxy:table:public.left_b'),
+    ])
+    const bottomProxies = await Promise.all([
+      screen.findByTestId('offscreen-relation-proxy:table:public.bottom_a'),
+      screen.findByTestId('offscreen-relation-proxy:table:public.bottom_b'),
+      screen.findByTestId('offscreen-relation-proxy:table:public.bottom_c'),
+    ])
+    const bottomTopValues = bottomProxies
+      .map((proxy) => Number.parseFloat(proxy.style.top))
+      .sort((first, second) => first - second)
+
+    expect(bottomTopValues).toEqual([326, 326, 326])
+  })
+
+  it('shifts top and bottom proxy cards away from adjacent side proxy blocks', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(
+      parseDbmlDocument(MIXED_SIDE_PROXY_RELATION_SOURCE),
+    )
+    const layoutedDiagram = moveTables(await layoutDbmlDiagram(diagram), {
+      'table:public.members': { x: 260, y: 120 },
+      'table:public.left_a': { x: -1200, y: 280 },
+      'table:public.left_b': { x: -1200, y: 300 },
+      'table:public.bottom_a': { x: -100, y: 900 },
+      'table:public.bottom_b': { x: 500, y: 920 },
+      'table:public.bottom_c': { x: 700, y: 940 },
+    })
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.members'))
+
+    const bottomProxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.bottom_a',
+    )
+
+    expect(Number.parseFloat(bottomProxy.style.left)).toBeGreaterThan(14)
+  })
+
+  it('scales offscreen relation proxy cards with the diagram viewport zoom', async () => {
+    installDiagramSurfaceBounds()
+    reactFlowProps.getViewport.mockReturnValue({ x: 0, y: 0, zoom: 1.5 })
+    reactFlowProps.getZoom.mockReturnValue(1.5)
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 1200, y: 0 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(proxy.style.transform).toBe('scale(1.5)')
+  })
+
+  it('places offscreen relation proxies by parallel translation when selected', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 1200, y: 180 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(Number.parseFloat(proxy.style.left)).toBe(402)
+    expect(Number.parseFloat(proxy.style.top)).toBe(180)
+  })
+
+  it('centers top and bottom parallel proxies on the original table center', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 200, y: -1200 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(Number.parseFloat(proxy.style.left)).toBe(238)
+    expect(Number.parseFloat(proxy.style.top)).toBe(14)
+  })
+
+  it('connects active relation lines to offscreen proxies when enabled', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 1200, y: 0 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        shouldConnectOffscreenRelationProxyLines
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    await screen.findByTestId('offscreen-relation-proxy:table:public.users')
+
+    expect(
+      screen
+        .getAllByTestId('diagram-edge')
+        .some((edge) => edge.getAttribute('d')?.includes('402')),
+    ).toBe(true)
+  })
+
+  it('connects top and bottom offscreen proxy lines to column ports', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 0, y: -1200 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        shouldConnectOffscreenRelationProxyLines
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    await screen.findByTestId('offscreen-relation-proxy:table:public.users')
+
+    expect(
+      screen
+        .getAllByTestId('diagram-edge')
+        .some((edge) => edge.getAttribute('d')?.includes('59')),
+    ).toBe(true)
+  })
+
+  it('navigates to the original table when an offscreen relation proxy is clicked', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 1200, y: 0 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+    fireEvent.click(
+      await screen.findByTestId('offscreen-relation-proxy:table:public.users'),
+    )
+
+    const usersTable = layoutedDiagram.tables.find(
+      (table) => table.id === 'table:public.users',
+    )
+
+    expect(reactFlowProps.setCenter).toHaveBeenCalledWith(
+      usersTable!.position.x + usersTable!.size.width / 2,
+      usersTable!.position.y + usersTable!.size.height / 2,
+      {
+        duration: 240,
+        zoom: 1,
+      },
+    )
+  })
+
+  it('highlights represented relations when an offscreen relation proxy is hovered', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 1200, y: 0 },
+    )
+
+    render(
+      <DbmlDiagramPreview
+        diagram={layoutedDiagram}
+        focusedTarget={{
+          type: 'table',
+          tableId: 'table:public.posts',
+        }}
+        isOffscreenRelationProxiesEnabled
+        isPending={false}
+        isPaused={false}
+      />,
+    )
+
+    expect(getRelationEdgeActiveStates()).not.toContain('true')
+
+    fireEvent.mouseEnter(
+      await screen.findByTestId('offscreen-relation-proxy:table:public.users'),
+    )
+
+    expect(getRelationEdgeActiveStates()).toContain('true')
+  })
+
   it('keeps base flow elements stable when diagram selection changes', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
@@ -819,8 +1292,14 @@ Table posts {
 
 function InteractivePreviewHarness({
   diagram,
+  isOffscreenRelationProxiesEnabled = false,
+  offscreenRelationProxyPlacementMode = 'line',
+  shouldConnectOffscreenRelationProxyLines = false,
 }: {
   diagram: LayoutedDbmlDiagram
+  isOffscreenRelationProxiesEnabled?: boolean
+  offscreenRelationProxyPlacementMode?: 'line' | 'parallel'
+  shouldConnectOffscreenRelationProxyLines?: boolean
 }) {
   const [hoveredTarget, setHoveredTarget] =
     useState<DbmlDiagramSelectionTarget | null>(null)
@@ -847,8 +1326,13 @@ function InteractivePreviewHarness({
       focusedRelationIds={getActiveRelationIds(diagram, focusedTarget)}
       focusedTableIds={getActiveTableIds(diagram, focusedTarget)}
       focusedTarget={focusedTarget}
+      isOffscreenRelationProxiesEnabled={isOffscreenRelationProxiesEnabled}
       isPending={false}
       isPaused={false}
+      offscreenRelationProxyPlacementMode={offscreenRelationProxyPlacementMode}
+      shouldConnectOffscreenRelationProxyLines={
+        shouldConnectOffscreenRelationProxyLines
+      }
       sourceColumnIds={activeRelationEndpointColumnIds.sourceColumnIds}
       referenceColumnIds={activeRelationEndpointColumnIds.referenceColumnIds}
       onColumnFocus={(column) =>
@@ -986,6 +1470,47 @@ function getCapturedReactFlowProps() {
   }
 }
 
+function installDiagramSurfaceBounds() {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    x: 0,
+    y: 0,
+    width: 600,
+    height: 400,
+    top: 0,
+    right: 600,
+    bottom: 400,
+    left: 0,
+    toJSON: () => ({}),
+  })
+}
+
+function moveTable(
+  diagram: LayoutedDbmlDiagram,
+  tableId: string,
+  position: { x: number; y: number },
+): LayoutedDbmlDiagram {
+  return moveTables(diagram, {
+    [tableId]: position,
+  })
+}
+
+function moveTables(
+  diagram: LayoutedDbmlDiagram,
+  positionsByTableId: Record<string, { x: number; y: number }>,
+): LayoutedDbmlDiagram {
+  return {
+    ...diagram,
+    tables: diagram.tables.map((table) =>
+      positionsByTableId[table.id]
+        ? {
+            ...table,
+            position: positionsByTableId[table.id],
+          }
+        : table,
+    ),
+  }
+}
+
 function expectActiveGradientEdge(edge: HTMLElement) {
   expect(DBML_RELATION_SOURCE_COLOR).toBe(EDITOR_COLOR_VARIABLES.relationSource)
   expect(DBML_RELATION_REFERENCE_COLOR).toBe(
@@ -1074,6 +1599,12 @@ function getRelationEdgeDimmedStates() {
   return screen
     .getAllByTestId('diagram-edge')
     .map((edge) => edge.closest('g')?.getAttribute('data-relation-edge-dimmed'))
+}
+
+function getRelationEdgeActiveStates() {
+  return screen
+    .getAllByTestId('diagram-edge')
+    .map((edge) => edge.closest('g')?.getAttribute('data-relation-edge-active'))
 }
 
 function getRelationEdgeGroup(relationId: string) {

@@ -99,8 +99,14 @@ export function EditorPage({
     codeEditorThemeMode,
     resolvedWorkspaceTheme,
     resolvedCodeEditorTheme,
+    isOffscreenRelationProxiesEnabled,
+    shouldConnectOffscreenRelationProxyLines,
+    offscreenRelationProxyPlacementMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
+    setOffscreenRelationProxiesEnabled,
+    setShouldConnectOffscreenRelationProxyLines,
+    setOffscreenRelationProxyPlacementMode,
   } = useEditorThemePreferences()
   const [codeEditorOverrideThemeMode, setCodeEditorOverrideThemeMode] =
     useState<EditorThemeMode>(() =>
@@ -328,12 +334,28 @@ export function EditorPage({
         <EditorSettingsPanel
           codeEditorOverrideThemeMode={codeEditorOverrideThemeMode}
           isCodeEditorThemeOverrideEnabled={codeEditorThemeMode !== 'workspace'}
+          isOffscreenRelationProxiesEnabled={isOffscreenRelationProxiesEnabled}
+          offscreenRelationProxyPlacementMode={
+            offscreenRelationProxyPlacementMode
+          }
+          shouldConnectOffscreenRelationProxyLines={
+            shouldConnectOffscreenRelationProxyLines
+          }
           workspaceThemeMode={workspaceThemeMode}
           onCodeEditorOverrideThemeModeChange={
             handleCodeEditorOverrideThemeModeChange
           }
           onCodeEditorThemeOverrideEnabledChange={
             handleCodeEditorThemeOverrideEnabledChange
+          }
+          onOffscreenRelationProxiesEnabledChange={
+            setOffscreenRelationProxiesEnabled
+          }
+          onConnectOffscreenRelationProxyLinesChange={
+            setShouldConnectOffscreenRelationProxyLines
+          }
+          onOffscreenRelationProxyPlacementModeChange={
+            setOffscreenRelationProxyPlacementMode
           }
           onWorkspaceThemeModeChange={setWorkspaceThemeMode}
         />
@@ -344,6 +366,12 @@ export function EditorPage({
       codeEditorThemeMode,
       handleCodeEditorOverrideThemeModeChange,
       handleCodeEditorThemeOverrideEnabledChange,
+      isOffscreenRelationProxiesEnabled,
+      offscreenRelationProxyPlacementMode,
+      setOffscreenRelationProxyPlacementMode,
+      setOffscreenRelationProxiesEnabled,
+      setShouldConnectOffscreenRelationProxyLines,
+      shouldConnectOffscreenRelationProxyLines,
       setWorkspaceThemeMode,
       workspaceThemeMode,
     ],
@@ -502,6 +530,15 @@ export function EditorPage({
                 focusedRelationIds={focusedRelationIds}
                 focusedTableIds={focusedTableIds}
                 focusedTarget={focusedDiagramTarget}
+                isOffscreenRelationProxiesEnabled={
+                  isOffscreenRelationProxiesEnabled
+                }
+                offscreenRelationProxyPlacementMode={
+                  offscreenRelationProxyPlacementMode
+                }
+                shouldConnectOffscreenRelationProxyLines={
+                  shouldConnectOffscreenRelationProxyLines
+                }
                 isPending={isDiagramPending}
                 isPaused={isDiagramPaused}
                 sourceColumnIds={

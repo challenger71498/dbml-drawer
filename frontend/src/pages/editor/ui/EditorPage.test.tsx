@@ -10,6 +10,9 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
   EDITOR_WORKSPACE_THEME_STORAGE_KEY,
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
   LIGHT_SOLARIZED_MONACO_THEME,
@@ -200,7 +203,11 @@ vi.mock('@xyflow/react', () => ({
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => children,
   useReactFlow: () => ({
     fitView: vi.fn(),
+    getViewport: vi.fn(() => ({ x: 0, y: 0, zoom: 1 })),
+    getZoom: vi.fn(() => 1),
+    setCenter: vi.fn(),
   }),
+  useOnViewportChange: () => undefined,
 }))
 
 describe('EditorPage', () => {
@@ -456,6 +463,83 @@ describe('EditorPage', () => {
     ).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('applies and persists the offscreen relation proxy settings from settings', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    const { unmount } = render(<EditorPage isEditorDevMode={false} />)
+
+    openSettingsPanel()
+    const proxyToggle = screen.getByRole('checkbox', {
+      name: 'Show offscreen relation proxies',
+    })
+    const proxyLineToggle = screen.getByRole('checkbox', {
+      name: 'Connect relation lines to proxies',
+    })
+    const proxyPlacementGroup = screen.getByRole('group', {
+      name: 'Proxy placement',
+    })
+
+    expect(proxyToggle).not.toBeChecked()
+    expect(proxyLineToggle).not.toBeChecked()
+    expect(proxyLineToggle).toBeDisabled()
+    expect(
+      within(proxyPlacementGroup).getByRole('button', { name: 'Line' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
+    ).toBeDisabled()
+
+    fireEvent.click(proxyToggle)
+    fireEvent.click(proxyLineToggle)
+    fireEvent.click(
+      within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
+    )
+
+    expect(proxyToggle).toBeChecked()
+    expect(proxyLineToggle).toBeChecked()
+    expect(proxyLineToggle).not.toBeDisabled()
+    expect(
+      within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
+      ),
+    ).toBe('true')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
+      ),
+    ).toBe('true')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+      ),
+    ).toBe('parallel')
+
+    unmount()
+    render(<EditorPage isEditorDevMode={false} />)
+    openSettingsPanel()
+
+    expect(
+      screen.getByRole('checkbox', {
+        name: 'Show offscreen relation proxies',
+      }),
+    ).toBeChecked()
+    expect(
+      screen.getByRole('checkbox', {
+        name: 'Connect relation lines to proxies',
+      }),
+    ).toBeChecked()
+    expect(
+      within(screen.getByRole('group', { name: 'Proxy placement' })).getByRole(
+        'button',
+        { name: 'Parallel' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('resolves system theme changes for workspace and code editor themes', () => {
     installLocalStorageMock()
     const mediaQuery = installMatchMediaMock(false)
@@ -549,6 +633,9 @@ describe('EditorPage', () => {
     ).toBeInTheDocument()
     expect(
       screen.getByRole('checkbox', { name: 'Override workspace theme' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('checkbox', { name: 'Show offscreen relation proxies' }),
     ).toBeInTheDocument()
 
     fireEvent.click(settingsButton)

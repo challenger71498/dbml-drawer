@@ -1,4 +1,4 @@
-import type { Edge, Node } from '@xyflow/react'
+import type { Edge, Node, Position } from '@xyflow/react'
 import type {
   DbmlDiagramRoute,
   LayoutedDbmlDiagram,
@@ -24,6 +24,18 @@ export type DbmlRelationEdgeData = {
   route: DbmlDiagramRoute
   highlightMode: DbmlRelationHighlightMode
   lineStyle: DbmlRelationLineStyle
+  endpointOverride?: DbmlRelationEdgeEndpointOverride
+}
+
+export type DbmlRelationEdgeEndpointOverride = {
+  source?: DbmlRelationEdgeEndpoint
+  target?: DbmlRelationEdgeEndpoint
+}
+
+export type DbmlRelationEdgeEndpoint = {
+  x: number
+  y: number
+  position: Position
 }
 
 export type DbmlDiagramFlowElements = {

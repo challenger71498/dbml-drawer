@@ -2,10 +2,16 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+  EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
   EDITOR_WORKSPACE_THEME_STORAGE_KEY,
   normalizeCodeEditorThemeMode,
   normalizeEditorThemeMode,
+  normalizeOffscreenRelationProxyPlacementMode,
+  readStoredBoolean,
   readStoredCodeEditorThemeMode,
+  readStoredOffscreenRelationProxyPlacementMode,
   readStoredThemeMode,
   useEditorThemePreferences,
 } from './editor-theme'
@@ -36,6 +42,21 @@ describe('editor theme preferences', () => {
     expect(
       readStoredCodeEditorThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
     ).toBe('workspace')
+
+    window.localStorage.setItem(
+      EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+      'diagonal',
+    )
+
+    expect(normalizeOffscreenRelationProxyPlacementMode('parallel')).toBe(
+      'parallel',
+    )
+    expect(normalizeOffscreenRelationProxyPlacementMode('unknown')).toBe('line')
+    expect(
+      readStoredOffscreenRelationProxyPlacementMode(
+        EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+      ),
+    ).toBe('line')
   })
 
   it('persists workspace and code editor theme modes independently', () => {
@@ -109,6 +130,71 @@ describe('editor theme preferences', () => {
       window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
     ).toBe('workspace')
   })
+
+  it('persists the offscreen relation proxy settings with disabled defaults', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+
+    expect(
+      readStoredBoolean(EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY, false),
+    ).toBe(false)
+    expect(
+      readStoredBoolean(
+        EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
+        false,
+      ),
+    ).toBe(false)
+
+    const { unmount } = render(<ThemeHarness />)
+
+    expect(screen.getByTestId('offscreen-proxies')).toHaveTextContent(
+      'disabled',
+    )
+    expect(screen.getByTestId('offscreen-proxy-lines')).toHaveTextContent(
+      'disconnected',
+    )
+    expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
+      'line',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enable proxies' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Connect proxies' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Place parallel' }))
+
+    expect(screen.getByTestId('offscreen-proxies')).toHaveTextContent('enabled')
+    expect(screen.getByTestId('offscreen-proxy-lines')).toHaveTextContent(
+      'connected',
+    )
+    expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
+      'parallel',
+    )
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
+      ),
+    ).toBe('true')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
+      ),
+    ).toBe('true')
+    expect(
+      window.localStorage.getItem(
+        EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+      ),
+    ).toBe('parallel')
+
+    unmount()
+    render(<ThemeHarness />)
+
+    expect(screen.getByTestId('offscreen-proxies')).toHaveTextContent('enabled')
+    expect(screen.getByTestId('offscreen-proxy-lines')).toHaveTextContent(
+      'connected',
+    )
+    expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
+      'parallel',
+    )
+  })
 })
 
 function ThemeHarness() {
@@ -117,8 +203,14 @@ function ThemeHarness() {
     codeEditorThemeMode,
     resolvedWorkspaceTheme,
     resolvedCodeEditorTheme,
+    isOffscreenRelationProxiesEnabled,
+    shouldConnectOffscreenRelationProxyLines,
+    offscreenRelationProxyPlacementMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
+    setOffscreenRelationProxiesEnabled,
+    setShouldConnectOffscreenRelationProxyLines,
+    setOffscreenRelationProxyPlacementMode,
   } = useEditorThemePreferences()
 
   return (
@@ -127,6 +219,17 @@ function ThemeHarness() {
       <span data-testid="code-editor-mode">{codeEditorThemeMode}</span>
       <span data-testid="workspace-resolved">{resolvedWorkspaceTheme}</span>
       <span data-testid="code-editor-resolved">{resolvedCodeEditorTheme}</span>
+      <span data-testid="offscreen-proxies">
+        {isOffscreenRelationProxiesEnabled ? 'enabled' : 'disabled'}
+      </span>
+      <span data-testid="offscreen-proxy-lines">
+        {shouldConnectOffscreenRelationProxyLines
+          ? 'connected'
+          : 'disconnected'}
+      </span>
+      <span data-testid="offscreen-proxy-placement">
+        {offscreenRelationProxyPlacementMode}
+      </span>
       <button type="button" onClick={() => setWorkspaceThemeMode('dark')}>
         Workspace dark
       </button>
@@ -135,6 +238,24 @@ function ThemeHarness() {
       </button>
       <button type="button" onClick={() => setCodeEditorThemeMode('workspace')}>
         Code workspace
+      </button>
+      <button
+        type="button"
+        onClick={() => setOffscreenRelationProxiesEnabled(true)}
+      >
+        Enable proxies
+      </button>
+      <button
+        type="button"
+        onClick={() => setShouldConnectOffscreenRelationProxyLines(true)}
+      >
+        Connect proxies
+      </button>
+      <button
+        type="button"
+        onClick={() => setOffscreenRelationProxyPlacementMode('parallel')}
+      >
+        Place parallel
       </button>
     </div>
   )

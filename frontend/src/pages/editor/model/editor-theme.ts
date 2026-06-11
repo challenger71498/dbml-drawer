@@ -5,6 +5,7 @@ import type { MonacoApi } from '../lib/monaco-dbml-language'
 export type EditorThemeMode = 'light' | 'light-solarized' | 'dark' | 'system'
 export type CodeEditorThemeMode = EditorThemeMode | 'workspace'
 export type ResolvedEditorTheme = 'light' | 'light-solarized' | 'dark'
+export type OffscreenRelationProxyPlacementMode = 'line' | 'parallel'
 
 export const EDITOR_WORKSPACE_THEME_MODES = [
   'light',
@@ -16,6 +17,10 @@ export const EDITOR_CODE_EDITOR_THEME_MODES = [
   'workspace',
   ...EDITOR_WORKSPACE_THEME_MODES,
 ] as const
+export const OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES = [
+  'line',
+  'parallel',
+] as const
 export const PURE_WHITE_LIGHT_MONACO_THEME = 'dbml-drawer-light-pure-white'
 export const LIGHT_SOLARIZED_MONACO_THEME = 'dbml-drawer-light-solarized'
 export const GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME =
@@ -25,6 +30,12 @@ export const EDITOR_WORKSPACE_THEME_STORAGE_KEY =
   'dbml-drawer.editor.workspace-theme'
 export const EDITOR_CODE_EDITOR_THEME_STORAGE_KEY =
   'dbml-drawer.editor.code-editor-theme'
+export const EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY =
+  'dbml-drawer.editor.offscreen-relation-proxies'
+export const EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY =
+  'dbml-drawer.editor.offscreen-relation-proxy-lines'
+export const EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY =
+  'dbml-drawer.editor.offscreen-relation-proxy-placement'
 const SYSTEM_THEME_QUERY = '(prefers-color-scheme: dark)'
 
 export type EditorThemePreferences = {
@@ -32,8 +43,16 @@ export type EditorThemePreferences = {
   codeEditorThemeMode: CodeEditorThemeMode
   resolvedWorkspaceTheme: ResolvedEditorTheme
   resolvedCodeEditorTheme: ResolvedEditorTheme
+  isOffscreenRelationProxiesEnabled: boolean
+  shouldConnectOffscreenRelationProxyLines: boolean
+  offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   setWorkspaceThemeMode: (mode: EditorThemeMode) => void
   setCodeEditorThemeMode: (mode: CodeEditorThemeMode) => void
+  setOffscreenRelationProxiesEnabled: (isEnabled: boolean) => void
+  setShouldConnectOffscreenRelationProxyLines: (shouldConnect: boolean) => void
+  setOffscreenRelationProxyPlacementMode: (
+    mode: OffscreenRelationProxyPlacementMode,
+  ) => void
 }
 
 export function useEditorThemePreferences(): EditorThemePreferences {
@@ -47,6 +66,26 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     useState<CodeEditorThemeMode>(() =>
       readStoredCodeEditorThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
     )
+  const [
+    isOffscreenRelationProxiesEnabled,
+    setOffscreenRelationProxiesEnabledState,
+  ] = useState(() =>
+    readStoredBoolean(EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY, false),
+  )
+  const [
+    shouldConnectOffscreenRelationProxyLines,
+    setShouldConnectOffscreenRelationProxyLinesState,
+  ] = useState(() =>
+    readStoredBoolean(EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY, false),
+  )
+  const [
+    offscreenRelationProxyPlacementMode,
+    setOffscreenRelationProxyPlacementModeState,
+  ] = useState(() =>
+    readStoredOffscreenRelationProxyPlacementMode(
+      EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+    ),
+  )
 
   useEffect(() => {
     const query = getSystemThemeQuery()
@@ -84,6 +123,31 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     writeStoredThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY, mode)
   }
 
+  const setOffscreenRelationProxiesEnabled = (isEnabled: boolean) => {
+    setOffscreenRelationProxiesEnabledState(isEnabled)
+    writeStoredBoolean(EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY, isEnabled)
+  }
+
+  const setShouldConnectOffscreenRelationProxyLines = (
+    shouldConnect: boolean,
+  ) => {
+    setShouldConnectOffscreenRelationProxyLinesState(shouldConnect)
+    writeStoredBoolean(
+      EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
+      shouldConnect,
+    )
+  }
+
+  const setOffscreenRelationProxyPlacementMode = (
+    mode: OffscreenRelationProxyPlacementMode,
+  ) => {
+    setOffscreenRelationProxyPlacementModeState(mode)
+    writeStoredOffscreenRelationProxyPlacementMode(
+      EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
+      mode,
+    )
+  }
+
   const resolvedWorkspaceTheme = resolveThemeMode(
     workspaceThemeMode,
     systemTheme,
@@ -98,8 +162,14 @@ export function useEditorThemePreferences(): EditorThemePreferences {
       resolvedWorkspaceTheme,
       systemTheme,
     ),
+    isOffscreenRelationProxiesEnabled,
+    shouldConnectOffscreenRelationProxyLines,
+    offscreenRelationProxyPlacementMode,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
+    setOffscreenRelationProxiesEnabled,
+    setShouldConnectOffscreenRelationProxyLines,
+    setOffscreenRelationProxyPlacementMode,
   }
 }
 
@@ -161,6 +231,16 @@ export function normalizeCodeEditorThemeMode(
     : 'workspace'
 }
 
+export function normalizeOffscreenRelationProxyPlacementMode(
+  value: string | null | undefined,
+): OffscreenRelationProxyPlacementMode {
+  return OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES.includes(
+    value as OffscreenRelationProxyPlacementMode,
+  )
+    ? (value as OffscreenRelationProxyPlacementMode)
+    : 'line'
+}
+
 export function readStoredThemeMode(storageKey: string): EditorThemeMode {
   try {
     return normalizeEditorThemeMode(window.localStorage.getItem(storageKey))
@@ -179,12 +259,61 @@ export function readStoredCodeEditorThemeMode(
   }
 }
 
+export function readStoredOffscreenRelationProxyPlacementMode(
+  storageKey: string,
+): OffscreenRelationProxyPlacementMode {
+  try {
+    return normalizeOffscreenRelationProxyPlacementMode(
+      window.localStorage.getItem(storageKey),
+    )
+  } catch {
+    return 'line'
+  }
+}
+
 function writeStoredThemeMode(
   storageKey: string,
   mode: EditorThemeMode | CodeEditorThemeMode,
 ) {
   try {
     window.localStorage.setItem(storageKey, mode)
+  } catch {
+    // Ignore storage failures; the in-memory selection still applies.
+  }
+}
+
+function writeStoredOffscreenRelationProxyPlacementMode(
+  storageKey: string,
+  mode: OffscreenRelationProxyPlacementMode,
+) {
+  try {
+    window.localStorage.setItem(storageKey, mode)
+  } catch {
+    // Ignore storage failures; the in-memory selection still applies.
+  }
+}
+
+export function readStoredBoolean(storageKey: string, fallback: boolean) {
+  try {
+    const storedValue = window.localStorage.getItem(storageKey)
+
+    if (storedValue === 'true') {
+      return true
+    }
+
+    if (storedValue === 'false') {
+      return false
+    }
+
+    return fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeStoredBoolean(storageKey: string, value: boolean) {
+  try {
+    window.localStorage.setItem(storageKey, String(value))
   } catch {
     // Ignore storage failures; the in-memory selection still applies.
   }

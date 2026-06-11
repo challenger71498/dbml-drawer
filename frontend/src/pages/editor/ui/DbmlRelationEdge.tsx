@@ -47,6 +47,14 @@ export function DbmlRelationEdge({
 }: EdgeProps<Edge<DbmlRelationEdgeData>>) {
   const { activeRelationIds, focusedRelationIds, focusedTarget } =
     useDbmlDiagramSelectionView()
+  const effectiveSourceX = data?.endpointOverride?.source?.x ?? sourceX
+  const effectiveSourceY = data?.endpointOverride?.source?.y ?? sourceY
+  const effectiveSourcePosition =
+    data?.endpointOverride?.source?.position ?? sourcePosition
+  const effectiveTargetX = data?.endpointOverride?.target?.x ?? targetX
+  const effectiveTargetY = data?.endpointOverride?.target?.y ?? targetY
+  const effectiveTargetPosition =
+    data?.endpointOverride?.target?.position ?? targetPosition
   const isActive = data ? activeRelationIds.has(data.relation.id) : false
   const isDimmed = data
     ? focusedTarget !== null && !focusedRelationIds.has(data.relation.id)
@@ -61,22 +69,22 @@ export function DbmlRelationEdge({
     data && isActive && highlightMode === 'dynamic'
   const path = getRelationPath({
     lineStyle: data?.lineStyle ?? 'bezier',
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
+    sourceX: effectiveSourceX,
+    sourceY: effectiveSourceY,
+    sourcePosition: effectiveSourcePosition,
+    targetX: effectiveTargetX,
+    targetY: effectiveTargetY,
+    targetPosition: effectiveTargetPosition,
   })
   const dynamicFlow = shouldRenderDynamicFlow
     ? getDynamicFlow({
         lineStyle: data?.lineStyle ?? 'bezier',
-        sourceX,
-        sourceY,
-        sourcePosition,
-        targetX,
-        targetY,
-        targetPosition,
+        sourceX: effectiveSourceX,
+        sourceY: effectiveSourceY,
+        sourcePosition: effectiveSourcePosition,
+        targetX: effectiveTargetX,
+        targetY: effectiveTargetY,
+        targetPosition: effectiveTargetPosition,
       })
     : null
 
@@ -93,10 +101,10 @@ export function DbmlRelationEdge({
             data-testid="relation-edge-gradient"
             gradientUnits="userSpaceOnUse"
             id={gradientId}
-            x1={sourceX}
-            x2={targetX}
-            y1={sourceY}
-            y2={targetY}
+            x1={effectiveSourceX}
+            x2={effectiveTargetX}
+            y1={effectiveSourceY}
+            y2={effectiveTargetY}
           >
             <stop offset="0%" stopColor={DBML_RELATION_REFERENCE_COLOR} />
             <stop offset="90%" stopColor={DBML_RELATION_SOURCE_COLOR} />
