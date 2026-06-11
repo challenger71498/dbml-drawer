@@ -23,9 +23,15 @@ export type EditorSidebarShellActivity = {
   onSelect: (event: MouseEvent<HTMLButtonElement>) => void
 }
 
+export type EditorSidebarShellActivityGroups = {
+  top?: readonly EditorSidebarShellActivity[]
+  bottom?: readonly EditorSidebarShellActivity[]
+}
+
 type EditorSidebarResizeHandleProps = {
   label: string
   min: number
+  max?: number
   value: number
   valueText: string
   onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void
@@ -40,7 +46,7 @@ type EditorSidebarShellProps = {
   panelPlacement: EditorSidebarPanelPlacement
   label: string
   activityBarLabel: string
-  activities: readonly EditorSidebarShellActivity[]
+  activityGroups: EditorSidebarShellActivityGroups
   isExpanded: boolean
   panelWidth?: number
   panelId?: string
@@ -66,7 +72,7 @@ export function EditorSidebarShell({
   panelPlacement,
   label,
   activityBarLabel,
-  activities,
+  activityGroups,
   isExpanded,
   panelWidth,
   panelId,
@@ -99,23 +105,11 @@ export function EditorSidebarShell({
       className={`${styles.editorSidebarActivityBar} ${activityBarSideClassNames[side]}`}
       aria-label={activityBarLabel}
     >
-      {activities.map((activity) => (
-        <button
-          className={`${styles.editorActivityButton} ${
-            activity.isActive ? styles.editorActivityButtonActive : ''
-          }`}
-          type="button"
-          aria-controls={activity.panelId}
-          aria-expanded={activity.isExpanded}
-          aria-label={activity.label}
-          aria-pressed={activity.isActive}
-          key={activity.id}
-          title={activity.label}
-          onClick={activity.onSelect}
-        >
-          {activity.icon}
-        </button>
-      ))}
+      <EditorSidebarActivityGroup activities={activityGroups.top ?? []} />
+      <EditorSidebarActivityGroup
+        activities={activityGroups.bottom ?? []}
+        placement="bottom"
+      />
     </div>
   )
 
@@ -135,6 +129,44 @@ export function EditorSidebarShell({
       {activityBar}
       {panelPlacement === 'after-activity-bar' ? panel : null}
     </aside>
+  )
+}
+
+function EditorSidebarActivityGroup({
+  activities,
+  placement = 'top',
+}: {
+  activities: readonly EditorSidebarShellActivity[]
+  placement?: 'top' | 'bottom'
+}) {
+  if (activities.length === 0) {
+    return null
+  }
+
+  return (
+    <div
+      className={`${styles.editorSidebarActivityGroup} ${
+        placement === 'bottom' ? styles.editorSidebarActivityGroupBottom : ''
+      }`}
+    >
+      {activities.map((activity) => (
+        <button
+          className={`${styles.editorActivityButton} ${
+            activity.isActive ? styles.editorActivityButtonActive : ''
+          }`}
+          type="button"
+          aria-controls={activity.panelId}
+          aria-expanded={activity.isExpanded}
+          aria-label={activity.label}
+          aria-pressed={activity.isActive}
+          key={activity.id}
+          title={activity.label}
+          onClick={activity.onSelect}
+        >
+          {activity.icon}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -183,6 +215,7 @@ function EditorSidebarPanel({
           role="separator"
           aria-label={resizeHandle.label}
           aria-orientation="vertical"
+          aria-valuemax={resizeHandle.max}
           aria-valuemin={resizeHandle.min}
           aria-valuenow={resizeHandle.value}
           aria-valuetext={resizeHandle.valueText}

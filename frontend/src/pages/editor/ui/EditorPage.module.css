@@ -87,6 +87,9 @@
 
 .themeModeGroup {
   display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
   overflow: hidden;
   border: 1px solid var(--editor-color-border-control);
   border-radius: 6px;
@@ -103,6 +106,7 @@
   font: inherit;
   font-size: 0.75rem;
   font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -174,6 +178,16 @@
   padding: 0;
   background: var(--editor-color-panel-muted-bg);
   flex-direction: column;
+}
+
+.editorSidebarActivityGroup {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.editorSidebarActivityGroupBottom {
+  margin-top: auto;
 }
 
 .editorSidebarActivityBarLeft {
@@ -678,6 +692,65 @@
   padding: 1rem;
 }
 
+.editorSettingsPanel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.editorSettingsSection {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.editorSettingsToggleField {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--editor-color-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.editorSettingsToggleField input {
+  display: grid;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  flex: 0 0 auto;
+  place-content: center;
+  appearance: none;
+  border: 1px solid var(--editor-color-border-control);
+  border-radius: 4px;
+  background: var(--editor-color-panel-bg);
+  color: var(--editor-color-control-active-text);
+  cursor: pointer;
+}
+
+.editorSettingsToggleField input::before {
+  width: 0.55rem;
+  height: 0.55rem;
+  background: currentColor;
+  clip-path: polygon(14% 44%, 0 65%, 43% 100%, 100% 16%, 80% 0, 38% 62%);
+  content: '';
+  transform: scale(0);
+  transform-origin: center;
+}
+
+.editorSettingsToggleField input:checked {
+  border-color: var(--editor-color-control-active-bg);
+  background: var(--editor-color-control-active-bg);
+}
+
+.editorSettingsToggleField input:checked::before {
+  transform: scale(1);
+}
+
+.editorSettingsToggleField input:focus-visible {
+  outline: 2px solid var(--editor-color-brand);
+  outline-offset: 2px;
+}
+
 .presetField {
   display: grid;
   gap: 0.35rem;
@@ -831,6 +904,17 @@
     order: 1;
     min-height: 3rem;
     flex-direction: row;
+  }
+
+  .editorSidebarActivityGroup {
+    width: auto;
+    height: 100%;
+    flex-direction: row;
+  }
+
+  .editorSidebarActivityGroupBottom {
+    margin-top: 0;
+    margin-left: auto;
   }
 
   .editorSidebarPanel {

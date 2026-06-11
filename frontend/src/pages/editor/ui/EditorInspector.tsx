@@ -13,15 +13,18 @@ import { EditorSidebarShell } from './EditorSidebarShell'
 
 type EditorInspectorProps = {
   activities: readonly EditorInspectorActivity[]
+  bottomActivities?: readonly EditorInspectorActivity[]
   onExpandedChange?: (isExpanded: boolean) => void
 }
 
 const INSPECTOR_SIDEBAR_DEFAULT_WIDTH = 384
 const INSPECTOR_SIDEBAR_MIN_WIDTH = 320
+const INSPECTOR_SIDEBAR_MAX_WIDTH = 720
 const INSPECTOR_SIDEBAR_KEYBOARD_STEP = 24
 
 export function EditorInspector({
   activities,
+  bottomActivities = [],
   onExpandedChange,
 }: EditorInspectorProps) {
   const resizeRef = useRef<{
@@ -35,11 +38,13 @@ export function EditorInspector({
     INSPECTOR_SIDEBAR_DEFAULT_WIDTH,
   )
 
-  if (activities.length === 0) {
+  const allActivities = [...activities, ...bottomActivities]
+
+  if (allActivities.length === 0) {
     return null
   }
 
-  const activeActivity = activities.find(
+  const activeActivity = allActivities.find(
     (activity) => activity.id === activeActivityId,
   )
   const isSidebarVisible = isExpanded && activeActivity
@@ -137,20 +142,36 @@ export function EditorInspector({
       panelPlacement="before-activity-bar"
       label="Editor inspector"
       activityBarLabel="Editor activities"
-      activities={activities.map((activity) => {
-        const isActive = activity.id === activeActivityId
+      activityGroups={{
+        top: activities.map((activity) => {
+          const isActive = activity.id === activeActivityId
 
-        return {
-          id: activity.id,
-          label: activity.label,
-          icon: activity.icon,
-          panelId: getActivityPanelId(activity.id),
-          isActive,
-          isExpanded: isActive && isExpanded,
-          onSelect: (event: MouseEvent<HTMLButtonElement>) =>
-            handleActivitySelect(activity.id, event),
-        }
-      })}
+          return {
+            id: activity.id,
+            label: activity.label,
+            icon: activity.icon,
+            panelId: getActivityPanelId(activity.id),
+            isActive,
+            isExpanded: isActive && isExpanded,
+            onSelect: (event: MouseEvent<HTMLButtonElement>) =>
+              handleActivitySelect(activity.id, event),
+          }
+        }),
+        bottom: bottomActivities.map((activity) => {
+          const isActive = activity.id === activeActivityId
+
+          return {
+            id: activity.id,
+            label: activity.label,
+            icon: activity.icon,
+            panelId: getActivityPanelId(activity.id),
+            isActive,
+            isExpanded: isActive && isExpanded,
+            onSelect: (event: MouseEvent<HTMLButtonElement>) =>
+              handleActivitySelect(activity.id, event),
+          }
+        }),
+      }}
       isExpanded={Boolean(isSidebarVisible)}
       panelWidth={sidebarWidth}
       panelId={
@@ -162,6 +183,7 @@ export function EditorInspector({
       resizeHandle={{
         label: 'Resize inspector',
         min: INSPECTOR_SIDEBAR_MIN_WIDTH,
+        max: INSPECTOR_SIDEBAR_MAX_WIDTH,
         value: sidebarWidth,
         valueText: `${sidebarWidth}px`,
         onKeyDown: handleResizeKeyDown,
@@ -181,5 +203,8 @@ function getActivityPanelId(activityId: EditorInspectorActivityId) {
 }
 
 function clampInspectorSidebarWidth(width: number) {
-  return Math.max(INSPECTOR_SIDEBAR_MIN_WIDTH, Math.round(width))
+  return Math.min(
+    INSPECTOR_SIDEBAR_MAX_WIDTH,
+    Math.max(INSPECTOR_SIDEBAR_MIN_WIDTH, Math.round(width)),
+  )
 }

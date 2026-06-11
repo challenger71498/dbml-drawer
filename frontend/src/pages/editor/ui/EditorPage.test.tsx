@@ -254,11 +254,13 @@ describe('EditorPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('applies and persists the workspace theme independently from the code editor theme', () => {
+  it('applies and persists the workspace theme from settings', () => {
     installLocalStorageMock()
     installMatchMediaMock(false)
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     const { unmount } = render(<EditorPage isEditorDevMode={false} />)
+
+    openSettingsPanel()
 
     fireEvent.click(
       within(screen.getByRole('group', { name: 'Workspace theme' })).getByRole(
@@ -272,11 +274,14 @@ describe('EditorPage', () => {
 
     expect(editorPage).toHaveAttribute('data-workspace-theme-mode', 'dark')
     expect(editorPage).toHaveAttribute('data-workspace-theme', 'dark')
-    expect(editorPage).toHaveAttribute('data-code-editor-theme-mode', 'system')
-    expect(editorPage).toHaveAttribute('data-code-editor-theme', 'light')
+    expect(editorPage).toHaveAttribute(
+      'data-code-editor-theme-mode',
+      'workspace',
+    )
+    expect(editorPage).toHaveAttribute('data-code-editor-theme', 'dark')
     expect(editor).toHaveAttribute(
       'data-monaco-theme',
-      PURE_WHITE_LIGHT_MONACO_THEME,
+      GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
     )
 
     unmount()
@@ -297,6 +302,10 @@ describe('EditorPage', () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
+    openSettingsPanel()
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Override workspace theme' }),
+    )
     fireEvent.click(
       within(
         screen.getByRole('group', { name: 'Code editor theme' }),
@@ -332,11 +341,15 @@ describe('EditorPage', () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
+    openSettingsPanel()
     fireEvent.click(
       within(screen.getByRole('group', { name: 'Workspace theme' })).getByRole(
         'button',
         { name: 'Solarized' },
       ),
+    )
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Override workspace theme' }),
     )
     fireEvent.click(
       within(
@@ -369,11 +382,7 @@ describe('EditorPage', () => {
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
     render(<EditorPage isEditorDevMode={false} />)
 
-    fireEvent.click(
-      within(
-        screen.getByRole('group', { name: 'Code editor theme' }),
-      ).getByRole('button', { name: 'Workspace' }),
-    )
+    openSettingsPanel()
     fireEvent.click(
       within(screen.getByRole('group', { name: 'Workspace theme' })).getByRole(
         'button',
@@ -398,7 +407,53 @@ describe('EditorPage', () => {
     ).toHaveAttribute('data-monaco-theme', LIGHT_SOLARIZED_MONACO_THEME)
     expect(
       window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
-    ).toBe('workspace')
+    ).toBeNull()
+  })
+
+  it('preserves the explicit code editor override selection when override is disabled and re-enabled', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    openSettingsPanel()
+    const overrideToggle = screen.getByRole('checkbox', {
+      name: 'Override workspace theme',
+    })
+
+    fireEvent.click(overrideToggle)
+    fireEvent.click(
+      within(
+        screen.getByRole('group', { name: 'Code editor theme' }),
+      ).getByRole('button', { name: 'Dark' }),
+    )
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme-mode',
+      'dark',
+    )
+
+    fireEvent.click(overrideToggle)
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme-mode',
+      'workspace',
+    )
+    expect(
+      screen.queryByRole('group', { name: 'Code editor theme' }),
+    ).toBeNull()
+
+    fireEvent.click(overrideToggle)
+
+    expect(screen.getByRole('main')).toHaveAttribute(
+      'data-code-editor-theme-mode',
+      'dark',
+    )
+    expect(
+      within(
+        screen.getByRole('group', { name: 'Code editor theme' }),
+      ).getByRole('button', { name: 'Dark' }),
+    ).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('resolves system theme changes for workspace and code editor themes', () => {
@@ -451,6 +506,9 @@ describe('EditorPage', () => {
     expect(editorButton).toHaveAttribute('aria-expanded', 'true')
     expect(editorButton).toHaveAttribute('aria-pressed', 'true')
     expect(
+      within(editorActivityBar).queryByRole('button', { name: 'Settings' }),
+    ).not.toBeInTheDocument()
+    expect(
       within(editorPanel).getByRole('button', { name: 'Close DBML editor' }),
     ).toBeInTheDocument()
     expect(
@@ -470,6 +528,35 @@ describe('EditorPage', () => {
       screen.queryByRole('region', { name: 'DBML editor' }),
     ).not.toBeInTheDocument()
     expect(screen.getByLabelText('Diagram canvas')).toBeInTheDocument()
+  })
+
+  it('opens settings from the right sidebar while keeping the DBML editor panel', () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    const editorButton = screen.getByRole('button', { name: 'DBML editor' })
+    const settingsButton = screen.getByRole('button', { name: 'Settings' })
+
+    fireEvent.click(settingsButton)
+
+    expect(settingsButton).toHaveAttribute('aria-expanded', 'true')
+    expect(settingsButton).toHaveAttribute('aria-pressed', 'true')
+    expect(editorButton).toHaveAttribute('aria-expanded', 'true')
+    expect(editorButton).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('region', { name: 'Settings' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'DBML editor' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('checkbox', { name: 'Override workspace theme' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(settingsButton)
+
+    expect(settingsButton).toHaveAttribute('aria-expanded', 'false')
+    expect(
+      screen.queryByRole('region', { name: 'Settings' }),
+    ).not.toBeInTheDocument()
   })
 
   it('closes the DBML editor sidebar from the shared panel header', () => {
@@ -506,9 +593,9 @@ describe('EditorPage', () => {
 
     expect(
       editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
-    ).toBe('384px')
-    expect(resizeHandle).toHaveAttribute('aria-valuenow', '384')
-    expect(resizeHandle).not.toHaveAttribute('aria-valuemax')
+    ).toBe('480px')
+    expect(resizeHandle).toHaveAttribute('aria-valuenow', '480')
+    expect(resizeHandle).toHaveAttribute('aria-valuemax', '720')
 
     fireEvent.pointerDown(resizeHandle, {
       clientX: 400,
@@ -525,14 +612,14 @@ describe('EditorPage', () => {
 
     expect(
       editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
-    ).toBe('504px')
-    expect(resizeHandle).toHaveAttribute('aria-valuenow', '504')
+    ).toBe('600px')
+    expect(resizeHandle).toHaveAttribute('aria-valuenow', '600')
 
     fireEvent.keyDown(resizeHandle, { key: 'ArrowLeft' })
 
     expect(
       editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
-    ).toBe('480px')
+    ).toBe('576px')
 
     fireEvent.keyDown(resizeHandle, { key: 'Home' })
 
@@ -555,7 +642,7 @@ describe('EditorPage', () => {
 
     expect(
       editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
-    ).toBe('920px')
+    ).toBe('720px')
   })
 
   it('resizes the inspector sidebar toward the workspace', async () => {
@@ -585,7 +672,7 @@ describe('EditorPage', () => {
     expect(
       inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
     ).toBe('384px')
-    expect(resizeHandle).not.toHaveAttribute('aria-valuemax')
+    expect(resizeHandle).toHaveAttribute('aria-valuemax', '720')
 
     fireEvent.pointerDown(resizeHandle, {
       clientX: 500,
@@ -615,6 +702,23 @@ describe('EditorPage', () => {
     expect(
       inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
     ).toBe('624px')
+
+    fireEvent.pointerDown(resizeHandle, {
+      clientX: 500,
+      pointerId: 2,
+    })
+    fireEvent.pointerMove(resizeHandle, {
+      clientX: -500,
+      pointerId: 2,
+    })
+    fireEvent.pointerUp(resizeHandle, {
+      clientX: -500,
+      pointerId: 2,
+    })
+
+    expect(
+      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+    ).toBe('720px')
   })
 
   it('opens diagnostics and presets through inspector activities', async () => {
@@ -912,6 +1016,12 @@ function isEditorRange(value: unknown): value is {
     typeof value.endLineNumber === 'number' &&
     typeof value.endColumn === 'number'
   )
+}
+
+function openSettingsPanel() {
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
+
+  return screen.getByRole('region', { name: 'Settings' })
 }
 
 type ThemeChangeListener = () => void

@@ -158,7 +158,7 @@ export function normalizeCodeEditorThemeMode(
 ): CodeEditorThemeMode {
   return EDITOR_CODE_EDITOR_THEME_MODES.includes(value as CodeEditorThemeMode)
     ? (value as CodeEditorThemeMode)
-    : 'system'
+    : 'workspace'
 }
 
 export function readStoredThemeMode(storageKey: string): EditorThemeMode {
@@ -175,7 +175,7 @@ export function readStoredCodeEditorThemeMode(
   try {
     return normalizeCodeEditorThemeMode(window.localStorage.getItem(storageKey))
   } catch {
-    return 'system'
+    return 'workspace'
   }
 }
 

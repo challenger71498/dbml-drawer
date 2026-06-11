@@ -19,7 +19,7 @@ describe('editor theme preferences', () => {
     vi.restoreAllMocks()
   })
 
-  it('falls back to system for invalid stored theme modes', () => {
+  it('falls back to defaults for invalid stored theme modes', () => {
     installLocalStorageMock()
     window.localStorage.setItem(EDITOR_WORKSPACE_THEME_STORAGE_KEY, 'sepia')
 
@@ -35,7 +35,7 @@ describe('editor theme preferences', () => {
 
     expect(
       readStoredCodeEditorThemeMode(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
-    ).toBe('system')
+    ).toBe('workspace')
   })
 
   it('persists workspace and code editor theme modes independently', () => {
@@ -74,7 +74,9 @@ describe('editor theme preferences', () => {
     render(<ThemeHarness />)
 
     expect(screen.getByTestId('workspace-mode')).toHaveTextContent('system')
-    expect(screen.getByTestId('code-editor-mode')).toHaveTextContent('system')
+    expect(screen.getByTestId('code-editor-mode')).toHaveTextContent(
+      'workspace',
+    )
     expect(screen.getByTestId('workspace-resolved')).toHaveTextContent('light')
     expect(screen.getByTestId('code-editor-resolved')).toHaveTextContent(
       'light',

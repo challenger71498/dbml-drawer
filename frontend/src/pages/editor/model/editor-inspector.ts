@@ -4,6 +4,7 @@ export type EditorInspectorActivityId =
   | 'diagnostics'
   | 'presets'
   | 'diagram-settings'
+  | 'settings'
 
 export type EditorInspectorActivity = {
   id: EditorInspectorActivityId

@@ -20,8 +20,10 @@ import {
   DiagramSettingsIcon,
   DiagnosticsIcon,
   PresetsIcon,
+  SettingsIcon,
 } from './EditorInspectorIcons'
 import { EditorSidebarShell } from './EditorSidebarShell'
+import { EditorSettingsPanel } from './EditorSettingsPanel'
 import { isEditorDevModeEnabled } from '../lib/editor-dev-mode'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
@@ -34,9 +36,6 @@ import {
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
 import {
-  EDITOR_CODE_EDITOR_THEME_MODES,
-  EDITOR_WORKSPACE_THEME_MODES,
-  type CodeEditorThemeMode,
   type EditorThemeMode,
   useEditorThemePreferences,
 } from '../model/editor-theme'
@@ -73,8 +72,9 @@ type EditorPageProps = {
   isEditorDevMode?: boolean
 }
 
-const EDITOR_SIDEBAR_DEFAULT_WIDTH = 384
+const EDITOR_SIDEBAR_DEFAULT_WIDTH = 480
 const EDITOR_SIDEBAR_MIN_WIDTH = 320
+const EDITOR_SIDEBAR_MAX_WIDTH = 720
 const EDITOR_SIDEBAR_KEYBOARD_STEP = 24
 
 export function EditorPage({
@@ -102,6 +102,10 @@ export function EditorPage({
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
   } = useEditorThemePreferences()
+  const [codeEditorOverrideThemeMode, setCodeEditorOverrideThemeMode] =
+    useState<EditorThemeMode>(() =>
+      codeEditorThemeMode === 'workspace' ? 'system' : codeEditorThemeMode,
+    )
   const {
     documentText,
     setDocumentText,
@@ -274,16 +278,13 @@ export function EditorPage({
     setSelectedLayoutOptionValue,
   ])
 
-  const hasInspectorActivities = inspectorActivities.length > 0
   const editorPanelId = 'editor-left-sidebar-panel-dbml'
 
   const pageClassName = [
     styles.editorPage,
     isEditorSidebarExpanded ? styles.editorPageLeftSidebarExpanded : '',
-    hasInspectorActivities ? styles.editorPageWithInspector : '',
-    hasInspectorActivities && isInspectorExpanded
-      ? styles.editorPageInspectorExpanded
-      : '',
+    styles.editorPageWithInspector,
+    isInspectorExpanded ? styles.editorPageInspectorExpanded : '',
   ]
     .filter(Boolean)
     .join(' ')
@@ -292,12 +293,60 @@ export function EditorPage({
     setEditorSidebarExpanded((isExpanded) => !isExpanded)
   }, [])
 
+  const handleCodeEditorThemeOverrideEnabledChange = useCallback(
+    (isEnabled: boolean) => {
+      setCodeEditorThemeMode(
+        isEnabled ? codeEditorOverrideThemeMode : 'workspace',
+      )
+    },
+    [codeEditorOverrideThemeMode, setCodeEditorThemeMode],
+  )
+
+  const handleCodeEditorOverrideThemeModeChange = useCallback(
+    (mode: EditorThemeMode) => {
+      setCodeEditorOverrideThemeMode(mode)
+      setCodeEditorThemeMode(mode)
+    },
+    [setCodeEditorThemeMode],
+  )
+
   const handleEditorSidebarClose = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       setEditorSidebarExpanded(false)
       event.currentTarget.blur()
     },
     [],
+  )
+
+  const settingsActivity = useMemo<EditorInspectorActivity>(
+    () => ({
+      id: 'settings',
+      label: 'Settings',
+      panelLabel: 'Settings',
+      icon: <SettingsIcon className={styles.editorActivityIcon} />,
+      renderPanel: () => (
+        <EditorSettingsPanel
+          codeEditorOverrideThemeMode={codeEditorOverrideThemeMode}
+          isCodeEditorThemeOverrideEnabled={codeEditorThemeMode !== 'workspace'}
+          workspaceThemeMode={workspaceThemeMode}
+          onCodeEditorOverrideThemeModeChange={
+            handleCodeEditorOverrideThemeModeChange
+          }
+          onCodeEditorThemeOverrideEnabledChange={
+            handleCodeEditorThemeOverrideEnabledChange
+          }
+          onWorkspaceThemeModeChange={setWorkspaceThemeMode}
+        />
+      ),
+    }),
+    [
+      codeEditorOverrideThemeMode,
+      codeEditorThemeMode,
+      handleCodeEditorOverrideThemeModeChange,
+      handleCodeEditorThemeOverrideEnabledChange,
+      setWorkspaceThemeMode,
+      workspaceThemeMode,
+    ],
   )
 
   const handleEditorSidebarResizePointerDown = useCallback(
@@ -362,6 +411,8 @@ export function EditorPage({
       }
 
       if (event.key === 'End') {
+        event.preventDefault()
+        setEditorSidebarWidth(EDITOR_SIDEBAR_MAX_WIDTH)
         return
       }
     },
@@ -381,17 +432,19 @@ export function EditorPage({
         panelPlacement="after-activity-bar"
         label="Editor authoring activities"
         activityBarLabel="Editor authoring activities"
-        activities={[
-          {
-            id: 'dbml-editor',
-            label: 'DBML editor',
-            icon: <DbmlEditorIcon className={styles.editorActivityIcon} />,
-            panelId: editorPanelId,
-            isActive: isEditorSidebarExpanded,
-            isExpanded: isEditorSidebarExpanded,
-            onSelect: handleEditorSidebarToggle,
-          },
-        ]}
+        activityGroups={{
+          top: [
+            {
+              id: 'dbml-editor',
+              label: 'DBML editor',
+              icon: <DbmlEditorIcon className={styles.editorActivityIcon} />,
+              panelId: editorPanelId,
+              isActive: isEditorSidebarExpanded,
+              isExpanded: isEditorSidebarExpanded,
+              onSelect: handleEditorSidebarToggle,
+            },
+          ],
+        }}
         isExpanded={isEditorSidebarExpanded}
         panelWidth={editorSidebarWidth}
         panelId={editorPanelId}
@@ -401,6 +454,7 @@ export function EditorPage({
         resizeHandle={{
           label: 'Resize DBML editor',
           min: EDITOR_SIDEBAR_MIN_WIDTH,
+          max: EDITOR_SIDEBAR_MAX_WIDTH,
           value: editorSidebarWidth,
           valueText: `${editorSidebarWidth}px`,
           onKeyDown: handleEditorSidebarResizeKeyDown,
@@ -431,18 +485,6 @@ export function EditorPage({
             <h1 id="editor-heading">Editor</h1>
           </div>
           <div className={styles.editorToolbarActions}>
-            <ThemeModeControl
-              label="Workspace theme"
-              modes={EDITOR_WORKSPACE_THEME_MODES}
-              value={workspaceThemeMode}
-              onChange={setWorkspaceThemeMode}
-            />
-            <ThemeModeControl
-              label="Code editor theme"
-              modes={EDITOR_CODE_EDITOR_THEME_MODES}
-              value={codeEditorThemeMode}
-              onChange={setCodeEditorThemeMode}
-            />
             <span className={styles.documentState}>
               {diagnostics.length === 0 ? 'Valid' : 'Needs attention'}
             </span>
@@ -479,72 +521,20 @@ export function EditorPage({
         </div>
       </section>
 
-      {hasInspectorActivities ? (
-        <EditorInspector
-          activities={inspectorActivities}
-          onExpandedChange={setInspectorExpanded}
-        />
-      ) : null}
+      <EditorInspector
+        activities={inspectorActivities}
+        bottomActivities={[settingsActivity]}
+        onExpandedChange={setInspectorExpanded}
+      />
     </main>
   )
 }
 
-function ThemeModeControl<TMode extends ThemeModeControlMode>({
-  label,
-  modes,
-  value,
-  onChange,
-}: {
-  label: string
-  modes: readonly TMode[]
-  value: TMode
-  onChange: (mode: TMode) => void
-}) {
-  return (
-    <div className={styles.themeControl}>
-      <span className={styles.themeControlLabel}>{label}</span>
-      <div className={styles.themeModeGroup} role="group" aria-label={label}>
-        {modes.map((mode) => (
-          <button
-            aria-pressed={value === mode}
-            className={[
-              styles.themeModeButton,
-              value === mode ? styles.themeModeButtonActive : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            key={mode}
-            onClick={() => onChange(mode)}
-            type="button"
-          >
-            {getThemeModeLabel(mode)}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-type ThemeModeControlMode = EditorThemeMode | CodeEditorThemeMode
-
-function getThemeModeLabel(mode: ThemeModeControlMode) {
-  if (mode === 'workspace') {
-    return 'Workspace'
-  }
-
-  if (mode === 'system') {
-    return 'System'
-  }
-
-  if (mode === 'dark') {
-    return 'Dark'
-  }
-
-  return mode === 'light-solarized' ? 'Solarized' : 'Light'
-}
-
 function clampEditorSidebarWidth(width: number) {
-  return Math.max(EDITOR_SIDEBAR_MIN_WIDTH, Math.round(width))
+  return Math.min(
+    EDITOR_SIDEBAR_MAX_WIDTH,
+    Math.max(EDITOR_SIDEBAR_MIN_WIDTH, Math.round(width)),
+  )
 }
 
 function isSameDiagramSelectionTarget(
