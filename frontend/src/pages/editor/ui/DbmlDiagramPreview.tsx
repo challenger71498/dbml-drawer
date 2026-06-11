@@ -10,7 +10,7 @@ import {
   type NodeTypes,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   mapDbmlDiagramToFlow,
   type DbmlDiagramFlowElements,
@@ -162,10 +162,6 @@ export function DbmlDiagramPreview({
       onColumnHover,
     ],
   )
-  const fitViewKey = useMemo(
-    () => (diagram ? getDiagramFitViewKey(diagram) : 'empty'),
-    [diagram],
-  )
   const isEmpty = !diagram || diagram.tables.length === 0
 
   return (
@@ -240,7 +236,6 @@ export function DbmlDiagramPreview({
             <DiagramCanvas
               backgroundColor={backgroundColor}
               elements={elements}
-              fitViewKey={fitViewKey}
               isEmpty={isEmpty}
               onFocusClear={onFocusClear}
               onTableFocus={onTableFocus}
@@ -264,7 +259,6 @@ export function DbmlDiagramPreview({
 type DiagramCanvasProps = {
   backgroundColor: string
   elements: DbmlDiagramFlowElements
-  fitViewKey: string
   isEmpty: boolean
   onFocusClear: () => void
   onTableFocus: (table: DbmlDiagramTable) => void
@@ -276,13 +270,13 @@ type DbmlTableFlowNode = Node<DbmlTableNodeData>
 function DiagramCanvas({
   backgroundColor,
   elements,
-  fitViewKey,
   isEmpty,
   onFocusClear,
   onTableFocus,
   onTableHover,
 }: DiagramCanvasProps) {
   const reactFlow = useReactFlow()
+  const hasFitInitialViewportRef = useRef(false)
 
   const handleNodeMouseEnter = useCallback<NodeMouseHandler<DbmlTableFlowNode>>(
     (_, node) => {
@@ -313,13 +307,19 @@ function DiagramCanvas({
 
   useEffect(() => {
     if (isEmpty) {
+      hasFitInitialViewportRef.current = false
       return
     }
 
+    if (hasFitInitialViewportRef.current) {
+      return
+    }
+
+    hasFitInitialViewportRef.current = true
     window.requestAnimationFrame(() => {
       void reactFlow.fitView({ padding: 0.18, duration: 240 })
     })
-  }, [fitViewKey, isEmpty, reactFlow])
+  }, [isEmpty, reactFlow])
 
   return (
     <ReactFlow
@@ -327,7 +327,6 @@ function DiagramCanvas({
       edges={elements.edges}
       nodeTypes={NODE_TYPES}
       edgeTypes={EDGE_TYPES}
-      fitView
       nodesDraggable={false}
       nodesConnectable={false}
       nodesFocusable={false}
@@ -348,22 +347,6 @@ function DiagramCanvas({
       <Controls showInteractive={false} />
     </ReactFlow>
   )
-}
-
-function getDiagramFitViewKey(diagram: LayoutedDbmlDiagram) {
-  return [
-    diagram.tables
-      .map((table) =>
-        [
-          table.id,
-          table.position.x,
-          table.position.y,
-          table.columns.map((column) => column.id).join(','),
-        ].join(':'),
-      )
-      .join('|'),
-    diagram.relations.map((relation) => relation.id).join('|'),
-  ].join('//')
 }
 
 function getPreviewStateLabel({

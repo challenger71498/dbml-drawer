@@ -580,6 +580,46 @@ describe('DbmlDiagramPreview', () => {
     expect(reactFlowProps.fitView).not.toHaveBeenCalled()
   })
 
+  it('does not refit the viewport when diagram elements update', async () => {
+    const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+    const updatedDiagram = createDbmlDiagram(
+      parseDbmlDocument(`Table users {
+  id integer [pk]
+  email varchar
+}
+
+Table posts {
+  id integer [pk]
+  user_id integer [ref: > users.id]
+  title varchar
+}
+`),
+    )
+    const updatedLayoutedDiagram = await layoutDbmlDiagram(updatedDiagram)
+
+    const { rerender } = render(
+      <DbmlDiagramPreview
+        diagram={layoutedDiagram}
+        isPending={false}
+        isPaused={false}
+      />,
+    )
+
+    await waitFor(() => expect(reactFlowProps.fitView).toHaveBeenCalled())
+    reactFlowProps.fitView.mockClear()
+
+    rerender(
+      <DbmlDiagramPreview
+        diagram={updatedLayoutedDiagram}
+        isPending={false}
+        isPaused={false}
+      />,
+    )
+
+    expect(reactFlowProps.fitView).not.toHaveBeenCalled()
+  })
+
   it('keeps base flow elements stable when diagram selection changes', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
