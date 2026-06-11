@@ -22,5 +22,10 @@
     "skipLibCheck": true,
     "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["src", "vite.config.ts", "eslint.config.js"]
+  "include": [
+    "src",
+    "vite.config.ts",
+    "eslint.config.js",
+    "style-dictionary.config.ts"
+  ]
 }

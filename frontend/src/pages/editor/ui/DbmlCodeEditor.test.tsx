@@ -4,6 +4,7 @@ import {
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
   VSCODE_LIGHT_2026_MONACO_THEME,
 } from '../model/editor-theme'
+import { EDITOR_MONACO_THEME_DEFINITIONS } from '../../../shared/design-tokens/generated/monaco-themes'
 import { DbmlCodeEditor } from './DbmlCodeEditor'
 
 const monacoApi = vi.hoisted(() => ({
@@ -112,11 +113,11 @@ describe('DbmlCodeEditor', () => {
 
     expect(monacoApi.editor.defineTheme).toHaveBeenCalledWith(
       VSCODE_LIGHT_2026_MONACO_THEME,
-      expect.objectContaining({ base: 'vs' }),
+      EDITOR_MONACO_THEME_DEFINITIONS.light,
     )
     expect(monacoApi.editor.defineTheme).toHaveBeenCalledWith(
       GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
-      expect.objectContaining({ base: 'vs-dark' }),
+      EDITOR_MONACO_THEME_DEFINITIONS.dark,
     )
     expect(screen.getByLabelText('DBML editor')).toHaveAttribute(
       'data-monaco-theme',

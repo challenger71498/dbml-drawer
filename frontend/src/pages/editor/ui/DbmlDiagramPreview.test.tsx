@@ -24,6 +24,7 @@ import {
   DBML_RELATION_REFERENCE_COLOR,
   DBML_RELATION_SOURCE_COLOR,
 } from '../model/dbml-diagram-rendering'
+import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
 import { DbmlDiagramSelectionViewProvider } from './DbmlDiagramSelectionViewProvider'
 import { DbmlDiagramPreview } from './DbmlDiagramPreview'
@@ -35,7 +36,9 @@ const reactFlowProps = vi.hoisted(() => ({
 }))
 
 vi.mock('@xyflow/react', () => ({
-  Background: () => <div data-testid="diagram-background" />,
+  Background: ({ color }: { color?: string }) => (
+    <div data-testid="diagram-background" data-color={color} />
+  ),
   BaseEdge: ({ path, style }: { path: string; style?: CSSProperties }) => (
     <path
       data-testid="diagram-edge"
@@ -218,6 +221,10 @@ describe('DbmlDiagramPreview', () => {
     )
 
     expect(screen.getByRole('heading', { name: 'Diagram' })).toBeInTheDocument()
+    expect(screen.getByTestId('diagram-background')).toHaveAttribute(
+      'data-color',
+      EDITOR_COLOR_VARIABLES.diagramGridDot,
+    )
     expect(screen.getByText('users')).toBeInTheDocument()
     expect(screen.getByText('id')).toBeInTheDocument()
     expect(screen.getByText('users').closest('article')).not.toHaveClass(
@@ -940,6 +947,11 @@ function getCapturedReactFlowProps() {
 }
 
 function expectActiveGradientEdge(edge: HTMLElement) {
+  expect(DBML_RELATION_SOURCE_COLOR).toBe(EDITOR_COLOR_VARIABLES.relationSource)
+  expect(DBML_RELATION_REFERENCE_COLOR).toBe(
+    EDITOR_COLOR_VARIABLES.relationReference,
+  )
+
   expect(edge.getAttribute('data-stroke')).toEqual(
     expect.stringMatching(/^url\(#dbml-relation-gradient-/),
   )

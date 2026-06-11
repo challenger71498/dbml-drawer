@@ -25,6 +25,7 @@ import {
 } from '../model/dbml-diagram-rendering'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
+import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
 import { DbmlRelationEdge } from './DbmlRelationEdge'
 import { DbmlDiagramSelectionViewProvider } from './DbmlDiagramSelectionViewProvider'
 import { DbmlTableNode } from './DbmlTableNode'
@@ -109,7 +110,7 @@ export function DbmlDiagramPreview({
   diagram,
   isPending,
   isPaused,
-  backgroundColor = '#d7dde6',
+  backgroundColor = EDITOR_COLOR_VARIABLES.diagramGridDot,
   activeRelationIds = EMPTY_ACTIVE_RELATION_IDS,
   activeTarget = null,
   focusedRelationIds = EMPTY_ACTIVE_RELATION_IDS,

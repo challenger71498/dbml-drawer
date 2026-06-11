@@ -113,7 +113,7 @@ export function DiagramSettingsIcon({ className }: IconProps) {
         cx="8"
         cy="4.5"
         r="1.8"
-        fill="#fff"
+        fill="var(--editor-color-panel-bg)"
         stroke="currentColor"
         strokeWidth="1.5"
       />
@@ -121,7 +121,7 @@ export function DiagramSettingsIcon({ className }: IconProps) {
         cx="12"
         cy="10"
         r="1.8"
-        fill="#fff"
+        fill="var(--editor-color-panel-bg)"
         stroke="currentColor"
         strokeWidth="1.5"
       />
@@ -129,7 +129,7 @@ export function DiagramSettingsIcon({ className }: IconProps) {
         cx="9.5"
         cy="15.5"
         r="1.8"
-        fill="#fff"
+        fill="var(--editor-color-panel-bg)"
         stroke="currentColor"
         strokeWidth="1.5"
       />

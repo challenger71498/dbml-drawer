@@ -1,0 +1,58 @@
+{
+  "primitive": {
+    "color": {
+      "gruvbox": {
+        "dark": {
+          "bg0Hard": { "value": "#1b1b1b" },
+          "bg0": { "value": "#282828" },
+          "bg1": { "value": "#32302f" },
+          "bg2": { "value": "#3c3836" },
+          "bg3": { "value": "#45403d" },
+          "bg4": { "value": "#504945" },
+          "gray": { "value": "#928374" },
+          "fg4": { "value": "#7c6f64" },
+          "fg3": { "value": "#928374" },
+          "fg2": { "value": "#a89984" },
+          "fg1": { "value": "#d4be98" },
+          "fg0": { "value": "#ddc7a1" },
+          "yellow": { "value": "#d8a657" },
+          "green": { "value": "#a9b665" },
+          "orange": { "value": "#e78a4e" },
+          "aqua": { "value": "#7daea3" },
+          "aquaHover": { "value": "#89b482" },
+          "purple": { "value": "#d3869b" },
+          "red": { "value": "#ea6962" },
+          "redMuted": { "value": "#633936" },
+          "redSurface": { "value": "#402120" }
+        },
+        "light": {
+          "bg0Hard": { "value": "#f6f1e7" },
+          "bg0": { "value": "#fffaf0" },
+          "bg1": { "value": "#fbf6ec" },
+          "bg2": { "value": "#eee5d6" },
+          "bg3": { "value": "#dfd3c0" },
+          "bg4": { "value": "#c9bba5" },
+          "gray": { "value": "#928374" },
+          "fg4": { "value": "#a99b88" },
+          "fg3": { "value": "#8a7a68" },
+          "fg2": { "value": "#6f6255" },
+          "fg1": { "value": "#3c3836" },
+          "fg0": { "value": "#282828" },
+          "yellow": { "value": "#b57614" },
+          "green": { "value": "#79740e" },
+          "orange": { "value": "#af3a03" },
+          "aqua": { "value": "#4f8a8b" },
+          "aquaHover": { "value": "#3f7778" },
+          "purple": { "value": "#8f3f71" },
+          "red": { "value": "#9d0006" },
+          "redMuted": { "value": "#c7605a" },
+          "redSurface": { "value": "#fae7e4" }
+        }
+      },
+      "base": {
+        "white": { "value": "#ffffff" },
+        "black": { "value": "#000000" }
+      }
+    }
+  }
+}

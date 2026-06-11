@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { EDITOR_MONACO_THEME_DEFINITIONS } from '../../../shared/design-tokens/generated/monaco-themes'
 import type { MonacoApi } from '../lib/monaco-dbml-language'
 
 export type EditorThemeMode = 'light' | 'dark' | 'system'
@@ -89,63 +90,14 @@ export function getMonacoTheme(theme: ResolvedEditorTheme) {
 }
 
 export function defineEditorMonacoThemes(monacoApi: MonacoApi) {
-  monacoApi.editor.defineTheme(VSCODE_LIGHT_2026_MONACO_THEME, {
-    base: 'vs',
-    inherit: true,
-    rules: [
-      { token: '', foreground: '202020', background: 'ffffff' },
-      { token: 'comment', foreground: '6e7781', fontStyle: 'italic' },
-      { token: 'keyword', foreground: 'cf222e', fontStyle: 'bold' },
-      { token: 'string', foreground: '0a7a3b' },
-      { token: 'number', foreground: '953800' },
-      { token: 'type', foreground: '0550ae' },
-      { token: 'delimiter', foreground: '606060' },
-      { token: 'operator', foreground: '8250df' },
-      { token: 'identifier', foreground: '202020' },
-    ],
-    colors: {
-      'editor.background': '#ffffff',
-      'editor.foreground': '#202020',
-      'editorLineNumber.foreground': '#606060',
-      'editorLineNumber.activeForeground': '#202020',
-      'editorCursor.foreground': '#202020',
-      'editor.selectionBackground': '#0069cc40',
-      'editor.inactiveSelectionBackground': '#0069cc1a',
-      'editor.lineHighlightBackground': '#eaeaea40',
-      'editorWhitespace.foreground': '#60606040',
-      'editorIndentGuide.background1': '#f7f7f740',
-      'editorIndentGuide.activeBackground1': '#eeeeee',
-    },
-  })
-
-  monacoApi.editor.defineTheme(GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME, {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-      { token: '', foreground: 'd4be98', background: '282828' },
-      { token: 'comment', foreground: '928374', fontStyle: 'italic' },
-      { token: 'keyword', foreground: 'd8a657', fontStyle: 'bold' },
-      { token: 'string', foreground: 'a9b665' },
-      { token: 'number', foreground: 'e78a4e' },
-      { token: 'type', foreground: '7daea3' },
-      { token: 'delimiter', foreground: 'a89984' },
-      { token: 'operator', foreground: 'd3869b' },
-      { token: 'identifier', foreground: 'ddc7a1' },
-    ],
-    colors: {
-      'editor.background': '#282828',
-      'editor.foreground': '#d4be98',
-      'editorLineNumber.foreground': '#7c6f64',
-      'editorLineNumber.activeForeground': '#ddc7a1',
-      'editorCursor.foreground': '#e78a4e',
-      'editor.selectionBackground': '#374141',
-      'editor.inactiveSelectionBackground': '#3c3836',
-      'editor.lineHighlightBackground': '#32302f',
-      'editorWhitespace.foreground': '#5a524c',
-      'editorIndentGuide.background1': '#45403d',
-      'editorIndentGuide.activeBackground1': '#928374',
-    },
-  })
+  monacoApi.editor.defineTheme(
+    VSCODE_LIGHT_2026_MONACO_THEME,
+    EDITOR_MONACO_THEME_DEFINITIONS.light,
+  )
+  monacoApi.editor.defineTheme(
+    GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
+    EDITOR_MONACO_THEME_DEFINITIONS.dark,
+  )
 }
 
 export function resolveThemeMode(

@@ -1,0 +1,432 @@
+{
+  "component": {
+    "theme": {
+      "light": {
+        "editor": {
+          "color": {
+            "pageBg": {
+              "value": "{semantic.theme.light.color.background.page}"
+            },
+            "workspaceBg": {
+              "value": "{semantic.theme.light.color.background.workspace}"
+            },
+            "panelBg": {
+              "value": "{semantic.theme.light.color.background.panel}"
+            },
+            "panelMutedBg": {
+              "value": "{semantic.theme.light.color.background.panelMuted}"
+            },
+            "diagramBg": {
+              "value": "{semantic.theme.light.color.background.diagram}"
+            },
+            "diagramGridDot": {
+              "value": "{semantic.theme.light.color.border.default}"
+            },
+            "border": {
+              "value": "{semantic.theme.light.color.border.default}"
+            },
+            "borderControl": {
+              "value": "{semantic.theme.light.color.border.control}"
+            },
+            "borderStrong": {
+              "value": "{semantic.theme.light.color.border.strong}"
+            },
+            "text": { "value": "{semantic.theme.light.color.text.default}" },
+            "textStrong": {
+              "value": "{semantic.theme.light.color.text.strong}"
+            },
+            "textMuted": { "value": "{semantic.theme.light.color.text.muted}" },
+            "textSubtle": {
+              "value": "{semantic.theme.light.color.text.subtle}"
+            },
+            "textFaint": { "value": "{semantic.theme.light.color.text.faint}" },
+            "title": { "value": "{semantic.theme.light.color.accent.title}" },
+            "controlHoverBg": {
+              "value": "{semantic.theme.light.color.control.hoverBg}"
+            },
+            "controlHoverSoftBg": {
+              "value": "{semantic.theme.light.color.control.hoverSoftBg}"
+            },
+            "controlActiveBg": {
+              "value": "{semantic.theme.light.color.control.activeBg}"
+            },
+            "controlActiveHoverBg": {
+              "value": "{semantic.theme.light.color.control.activeHoverBg}"
+            },
+            "controlActiveText": {
+              "value": "{semantic.theme.light.color.control.activeText}"
+            },
+            "brand": { "value": "{semantic.theme.light.color.accent.brand}" },
+            "tableHeaderBg": {
+              "value": "{semantic.theme.light.color.table.headerBg}"
+            },
+            "tableHeaderActiveBg": {
+              "value": "{semantic.theme.light.color.table.headerActiveBg}"
+            },
+            "tableHeaderMuted": {
+              "value": "{semantic.theme.light.color.table.headerMuted}"
+            },
+            "tableBorder": {
+              "value": "{semantic.theme.light.color.border.control}"
+            },
+            "tableShadow": {
+              "value": "{semantic.theme.light.color.table.shadow}"
+            },
+            "tableActiveShadow": {
+              "value": "{semantic.theme.light.color.table.activeShadow}"
+            },
+            "floatingShadow": {
+              "value": "{semantic.theme.light.color.floating.shadow}"
+            },
+            "tableActiveAccent": {
+              "value": "{semantic.theme.light.color.accent.source}"
+            },
+            "tableActiveRing": {
+              "value": "{semantic.theme.light.color.table.activeRing}"
+            },
+            "relationLine": {
+              "value": "{semantic.theme.light.color.relation.line}"
+            },
+            "relationSource": {
+              "value": "{semantic.theme.light.color.relation.source}"
+            },
+            "relationReference": {
+              "value": "{semantic.theme.light.color.relation.reference}"
+            },
+            "referenceAccent": {
+              "value": "{semantic.theme.light.color.relation.reference}"
+            },
+            "referenceBg": {
+              "value": "{semantic.theme.light.color.background.reference}"
+            },
+            "sourceAccent": {
+              "value": "{semantic.theme.light.color.accent.source}"
+            },
+            "sourceBg": {
+              "value": "{semantic.theme.light.color.background.source}"
+            },
+            "columnBorder": {
+              "value": "{semantic.theme.light.color.border.column}"
+            },
+            "badgeBg": { "value": "{semantic.theme.light.color.badge.bg}" },
+            "badgeText": { "value": "{semantic.theme.light.color.badge.text}" },
+            "handleBg": { "value": "{semantic.theme.light.color.handle.bg}" },
+            "handleBorder": {
+              "value": "{semantic.theme.light.color.handle.border}"
+            },
+            "diagnosticsEmptyBorder": {
+              "value": "{semantic.theme.light.color.diagnostics.emptyBorder}"
+            },
+            "diagnosticsEmptyBg": {
+              "value": "{semantic.theme.light.color.diagnostics.emptyBg}"
+            },
+            "diagnosticsEmptyText": {
+              "value": "{semantic.theme.light.color.diagnostics.emptyText}"
+            },
+            "diagnosticsErrorBorder": {
+              "value": "{semantic.theme.light.color.diagnostics.errorBorder}"
+            },
+            "diagnosticsErrorBg": {
+              "value": "{semantic.theme.light.color.diagnostics.errorBg}"
+            },
+            "diagnosticsText": {
+              "value": "{semantic.theme.light.color.diagnostics.text}"
+            },
+            "diagnosticsMuted": {
+              "value": "{semantic.theme.light.color.diagnostics.muted}"
+            },
+            "error": { "value": "{semantic.theme.light.color.status.error}" },
+            "warning": {
+              "value": "{semantic.theme.light.color.status.warning}"
+            }
+          }
+        },
+        "monaco": {
+          "base": { "value": "vs" },
+          "background": {
+            "value": "{semantic.theme.light.color.background.workspace}"
+          },
+          "foreground": {
+            "value": "{semantic.theme.light.color.text.default}"
+          },
+          "lineNumber": { "value": "{semantic.theme.light.color.text.subtle}" },
+          "lineNumberActive": {
+            "value": "{semantic.theme.light.color.text.strong}"
+          },
+          "cursor": { "value": "{semantic.theme.light.color.accent.source}" },
+          "selection": { "value": "{primitive.color.gruvbox.light.bg3}" },
+          "inactiveSelection": {
+            "value": "{primitive.color.gruvbox.light.bg2}"
+          },
+          "lineHighlight": { "value": "{primitive.color.gruvbox.light.bg1}" },
+          "whitespace": { "value": "{primitive.color.gruvbox.light.fg4}" },
+          "indentGuide": {
+            "value": "{semantic.theme.light.color.border.default}"
+          },
+          "indentGuideActive": {
+            "value": "{semantic.theme.light.color.border.control}"
+          },
+          "rule": {
+            "default": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.text.default}"
+              }
+            },
+            "comment": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.comment}"
+              },
+              "fontStyle": { "value": "italic" }
+            },
+            "keyword": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.keyword}"
+              },
+              "fontStyle": { "value": "bold" }
+            },
+            "string": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.string}"
+              }
+            },
+            "number": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.number}"
+              }
+            },
+            "type": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.type}"
+              }
+            },
+            "delimiter": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.delimiter}"
+              }
+            },
+            "operator": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.operator}"
+              }
+            },
+            "identifier": {
+              "foreground": {
+                "value": "{semantic.theme.light.color.syntax.identifier}"
+              }
+            }
+          }
+        }
+      },
+      "dark": {
+        "editor": {
+          "color": {
+            "pageBg": {
+              "value": "{semantic.theme.dark.color.background.page}"
+            },
+            "workspaceBg": {
+              "value": "{semantic.theme.dark.color.background.workspace}"
+            },
+            "panelBg": {
+              "value": "{semantic.theme.dark.color.background.panel}"
+            },
+            "panelMutedBg": {
+              "value": "{semantic.theme.dark.color.background.panelMuted}"
+            },
+            "diagramBg": {
+              "value": "{semantic.theme.dark.color.background.diagram}"
+            },
+            "diagramGridDot": {
+              "value": "{semantic.theme.dark.color.border.default}"
+            },
+            "border": { "value": "{semantic.theme.dark.color.border.default}" },
+            "borderControl": {
+              "value": "{semantic.theme.dark.color.border.control}"
+            },
+            "borderStrong": {
+              "value": "{semantic.theme.dark.color.border.strong}"
+            },
+            "text": { "value": "{semantic.theme.dark.color.text.default}" },
+            "textStrong": {
+              "value": "{semantic.theme.dark.color.text.strong}"
+            },
+            "textMuted": { "value": "{semantic.theme.dark.color.text.muted}" },
+            "textSubtle": {
+              "value": "{semantic.theme.dark.color.text.subtle}"
+            },
+            "textFaint": { "value": "{semantic.theme.dark.color.text.faint}" },
+            "title": { "value": "{semantic.theme.dark.color.accent.title}" },
+            "controlHoverBg": {
+              "value": "{semantic.theme.dark.color.control.hoverBg}"
+            },
+            "controlHoverSoftBg": {
+              "value": "{semantic.theme.dark.color.control.hoverSoftBg}"
+            },
+            "controlActiveBg": {
+              "value": "{semantic.theme.dark.color.control.activeBg}"
+            },
+            "controlActiveHoverBg": {
+              "value": "{semantic.theme.dark.color.control.activeHoverBg}"
+            },
+            "controlActiveText": {
+              "value": "{semantic.theme.dark.color.control.activeText}"
+            },
+            "brand": { "value": "{semantic.theme.dark.color.accent.brand}" },
+            "tableHeaderBg": {
+              "value": "{semantic.theme.dark.color.table.headerBg}"
+            },
+            "tableHeaderActiveBg": {
+              "value": "{semantic.theme.dark.color.table.headerActiveBg}"
+            },
+            "tableHeaderMuted": {
+              "value": "{semantic.theme.dark.color.table.headerMuted}"
+            },
+            "tableBorder": {
+              "value": "{semantic.theme.dark.color.border.control}"
+            },
+            "tableShadow": {
+              "value": "{semantic.theme.dark.color.table.shadow}"
+            },
+            "tableActiveShadow": {
+              "value": "{semantic.theme.dark.color.table.activeShadow}"
+            },
+            "floatingShadow": {
+              "value": "{semantic.theme.dark.color.floating.shadow}"
+            },
+            "tableActiveAccent": {
+              "value": "{semantic.theme.dark.color.accent.source}"
+            },
+            "tableActiveRing": {
+              "value": "{semantic.theme.dark.color.table.activeRing}"
+            },
+            "relationLine": {
+              "value": "{semantic.theme.dark.color.relation.line}"
+            },
+            "relationSource": {
+              "value": "{semantic.theme.dark.color.relation.source}"
+            },
+            "relationReference": {
+              "value": "{semantic.theme.dark.color.relation.reference}"
+            },
+            "referenceAccent": {
+              "value": "{semantic.theme.dark.color.accent.reference}"
+            },
+            "referenceBg": {
+              "value": "{semantic.theme.dark.color.background.reference}"
+            },
+            "sourceAccent": {
+              "value": "{semantic.theme.dark.color.accent.source}"
+            },
+            "sourceBg": {
+              "value": "{semantic.theme.dark.color.background.source}"
+            },
+            "columnBorder": {
+              "value": "{semantic.theme.dark.color.border.column}"
+            },
+            "badgeBg": { "value": "{semantic.theme.dark.color.badge.bg}" },
+            "badgeText": { "value": "{semantic.theme.dark.color.badge.text}" },
+            "handleBg": { "value": "{semantic.theme.dark.color.handle.bg}" },
+            "handleBorder": {
+              "value": "{semantic.theme.dark.color.handle.border}"
+            },
+            "diagnosticsEmptyBorder": {
+              "value": "{semantic.theme.dark.color.diagnostics.emptyBorder}"
+            },
+            "diagnosticsEmptyBg": {
+              "value": "{semantic.theme.dark.color.diagnostics.emptyBg}"
+            },
+            "diagnosticsEmptyText": {
+              "value": "{semantic.theme.dark.color.diagnostics.emptyText}"
+            },
+            "diagnosticsErrorBorder": {
+              "value": "{semantic.theme.dark.color.diagnostics.errorBorder}"
+            },
+            "diagnosticsErrorBg": {
+              "value": "{semantic.theme.dark.color.diagnostics.errorBg}"
+            },
+            "diagnosticsText": {
+              "value": "{semantic.theme.dark.color.diagnostics.text}"
+            },
+            "diagnosticsMuted": {
+              "value": "{semantic.theme.dark.color.diagnostics.muted}"
+            },
+            "error": { "value": "{semantic.theme.dark.color.status.error}" },
+            "warning": { "value": "{semantic.theme.dark.color.status.warning}" }
+          }
+        },
+        "monaco": {
+          "base": { "value": "vs-dark" },
+          "background": {
+            "value": "{semantic.theme.dark.color.background.workspace}"
+          },
+          "foreground": { "value": "{semantic.theme.dark.color.text.default}" },
+          "lineNumber": { "value": "{semantic.theme.dark.color.text.faint}" },
+          "lineNumberActive": {
+            "value": "{semantic.theme.dark.color.text.strong}"
+          },
+          "cursor": { "value": "{primitive.color.gruvbox.dark.orange}" },
+          "selection": {
+            "value": "{semantic.theme.dark.color.background.reference}"
+          },
+          "inactiveSelection": {
+            "value": "{primitive.color.gruvbox.dark.bg2}"
+          },
+          "lineHighlight": { "value": "{primitive.color.gruvbox.dark.bg1}" },
+          "whitespace": { "value": "#5a524c" },
+          "indentGuide": { "value": "{primitive.color.gruvbox.dark.bg3}" },
+          "indentGuideActive": {
+            "value": "{primitive.color.gruvbox.dark.gray}"
+          },
+          "rule": {
+            "default": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.text.default}"
+              }
+            },
+            "comment": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.comment}"
+              },
+              "fontStyle": { "value": "italic" }
+            },
+            "keyword": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.keyword}"
+              },
+              "fontStyle": { "value": "bold" }
+            },
+            "string": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.string}"
+              }
+            },
+            "number": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.number}"
+              }
+            },
+            "type": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.type}"
+              }
+            },
+            "delimiter": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.delimiter}"
+              }
+            },
+            "operator": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.operator}"
+              }
+            },
+            "identifier": {
+              "foreground": {
+                "value": "{semantic.theme.dark.color.syntax.identifier}"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

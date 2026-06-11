@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "build": "pnpm tokens:build && tsc -p tsconfig.json --noEmit && vite build",
     "coverage": "vitest run --coverage",
     "dead-code": "knip",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint .",
     "test": "vitest run",
+    "tokens:build": "style-dictionary build --config style-dictionary.config.ts",
+    "tokens:check": "pnpm tokens:build && git diff --exit-code src/shared/design-tokens/generated",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "preview": "vite preview --host 0.0.0.0"
   },
@@ -41,6 +43,7 @@
     "jsdom": "^29.1.1",
     "knip": "^6.16.1",
     "prettier": "^3.8.3",
+    "style-dictionary": "^5.4.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "8.60.1",
     "vitest": "^4.1.8"

@@ -36,10 +36,11 @@ import { useDbmlDocument } from '../model/dbml-document'
 import {
   EDITOR_THEME_MODES,
   type EditorThemeMode,
-  type ResolvedEditorTheme,
   useEditorThemePreferences,
 } from '../model/editor-theme'
 import type { EditorInspectorActivity } from '../model/editor-inspector'
+import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
+import '../../../shared/design-tokens/generated/tokens.css'
 import styles from './EditorPage.module.css'
 
 const DbmlDiagramPreview = lazy(() =>
@@ -450,9 +451,7 @@ export function EditorPage({
               <DbmlDiagramPreview
                 activeRelationIds={activeRelationIds}
                 activeTarget={activeDiagramTarget}
-                backgroundColor={getDiagramBackgroundColor(
-                  resolvedWorkspaceTheme,
-                )}
+                backgroundColor={EDITOR_COLOR_VARIABLES.diagramGridDot}
                 diagram={layoutedDiagram}
                 focusedRelationIds={focusedRelationIds}
                 focusedTableIds={focusedTableIds}
@@ -522,10 +521,6 @@ function ThemeModeControl({
 
 function getThemeModeLabel(mode: EditorThemeMode) {
   return mode === 'system' ? 'System' : mode === 'dark' ? 'Dark' : 'Light'
-}
-
-function getDiagramBackgroundColor(theme: ResolvedEditorTheme) {
-  return theme === 'dark' ? '#45403d' : '#f7f7f7'
 }
 
 function clampEditorSidebarWidth(width: number) {
