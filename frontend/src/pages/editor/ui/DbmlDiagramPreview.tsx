@@ -296,6 +296,7 @@ export function DbmlDiagramPreview({
                 shouldConnectOffscreenRelationProxyLines
               }
               isEmpty={isEmpty}
+              onColumnFocus={onColumnFocus}
               onFocusClear={onFocusClear}
               onProxyRelationHover={setHoveredProxyRelationIds}
               onTableFocus={onTableFocus}
@@ -327,6 +328,7 @@ type DiagramCanvasProps = {
   offscreenRelationProxyVisibilityMode: DbmlOffscreenRelationProxyVisibilityMode
   shouldConnectOffscreenRelationProxyLines: boolean
   isEmpty: boolean
+  onColumnFocus: (column: DbmlDiagramColumn) => void
   onFocusClear: () => void
   onProxyRelationHover: (relationIds: ReadonlySet<string> | null) => void
   onTableFocus: (table: DbmlDiagramTable) => void
@@ -346,6 +348,7 @@ function DiagramCanvas({
   offscreenRelationProxyVisibilityMode,
   shouldConnectOffscreenRelationProxyLines,
   isEmpty,
+  onColumnFocus,
   onFocusClear,
   onProxyRelationHover,
   onTableFocus,
@@ -524,7 +527,9 @@ function DiagramCanvas({
               },
             )
           }}
+          onProxyColumnFocus={onColumnFocus}
           onProxyHover={onProxyRelationHover}
+          onProxyTableFocus={onTableFocus}
         />
       ) : null}
     </>
@@ -534,11 +539,15 @@ function DiagramCanvas({
 function OffscreenRelationProxyOverlay({
   proxyLayouts,
   onProxyActivate,
+  onProxyColumnFocus,
   onProxyHover,
+  onProxyTableFocus,
 }: {
   proxyLayouts: readonly OffscreenRelationProxyLayout[]
   onProxyActivate: (proxy: DbmlOffscreenRelationProxy) => void
+  onProxyColumnFocus: (column: DbmlDiagramColumn) => void
   onProxyHover: (relationIds: ReadonlySet<string> | null) => void
+  onProxyTableFocus: (table: DbmlDiagramTable) => void
 }) {
   if (proxyLayouts.length === 0) {
     return null
@@ -560,6 +569,20 @@ function OffscreenRelationProxyOverlay({
             type="button"
             onClick={(event) => {
               event.stopPropagation()
+              const columnId = (
+                event.target as HTMLElement
+              ).closest<HTMLElement>('[data-proxy-column-id]')?.dataset
+                .proxyColumnId
+              const column = columnId
+                ? proxy.columns.find((candidate) => candidate.id === columnId)
+                : null
+
+              if (column) {
+                onProxyColumnFocus(column)
+              } else {
+                onProxyTableFocus(proxy.table)
+              }
+
               onProxyActivate(proxy)
             }}
             onMouseEnter={() => onProxyHover(new Set(proxy.relationIds))}
@@ -585,6 +608,7 @@ function OffscreenRelationProxyOverlay({
                     styles.diagramColumnRow,
                     styles.offscreenProxyColumn,
                   ].join(' ')}
+                  data-proxy-column-id={column.id}
                   key={column.id}
                 >
                   <span className={styles.diagramColumnName}>

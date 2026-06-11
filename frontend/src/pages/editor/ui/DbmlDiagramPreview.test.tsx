@@ -1060,6 +1060,37 @@ Table posts {
         zoom: 1,
       },
     )
+    expect(getTableArticle('users')).toHaveAttribute('data-active', 'true')
+  })
+
+  it('focuses the represented column when an offscreen relation proxy column is clicked', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 1200, y: 0 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    fireEvent.click(within(proxy).getByText('id'))
+
+    expect(getColumnRow('id', 'users')).toHaveAttribute('data-active', 'true')
+    expect(getColumnRow('id', 'users')).toHaveAttribute(
+      'data-reference',
+      'true',
+    )
   })
 
   it('highlights represented relations when an offscreen relation proxy is hovered', async () => {
