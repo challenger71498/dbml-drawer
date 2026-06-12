@@ -50,7 +50,10 @@ import {
 } from '../model/dbml-offscreen-relation-proxy-layout'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
 import {
-  useEditorSettingsStore,
+  useRelationHighlightModeSetting,
+  useRelationLineStyleSetting,
+  useSetRelationHighlightMode,
+  useSetRelationLineStyle,
   type OffscreenRelationProxyPlacementMode,
 } from '../model/editor-theme'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
@@ -163,18 +166,10 @@ export function DbmlDiagramPreview({
   onColumnHover = NOOP_COLUMN_HOVER,
   onFocusClear = NOOP_FOCUS_CLEAR,
 }: DbmlDiagramPreviewProps) {
-  const relationLineStyle = useEditorSettingsStore(
-    (state) => state.relationLineStyle,
-  )
-  const relationHighlightMode = useEditorSettingsStore(
-    (state) => state.relationHighlightMode,
-  )
-  const setRelationLineStyle = useEditorSettingsStore(
-    (state) => state.setRelationLineStyle,
-  )
-  const setRelationHighlightMode = useEditorSettingsStore(
-    (state) => state.setRelationHighlightMode,
-  )
+  const relationLineStyle = useRelationLineStyleSetting()
+  const relationHighlightMode = useRelationHighlightModeSetting()
+  const setRelationLineStyle = useSetRelationLineStyle()
+  const setRelationHighlightMode = useSetRelationHighlightMode()
   const [hoveredProxyRelationIds, setHoveredProxyRelationIds] =
     useState<ReadonlySet<string> | null>(null)
   const effectiveActiveRelationIds = useMemo(() => {

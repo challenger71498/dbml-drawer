@@ -7,7 +7,12 @@ import {
   type DbmlLayoutAlgorithmId,
   type DbmlLayoutOptionValueMap,
 } from './dbml-layout-settings'
-import { useEditorSettingsStore } from './editor-settings-store'
+import {
+  useSelectedDbmlLayoutAlgorithmId,
+  useSelectedDbmlLayoutOptionValues,
+  useSelectDbmlLayoutAlgorithm,
+  useSetSelectedDbmlLayoutOptionValue,
+} from './editor-settings-store'
 
 const VALIDATION_DELAY_MS = 300
 
@@ -25,18 +30,10 @@ type DbmlDocumentLayoutAction =
 export function useDbmlDocument() {
   const documentText = useDbmlEditorStore((state) => state.documentText)
   const setDocumentText = useDbmlEditorStore((state) => state.setDocumentText)
-  const selectedLayoutAlgorithmId = useEditorSettingsStore(
-    (state) => state.selectedLayoutAlgorithmId,
-  )
-  const selectedLayoutOptionValues = useEditorSettingsStore(
-    (state) => state.selectedLayoutOptionValues,
-  )
-  const selectLayoutAlgorithm = useEditorSettingsStore(
-    (state) => state.selectLayoutAlgorithm,
-  )
-  const setSelectedLayoutOptionValue = useEditorSettingsStore(
-    (state) => state.setSelectedLayoutOptionValue,
-  )
+  const selectedLayoutAlgorithmId = useSelectedDbmlLayoutAlgorithmId()
+  const selectedLayoutOptionValues = useSelectedDbmlLayoutOptionValues()
+  const selectLayoutAlgorithm = useSelectDbmlLayoutAlgorithm()
+  const setSelectedLayoutOptionValue = useSetSelectedDbmlLayoutOptionValue()
   const [{ layoutedDiagram, isDiagramPending }, dispatchLayout] = useReducer(
     reduceDbmlDocumentLayoutState,
     {

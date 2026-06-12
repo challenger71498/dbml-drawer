@@ -134,7 +134,7 @@ type EditorSettingsData = Omit<
 
 type PersistedEditorSettingsState = Omit<EditorSettingsData, 'systemTheme'>
 
-export const useEditorSettingsStore = create<EditorSettingsState>()(
+const useEditorSettingsStore = create<EditorSettingsState>()(
   persist(
     (set) => ({
       ...getDefaultEditorSettingsState(),
@@ -355,6 +355,38 @@ export function useEditorSettings(): EditorSettings {
   }
 }
 
+export function useSelectedDbmlLayoutAlgorithmId() {
+  return useEditorSettingsStore((state) => state.selectedLayoutAlgorithmId)
+}
+
+export function useSelectedDbmlLayoutOptionValues() {
+  return useEditorSettingsStore((state) => state.selectedLayoutOptionValues)
+}
+
+export function useSelectDbmlLayoutAlgorithm() {
+  return useEditorSettingsStore((state) => state.selectLayoutAlgorithm)
+}
+
+export function useSetSelectedDbmlLayoutOptionValue() {
+  return useEditorSettingsStore((state) => state.setSelectedLayoutOptionValue)
+}
+
+export function useRelationLineStyleSetting() {
+  return useEditorSettingsStore((state) => state.relationLineStyle)
+}
+
+export function useRelationHighlightModeSetting() {
+  return useEditorSettingsStore((state) => state.relationHighlightMode)
+}
+
+export function useSetRelationLineStyle() {
+  return useEditorSettingsStore((state) => state.setRelationLineStyle)
+}
+
+export function useSetRelationHighlightMode() {
+  return useEditorSettingsStore((state) => state.setRelationHighlightMode)
+}
+
 export function resetEditorSettingsStoreForTests() {
   useEditorSettingsStore.setState(
     {
@@ -363,6 +395,10 @@ export function resetEditorSettingsStoreForTests() {
     },
     false,
   )
+}
+
+export function getEditorSettingsStateForTests() {
+  return useEditorSettingsStore.getState()
 }
 
 function getDefaultEditorSettingsState(): EditorSettingsData {
@@ -416,6 +452,10 @@ function normalizePersistedEditorSettingsState(
   value: unknown,
 ): PersistedEditorSettingsState {
   const state = isRecord(value) ? value : {}
+  const selectedLayoutAlgorithmId =
+    typeof state.selectedLayoutAlgorithmId === 'string'
+      ? state.selectedLayoutAlgorithmId
+      : DEFAULT_DBML_LAYOUT_ALGORITHM_ID
 
   return {
     workspaceThemeMode: normalizeEditorThemeMode(state.workspaceThemeMode),
@@ -454,14 +494,11 @@ function normalizePersistedEditorSettingsState(
     relationHighlightMode: normalizeRelationHighlightMode(
       state.relationHighlightMode,
     ),
-    selectedLayoutAlgorithmId:
-      typeof state.selectedLayoutAlgorithmId === 'string'
-        ? state.selectedLayoutAlgorithmId
-        : DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
+    selectedLayoutAlgorithmId,
     selectedLayoutOptionValues: normalizeDbmlLayoutOptionValues(
       isStringRecord(state.selectedLayoutOptionValues)
         ? state.selectedLayoutOptionValues
-        : getDefaultDbmlLayoutOptionValues(DEFAULT_DBML_LAYOUT_ALGORITHM_ID),
+        : getDefaultDbmlLayoutOptionValues(selectedLayoutAlgorithmId),
     ),
   }
 }

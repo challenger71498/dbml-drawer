@@ -41,9 +41,17 @@ export {
   type ResolvedEditorTheme,
 } from './editor-theme-options'
 export {
+  getEditorSettingsStateForTests,
   resetEditorSettingsStoreForTests,
-  useEditorSettingsStore,
   useEditorSettings,
+  useRelationHighlightModeSetting,
+  useRelationLineStyleSetting,
+  useSelectedDbmlLayoutAlgorithmId,
+  useSelectedDbmlLayoutOptionValues,
+  useSelectDbmlLayoutAlgorithm,
+  useSetRelationHighlightMode,
+  useSetRelationLineStyle,
+  useSetSelectedDbmlLayoutOptionValue,
   type EditorSettings,
   type EditorSettingsState,
 } from './editor-settings-store'

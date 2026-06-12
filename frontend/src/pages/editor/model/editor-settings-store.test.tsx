@@ -10,8 +10,8 @@ import {
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
   normalizeRelationLineStyle,
+  getEditorSettingsStateForTests,
   resetEditorSettingsStoreForTests,
-  useEditorSettingsStore,
   useEditorSettings,
 } from './editor-theme'
 
@@ -66,7 +66,7 @@ describe('editor theme settings', () => {
     )
     expect(normalizeRelationHighlightMode('dynamic')).toBe('dynamic')
 
-    const state = useEditorSettingsStore.getState()
+    const state = getEditorSettingsStateForTests()
 
     expect(state.workspaceThemeMode).toBe('system')
     expect(state.codeEditorThemeMode).toBe('workspace')
@@ -326,6 +326,23 @@ describe('editor theme settings', () => {
       'org.eclipse.elk.box',
     )
     expect(screen.getByTestId('layout-options')).toHaveTextContent('')
+  })
+
+  it('falls back to layout option defaults for the normalized layout algorithm', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    setStoredEditorSettings({
+      selectedLayoutAlgorithmId: 'org.eclipse.elk.box',
+      selectedLayoutOptionValues: null,
+    })
+    resetEditorSettingsStoreForTests()
+
+    const state = getEditorSettingsStateForTests()
+
+    expect(state.selectedLayoutAlgorithmId).toBe('org.eclipse.elk.box')
+    expect(state.selectedLayoutOptionValues).toEqual({
+      'elk.box.packingMode': 'SIMPLE',
+    })
   })
 })
 
