@@ -13,11 +13,16 @@ const PROXY_CARD_EDGE_GAP = 14
 
 export type DbmlOffscreenRelationProxyLayout = {
   proxy: DbmlOffscreenRelationProxy
+  handoffProgress?: number
+  screenRect?: DbmlOffscreenRelationProxyLayoutRect
+  sourceScreenRect?: DbmlOffscreenRelationProxyLayoutRect
   style: {
     left: number
+    height?: number
     opacity?: number
     top: number
     transform: string
+    width?: number
   }
 }
 

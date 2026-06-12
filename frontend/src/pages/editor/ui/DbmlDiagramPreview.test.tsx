@@ -972,13 +972,13 @@ Table posts {
     expect(Number.parseFloat(proxy.style.opacity)).toBeLessThan(0.5)
   })
 
-  it('falls back to none transition behavior when morph is selected', async () => {
+  it('morphs offscreen relation proxies toward the original table when selected', async () => {
     installDiagramSurfaceBounds()
     const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
     const layoutedDiagram = moveTable(
       await layoutDbmlDiagram(diagram),
       'table:public.users',
-      { x: 605, y: 0 },
+      { x: 395, y: 0 },
     )
 
     render(
@@ -986,6 +986,7 @@ Table posts {
         diagram={layoutedDiagram}
         isOffscreenRelationProxiesEnabled
         offscreenRelationProxyTransitionMode="morph"
+        offscreenRelationProxyVisibilityMode="center"
       />,
     )
 
@@ -995,7 +996,11 @@ Table posts {
       'offscreen-relation-proxy:table:public.users',
     )
 
-    expect(proxy.style.opacity).toBe('')
+    expect(Number.parseFloat(proxy.style.left)).toBeGreaterThan(380)
+    expect(Number.parseFloat(proxy.style.opacity)).toBeLessThan(0.2)
+    expect(proxy.style.transform).toBe('scale(1)')
+    expect(Number.parseFloat(proxy.style.width)).toBeGreaterThan(250)
+    expect(within(proxy).getByText('email')).toBeInTheDocument()
   })
 
   it('places offscreen relation proxies by parallel translation when selected', async () => {
@@ -1407,6 +1412,7 @@ function InteractivePreviewHarness({
   isOffscreenRelationProxiesEnabled = false,
   offscreenRelationProxyPlacementMode = 'line',
   offscreenRelationProxyTransitionMode = 'none',
+  offscreenRelationProxyVisibilityMode = 'any-overlap',
   shouldAvoidOffscreenRelationProxyActiveNodes = false,
   shouldConnectOffscreenRelationProxyLines = false,
 }: {
@@ -1414,6 +1420,7 @@ function InteractivePreviewHarness({
   isOffscreenRelationProxiesEnabled?: boolean
   offscreenRelationProxyPlacementMode?: 'line' | 'parallel'
   offscreenRelationProxyTransitionMode?: 'none' | 'opacity' | 'morph'
+  offscreenRelationProxyVisibilityMode?: 'any-overlap' | 'center'
   shouldAvoidOffscreenRelationProxyActiveNodes?: boolean
   shouldConnectOffscreenRelationProxyLines?: boolean
 }) {
@@ -1448,6 +1455,9 @@ function InteractivePreviewHarness({
       offscreenRelationProxyPlacementMode={offscreenRelationProxyPlacementMode}
       offscreenRelationProxyTransitionMode={
         offscreenRelationProxyTransitionMode
+      }
+      offscreenRelationProxyVisibilityMode={
+        offscreenRelationProxyVisibilityMode
       }
       shouldAvoidOffscreenRelationProxyActiveNodes={
         shouldAvoidOffscreenRelationProxyActiveNodes

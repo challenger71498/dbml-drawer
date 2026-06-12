@@ -10,7 +10,7 @@
 - [x] 2.2 Add a transition strategy interface that consumes proxy layout, viewport, and original table visibility data separately from proxy layout strategy
 - [x] 2.3 Implement the `none` transition strategy as current immediate proxy visibility behavior
 - [x] 2.4 Implement the `opacity` transition strategy using original table visibility progress while preserving computed proxy layout
-- [x] 2.5 Route `morph` mode through the transition strategy surface with a fallback to `none` until the later morph implementation phase
+- [x] 2.5 Route `morph` mode through the transition strategy surface
 
 ## 3. Editor Settings Integration
 
@@ -21,9 +21,14 @@
 ## 4. Verification
 
 - [x] 4.1 Add or update unit tests for proxy transition mode normalization and persistence behavior
-- [x] 4.2 Add or update diagram preview tests for `none`, `opacity`, and `morph` fallback behavior
+- [x] 4.2 Add or update diagram preview tests for `none`, `opacity`, and `morph` behavior
 - [x] 4.3 Run targeted proxy/settings tests, frontend typecheck, lint, and format checks
 
-## 5. Deferred Morph Phase
+## 5. Morph Transition
 
-- [x] 5.1 Leave morph overlay animation implementation for a later OpenSpec change
+- [x] 5.1 Implement morph transition layout interpolation toward the original table screen rect
+- [x] 5.2 Interpolate proxy relation endpoints toward original relation endpoints during morph handoff
+- [x] 5.3 Crossfade compact proxy content into represented original table content during morph handoff
+- [x] 5.4 Keep morph proxies visible until represented original tables are about 80% visible
+- [x] 5.5 Smooth relation endpoints from compact proxy ports during the first morph interval
+- [x] 5.6 Add or update tests for morph transition behavior

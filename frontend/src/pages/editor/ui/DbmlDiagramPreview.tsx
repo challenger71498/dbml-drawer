@@ -42,6 +42,7 @@ import {
 } from '../model/dbml-offscreen-relation-proxies'
 import {
   getActiveTableProxyLayoutObstacles,
+  getScaledProxyCardHeight,
   getScaledProxyCardWidth,
   getScaledProxyColumnHeight,
   getScaledProxyHeaderHeight,
@@ -359,6 +360,10 @@ type DiagramCanvasProps = {
 
 type DbmlTableFlowNode = Node<DbmlTableNodeData>
 
+const DIAGRAM_TABLE_HEADER_HEIGHT = 44
+const MORPH_ENDPOINT_HANDOFF_PROGRESS = 0.2
+const MORPH_COMPLETION_VISIBLE_RATIO = 0.8
+
 function DiagramCanvas({
   backgroundColor,
   diagram,
@@ -420,6 +425,10 @@ function DiagramCanvas({
         ? getOffscreenRelationProxies({
             diagram,
             focusedTarget,
+            minimumVisibleRatio:
+              offscreenRelationProxyTransitionMode === 'morph'
+                ? MORPH_COMPLETION_VISIBLE_RATIO
+                : undefined,
             viewport: diagramViewport,
             visibilityMode: offscreenRelationProxyVisibilityMode,
           })
@@ -429,6 +438,7 @@ function DiagramCanvas({
       diagramViewport,
       focusedTarget,
       isOffscreenRelationProxiesEnabled,
+      offscreenRelationProxyTransitionMode,
       offscreenRelationProxyVisibilityMode,
     ],
   )
@@ -605,11 +615,29 @@ function OffscreenRelationProxyOverlay({
       className={styles.offscreenProxyOverlay}
       aria-label="Offscreen relations"
     >
-      {proxyLayouts.map(({ proxy, style }) => {
+      {proxyLayouts.map(({ handoffProgress = 0, proxy, style }) => {
+        const compactLayerStyle =
+          handoffProgress > 0
+            ? {
+                opacity: 1 - handoffProgress,
+                pointerEvents:
+                  handoffProgress > 0.5 ? ('none' as const) : ('auto' as const),
+              }
+            : undefined
+        const originalLayerStyle =
+          handoffProgress > 0
+            ? {
+                opacity: handoffProgress,
+                pointerEvents:
+                  handoffProgress > 0.5 ? ('auto' as const) : ('none' as const),
+              }
+            : undefined
+
         return (
           <button
             aria-label={`Show ${proxy.table.name}`}
             className={styles.offscreenProxyCard}
+            data-handoff-progress={String(handoffProgress)}
             data-testid={`offscreen-relation-proxy:${proxy.table.id}`}
             key={proxy.id}
             style={style}
@@ -621,7 +649,9 @@ function OffscreenRelationProxyOverlay({
               ).closest<HTMLElement>('[data-proxy-column-id]')?.dataset
                 .proxyColumnId
               const column = columnId
-                ? proxy.columns.find((candidate) => candidate.id === columnId)
+                ? proxy.table.columns.find(
+                    (candidate) => candidate.id === columnId,
+                  )
                 : null
 
               if (column) {
@@ -635,45 +665,75 @@ function OffscreenRelationProxyOverlay({
             onMouseEnter={() => onProxyHover(new Set(proxy.relationIds))}
             onMouseLeave={() => onProxyHover(null)}
           >
-            <span
-              className={[
-                styles.diagramTableHeader,
-                styles.offscreenProxyHeader,
-              ].join(' ')}
-            >
-              <span>{proxy.table.name}</span>
-            </span>
-            <span
-              className={[
-                styles.diagramColumnList,
-                styles.offscreenProxyColumns,
-              ].join(' ')}
-            >
-              {proxy.columns.map((column) => (
-                <span
-                  className={[
-                    styles.diagramColumnRow,
-                    styles.offscreenProxyColumn,
-                  ].join(' ')}
-                  data-proxy-column-id={column.id}
-                  key={column.id}
-                >
-                  <span className={styles.diagramColumnName}>
-                    {column.name}
-                    {column.isPrimaryKey ? (
-                      <span className={styles.diagramColumnBadge}>PK</span>
-                    ) : null}
-                  </span>
-                  <span className={styles.diagramColumnType}>
-                    {column.typeName}
-                  </span>
-                </span>
-              ))}
+            <span className={styles.offscreenProxyLayerFrame}>
+              <OffscreenRelationProxyContent
+                columns={proxy.columns}
+                tableName={proxy.table.name}
+                style={compactLayerStyle}
+              />
+              {handoffProgress > 0 ? (
+                <OffscreenRelationProxyContent
+                  columns={proxy.table.columns}
+                  tableName={proxy.table.name}
+                  style={originalLayerStyle}
+                />
+              ) : null}
             </span>
           </button>
         )
       })}
     </div>
+  )
+}
+
+function OffscreenRelationProxyContent({
+  columns,
+  tableName,
+  style,
+}: {
+  columns: readonly DbmlDiagramColumn[]
+  tableName: string
+  style?: {
+    opacity: number
+    pointerEvents: 'auto' | 'none'
+  }
+}) {
+  return (
+    <span className={styles.offscreenProxyLayer} style={style}>
+      <span
+        className={[
+          styles.diagramTableHeader,
+          styles.offscreenProxyHeader,
+        ].join(' ')}
+      >
+        <span>{tableName}</span>
+      </span>
+      <span
+        className={[
+          styles.diagramColumnList,
+          styles.offscreenProxyColumns,
+        ].join(' ')}
+      >
+        {columns.map((column) => (
+          <span
+            className={[
+              styles.diagramColumnRow,
+              styles.offscreenProxyColumn,
+            ].join(' ')}
+            data-proxy-column-id={column.id}
+            key={column.id}
+          >
+            <span className={styles.diagramColumnName}>
+              {column.name}
+              {column.isPrimaryKey ? (
+                <span className={styles.diagramColumnBadge}>PK</span>
+              ) : null}
+            </span>
+            <span className={styles.diagramColumnType}>{column.typeName}</span>
+          </span>
+        ))}
+      </span>
+    </span>
   )
 }
 
@@ -761,20 +821,14 @@ function getProxyRelationEndpoint({
   relation: DbmlRelationEdgeData['relation']
   viewport: DbmlDiagramViewport
 }): DbmlRelationEdgeEndpoint {
-  const { proxy, style } = proxyLayout
-  const left = Number(style.left)
-  const top = Number(style.top)
-  const cardWidth = getScaledProxyCardWidth(viewport)
-  const headerHeight = getScaledProxyHeaderHeight(viewport)
-  const columnHeight = getScaledProxyColumnHeight(viewport)
+  const { proxy } = proxyLayout
+  const proxyRect = getProxyLayoutScreenRect(proxyLayout, viewport)
+  const sourceProxyRect = proxyLayout.sourceScreenRect ?? proxyRect
   const proxyColumnId =
     relation.sourceTableId === proxy.table.id
       ? relation.sourceColumnId
       : relation.targetColumnId
-  const proxyColumnIndex = Math.max(
-    0,
-    proxy.columns.findIndex((column) => column.id === proxyColumnId),
-  )
+  const handoffProgress = proxyLayout.handoffProgress ?? 0
   const originalEndpoint =
     relation.sourceTableId === proxy.table.id
       ? relation.route.startPoint
@@ -782,16 +836,92 @@ function getProxyRelationEndpoint({
   const proxyTableCenterX = proxy.table.position.x + proxy.table.size.width / 2
   const position =
     originalEndpoint.x < proxyTableCenterX ? Position.Left : Position.Right
-  const screenEndpoint = {
-    x: position === Position.Left ? left : left + cardWidth,
-    y: top + headerHeight + proxyColumnIndex * columnHeight + columnHeight / 2,
+  const compactEndpoint = getProxyColumnScreenEndpoint({
+    columnId: proxyColumnId,
+    columns: proxy.columns,
+    columnHeight: getScaledProxyColumnHeight(viewport),
+    headerHeight: getScaledProxyHeaderHeight(viewport),
     position,
+    rect: sourceProxyRect,
+  })
+  const morphEndpoint = getProxyColumnScreenEndpoint({
+    columnId: proxyColumnId,
+    columns: proxy.table.columns,
+    columnHeight: getScaledProxyColumnHeight(viewport) * getMorphHeightScale(),
+    headerHeight:
+      DIAGRAM_TABLE_HEADER_HEIGHT * viewport.zoom * getMorphHeightScale(),
+    position,
+    rect: proxyRect,
+  })
+  const endpointProgress = clamp(
+    handoffProgress / MORPH_ENDPOINT_HANDOFF_PROGRESS,
+    0,
+    1,
+  )
+  const proxyScreenEndpoint =
+    handoffProgress > 0
+      ? {
+          x: interpolate(compactEndpoint.x, morphEndpoint.x, endpointProgress),
+          y: interpolate(compactEndpoint.y, morphEndpoint.y, endpointProgress),
+          position,
+        }
+      : compactEndpoint
+
+  return {
+    x: (proxyScreenEndpoint.x - viewport.x) / viewport.zoom,
+    y: (proxyScreenEndpoint.y - viewport.y) / viewport.zoom,
+    position: proxyScreenEndpoint.position,
+  }
+
+  function getMorphHeightScale() {
+    return proxyRect.height / (proxy.table.size.height * viewport.zoom)
+  }
+}
+
+function getProxyColumnScreenEndpoint({
+  columnId,
+  columns,
+  columnHeight,
+  headerHeight,
+  position,
+  rect,
+}: {
+  columnId: string
+  columns: readonly DbmlDiagramColumn[]
+  columnHeight: number
+  headerHeight: number
+  position: Position.Left | Position.Right
+  rect: {
+    left: number
+    top: number
+    width: number
+  }
+}) {
+  const columnIndex = Math.max(
+    0,
+    columns.findIndex((column) => column.id === columnId),
+  )
+
+  return {
+    x: position === Position.Left ? rect.left : rect.left + rect.width,
+    y: rect.top + headerHeight + columnIndex * columnHeight + columnHeight / 2,
+    position,
+  }
+}
+
+function getProxyLayoutScreenRect(
+  proxyLayout: OffscreenRelationProxyLayout,
+  viewport: DbmlDiagramViewport,
+) {
+  if (proxyLayout.screenRect) {
+    return proxyLayout.screenRect
   }
 
   return {
-    x: (screenEndpoint.x - viewport.x) / viewport.zoom,
-    y: (screenEndpoint.y - viewport.y) / viewport.zoom,
-    position: screenEndpoint.position,
+    left: Number(proxyLayout.style.left),
+    top: Number(proxyLayout.style.top),
+    width: getScaledProxyCardWidth(viewport),
+    height: getScaledProxyCardHeight(proxyLayout.proxy, viewport),
   }
 }
 
@@ -806,6 +936,14 @@ function areDiagramViewportsEqual(
     currentViewport.width === nextViewport.width &&
     currentViewport.height === nextViewport.height
   )
+}
+
+function interpolate(from: number, to: number, progress: number) {
+  return from + (to - from) * progress
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
 }
 
 function getPreviewStateLabel({

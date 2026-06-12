@@ -54,11 +54,13 @@ export function getFlowViewportBounds({
 export function getOffscreenRelationProxies({
   diagram,
   focusedTarget,
+  minimumVisibleRatio,
   viewport,
   visibilityMode = 'any-overlap',
 }: {
   diagram: LayoutedDbmlDiagram | null
   focusedTarget: DbmlDiagramSelectionTarget | null
+  minimumVisibleRatio?: number
   viewport: DbmlDiagramViewport | null
   visibilityMode?: DbmlOffscreenRelationProxyVisibilityMode
 }): DbmlOffscreenRelationProxy[] {
@@ -94,7 +96,9 @@ export function getOffscreenRelationProxies({
 
     if (
       !proxyTable ||
-      isTableVisible(proxyTable, viewportBounds, visibilityMode)
+      isTableVisible(proxyTable, viewportBounds, visibilityMode, {
+        minimumVisibleRatio,
+      })
     ) {
       continue
     }
@@ -135,12 +139,45 @@ export function isTableVisible(
   table: LayoutedDbmlDiagramTable,
   viewportBounds: DbmlDiagramBounds,
   visibilityMode: DbmlOffscreenRelationProxyVisibilityMode = 'any-overlap',
+  options: {
+    minimumVisibleRatio?: number
+  } = {},
 ) {
+  if (options.minimumVisibleRatio !== undefined) {
+    return (
+      getTableVisibleRatio(table, viewportBounds) >= options.minimumVisibleRatio
+    )
+  }
+
   if (visibilityMode === 'center') {
     return isPointInsideBounds(getTableCenter(table), viewportBounds)
   }
 
   return rectanglesIntersect(getTableBounds(table), viewportBounds)
+}
+
+function getTableVisibleRatio(
+  table: LayoutedDbmlDiagramTable,
+  viewportBounds: DbmlDiagramBounds,
+) {
+  const tableBounds = getTableBounds(table)
+  const overlapWidth = Math.max(
+    0,
+    Math.min(
+      tableBounds.x + tableBounds.width,
+      viewportBounds.x + viewportBounds.width,
+    ) - Math.max(tableBounds.x, viewportBounds.x),
+  )
+  const overlapHeight = Math.max(
+    0,
+    Math.min(
+      tableBounds.y + tableBounds.height,
+      viewportBounds.y + viewportBounds.height,
+    ) - Math.max(tableBounds.y, viewportBounds.y),
+  )
+  const tableArea = tableBounds.width * tableBounds.height
+
+  return tableArea > 0 ? (overlapWidth * overlapHeight) / tableArea : 0
 }
 
 export function getTableBounds(

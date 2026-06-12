@@ -41,8 +41,37 @@ describe('dbml offscreen relation proxy transition', () => {
     expect(layout.style.opacity).toBe(1)
   })
 
-  it('falls back to none behavior for morph until morph animation is implemented', () => {
-    const layout = createLayout(createTable('users', 805, 20))
+  it('morphs a proxy toward its original table during handoff', () => {
+    const [layout] = getOffscreenRelationProxyTransitionLayouts({
+      layouts: [
+        createLayout(
+          createTable('users', 598, 20, {
+            height: 180,
+            width: 260,
+          }),
+        ),
+      ],
+      viewport: VIEWPORT,
+      options: { mode: 'morph' },
+    })
+
+    expect(layout.handoffProgress).toBeGreaterThan(0.9)
+    expect(layout.screenRect?.left).toBeGreaterThan(590)
+    expect(layout.screenRect?.width).toBeGreaterThan(250)
+    expect(layout.style.height).toBeGreaterThan(160)
+    expect(layout.style.left).toBe(layout.screenRect?.left)
+    expect(layout.style.opacity).toBeLessThan(0.2)
+    expect(layout.style.transform).toBe('scale(1)')
+    expect(layout.style.width).toBeGreaterThan(250)
+  })
+
+  it('keeps morph layout unchanged while the original table is far away', () => {
+    const layout = createLayout(
+      createTable('users', 675, 20, {
+        height: 180,
+        width: 260,
+      }),
+    )
 
     expect(
       getOffscreenRelationProxyTransitionLayouts({
@@ -84,6 +113,7 @@ function createTable(
   name: string,
   x: number,
   y: number,
+  size: { width: number; height: number } = { width: 184, height: 30 },
 ): LayoutedDbmlDiagramTable {
   return {
     id: `table:public.${name}`,
@@ -91,10 +121,7 @@ function createTable(
     schemaName: 'public',
     columns: [],
     ports: [],
-    size: {
-      width: 184,
-      height: 30,
-    },
+    size,
     source: {} as LayoutedDbmlDiagramTable['source'],
     position: { x, y },
   }

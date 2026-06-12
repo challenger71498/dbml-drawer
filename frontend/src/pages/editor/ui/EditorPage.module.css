@@ -351,6 +351,19 @@
   outline-offset: 2px;
 }
 
+.offscreenProxyLayerFrame {
+  display: grid;
+  min-width: 0;
+  min-height: 100%;
+}
+
+.offscreenProxyLayer {
+  display: grid;
+  grid-area: 1 / 1;
+  align-self: start;
+  min-width: 0;
+}
+
 .offscreenProxyCard .offscreenProxyHeader {
   min-height: 30px;
   padding: 0 0.75rem;

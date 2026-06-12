@@ -11,11 +11,10 @@ The current active-node avoidance treats every active table obstacle equally. Be
 - Keep avoidance behavior for other active tables unchanged.
 - Introduce a transition strategy boundary that is separate from proxy layout strategy.
 - Add a persisted proxy transition setting with `none`, `opacity`, and `morph` modes.
-- Implement `none` and `opacity` transition modes in this change.
-- Keep `morph` as a deferred phase with a stable option and strategy surface.
+- Implement `none`, `opacity`, and `morph` transition modes in this change.
 
 **Non-Goals:**
-- Do not implement the visual morph overlay in this phase.
+- Do not replace the morph strategy with a separate overlay clone animation in this phase.
 - Do not replace the existing legacy proxy layout strategy or collision algorithm.
 - Do not change the meaning of the existing proxy visibility mode setting.
 - Do not move original React Flow nodes or alter automatic diagram layout.
@@ -41,9 +40,11 @@ Active-node avoidance should filter obstacles per proxy:
 
 This keeps the global obstacle list simple while making the semantic exception local to the proxy being placed.
 
-### Treat Morph As A Deferred Strategy
+### Morph Uses Screen-Rect Interpolation
 
-`morph` should be exposed as a mode and represented in types/settings, but the strategy may initially fall back to `none` or be marked as not implemented in task scope. The actual morph phase likely needs overlay clone rendering, animation state, and viewport/node rect coordination, which is larger than the self-collision and opacity handoff fix.
+`morph` should remain inside the transition strategy layer, not the proxy layout layer. The strategy should interpolate the proxy card's screen rect toward the represented original table's screen rect as the original closely approaches the viewport. Morph mode should override the regular `any-overlap` / `center` proxy visibility rule and keep the proxy available until the represented original table is about 80% visible. The strategy may also expose handoff progress so relation endpoints can use the morphing card's current column-port position and avoid a visible disconnect between the morphing card and its line.
+
+The UI should avoid stretching a compact proxy card into the original table shape. During morph handoff, the compact proxy content should fade out while the represented original table content fades in, so the transition feels like the original node is being revealed rather than a small card being distorted.
 
 ### Use Visibility Progress For Opacity
 
@@ -58,7 +59,7 @@ The exact thresholds can be implementation constants, but the behavior should av
 ## Risks / Trade-offs
 
 - [Risk] Opacity transition could flicker near threshold boundaries while panning slowly. → Keep thresholds simple and deterministic, and avoid mutating proxy generation visibility semantics in the same pass.
-- [Risk] Adding `morph` as a selectable option before full implementation could confuse users. → Scope it as a strategy surface and setting value, but document the implementation phase split; if necessary, hide or disable it until implementation.
+- [Risk] Morphing a compact proxy into a full table can make the card content look compressed near the original. → Keep the behavior scoped to the handoff range and use opacity during the final morph interval.
 - [Risk] The legacy layout strategy is already complex. → Keep self-obstacle filtering local and tested, and do not restructure collision passes in this change.
 - [Risk] Persisted settings may contain unknown transition values. → Normalize unknown values to the default transition mode.
 

@@ -7,8 +7,7 @@ Offscreen relation proxies improve navigation in dense diagrams, but proxy cards
 - Exclude a proxy's own original table from active-node collision avoidance while preserving avoidance for other active tables.
 - Add an offscreen proxy transition setting with `none`, `opacity`, and `morph` modes.
 - Implement the transition behavior through a dedicated strategy interface that is separate from proxy layout strategies.
-- Implement `none` and `opacity` transition strategies in this change.
-- Defer `morph` transition implementation to a later phase while keeping the setting and strategy surface ready for it.
+- Implement `none`, `opacity`, and `morph` transition strategies in this change.
 - Expose the proxy transition mode in editor settings and persist the selected value locally.
 
 ## Capabilities
