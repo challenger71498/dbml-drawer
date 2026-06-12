@@ -578,7 +578,7 @@ function DiagramCanvas({
         proOptions={{ hideAttribution: true }}
       >
         <Background color={backgroundColor} gap={20} />
-        <Controls showInteractive={false} />
+        <Controls position="bottom-right" showInteractive={false} />
       </ReactFlow>
       {offscreenRelationProxyLayouts.length > 0 ? (
         <OffscreenRelationProxyOverlay
