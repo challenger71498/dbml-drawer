@@ -8,6 +8,7 @@ export type CodeEditorThemeMode = EditorThemeMode | 'workspace'
 export type ResolvedEditorTheme = 'light' | 'light-solarized' | 'dark'
 export type OffscreenRelationProxyPlacementMode = 'line' | 'parallel'
 export type OffscreenRelationProxyVisibilityMode = 'any-overlap' | 'center'
+export type OffscreenRelationProxyTransitionMode = 'none' | 'opacity' | 'morph'
 
 export const EDITOR_WORKSPACE_THEME_MODES = [
   'light',
@@ -26,6 +27,11 @@ export const OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES = [
 export const OFFSCREEN_RELATION_PROXY_VISIBILITY_MODES = [
   'any-overlap',
   'center',
+] as const
+export const OFFSCREEN_RELATION_PROXY_TRANSITION_MODES = [
+  'none',
+  'opacity',
+  'morph',
 ] as const
 export const EDITOR_RELATION_LINE_STYLE_MODES = [
   'bezier',
@@ -100,6 +106,16 @@ export function normalizeOffscreenRelationProxyVisibilityMode(
   )
     ? (value as OffscreenRelationProxyVisibilityMode)
     : 'any-overlap'
+}
+
+export function normalizeOffscreenRelationProxyTransitionMode(
+  value: unknown,
+): OffscreenRelationProxyTransitionMode {
+  return OFFSCREEN_RELATION_PROXY_TRANSITION_MODES.includes(
+    value as OffscreenRelationProxyTransitionMode,
+  )
+    ? (value as OffscreenRelationProxyTransitionMode)
+    : 'none'
 }
 
 export function normalizeRelationLineStyle(

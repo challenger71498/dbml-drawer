@@ -477,6 +477,9 @@ describe('EditorPage', () => {
     const proxyVisibilityGroup = screen.getByRole('group', {
       name: 'Proxy visibility',
     })
+    const proxyTransitionGroup = screen.getByRole('group', {
+      name: 'Proxy transition',
+    })
 
     expect(proxyToggle).not.toBeChecked()
     expect(proxyLineToggle).not.toBeChecked()
@@ -497,6 +500,12 @@ describe('EditorPage', () => {
         name: 'Center visible',
       }),
     ).toBeDisabled()
+    expect(
+      within(proxyTransitionGroup).getByRole('button', { name: 'None' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(proxyTransitionGroup).getByRole('button', { name: 'Opacity' }),
+    ).toBeDisabled()
 
     fireEvent.click(proxyToggle)
     fireEvent.click(proxyLineToggle)
@@ -507,6 +516,9 @@ describe('EditorPage', () => {
       within(proxyVisibilityGroup).getByRole('button', {
         name: 'Center visible',
       }),
+    )
+    fireEvent.click(
+      within(proxyTransitionGroup).getByRole('button', { name: 'Opacity' }),
     )
 
     expect(proxyToggle).toBeChecked()
@@ -520,6 +532,9 @@ describe('EditorPage', () => {
         name: 'Center visible',
       }),
     ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(proxyTransitionGroup).getByRole('button', { name: 'Opacity' }),
+    ).toHaveAttribute('aria-pressed', 'true')
     expect(getStoredEditorSettings().isOffscreenRelationProxiesEnabled).toBe(
       true,
     )
@@ -531,6 +546,9 @@ describe('EditorPage', () => {
     )
     expect(getStoredEditorSettings().offscreenRelationProxyVisibilityMode).toBe(
       'center',
+    )
+    expect(getStoredEditorSettings().offscreenRelationProxyTransitionMode).toBe(
+      'opacity',
     )
 
     unmount()
@@ -557,6 +575,12 @@ describe('EditorPage', () => {
       within(screen.getByRole('group', { name: 'Proxy visibility' })).getByRole(
         'button',
         { name: 'Center visible' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(screen.getByRole('group', { name: 'Proxy transition' })).getByRole(
+        'button',
+        { name: 'Opacity' },
       ),
     ).toHaveAttribute('aria-pressed', 'true')
   })

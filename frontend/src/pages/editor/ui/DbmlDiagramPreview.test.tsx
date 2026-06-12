@@ -946,6 +946,58 @@ Table posts {
     expect(proxy.style.transform).toBe('scale(1.5)')
   })
 
+  it('fades offscreen relation proxies when opacity transition is selected', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 605, y: 0 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyTransitionMode="opacity"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(Number.parseFloat(proxy.style.opacity)).toBeLessThan(0.5)
+  })
+
+  it('falls back to none transition behavior when morph is selected', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
+      { x: 605, y: 0 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyTransitionMode="morph"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(proxy.style.opacity).toBe('')
+  })
+
   it('places offscreen relation proxies by parallel translation when selected', async () => {
     installDiagramSurfaceBounds()
     const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
@@ -1354,12 +1406,14 @@ function InteractivePreviewHarness({
   diagram,
   isOffscreenRelationProxiesEnabled = false,
   offscreenRelationProxyPlacementMode = 'line',
+  offscreenRelationProxyTransitionMode = 'none',
   shouldAvoidOffscreenRelationProxyActiveNodes = false,
   shouldConnectOffscreenRelationProxyLines = false,
 }: {
   diagram: LayoutedDbmlDiagram
   isOffscreenRelationProxiesEnabled?: boolean
   offscreenRelationProxyPlacementMode?: 'line' | 'parallel'
+  offscreenRelationProxyTransitionMode?: 'none' | 'opacity' | 'morph'
   shouldAvoidOffscreenRelationProxyActiveNodes?: boolean
   shouldConnectOffscreenRelationProxyLines?: boolean
 }) {
@@ -1392,6 +1446,9 @@ function InteractivePreviewHarness({
       isPending={false}
       isPaused={false}
       offscreenRelationProxyPlacementMode={offscreenRelationProxyPlacementMode}
+      offscreenRelationProxyTransitionMode={
+        offscreenRelationProxyTransitionMode
+      }
       shouldAvoidOffscreenRelationProxyActiveNodes={
         shouldAvoidOffscreenRelationProxyActiveNodes
       }

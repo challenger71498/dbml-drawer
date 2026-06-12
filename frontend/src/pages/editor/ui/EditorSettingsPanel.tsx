@@ -2,11 +2,13 @@ import type {
   CodeEditorThemeMode,
   EditorThemeMode,
   OffscreenRelationProxyPlacementMode,
+  OffscreenRelationProxyTransitionMode,
   OffscreenRelationProxyVisibilityMode,
 } from '../model/editor-theme'
 import {
   EDITOR_WORKSPACE_THEME_MODES,
   OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES,
+  OFFSCREEN_RELATION_PROXY_TRANSITION_MODES,
   OFFSCREEN_RELATION_PROXY_VISIBILITY_MODES,
 } from '../model/editor-theme'
 import styles from './EditorPage.module.css'
@@ -20,6 +22,7 @@ type EditorSettingsPanelProps = {
   shouldAvoidOffscreenRelationProxyActiveNodes: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
+  offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
   onWorkspaceThemeModeChange: (mode: EditorThemeMode) => void
   onCodeEditorThemeOverrideEnabledChange: (isEnabled: boolean) => void
   onCodeEditorOverrideThemeModeChange: (mode: EditorThemeMode) => void
@@ -32,6 +35,9 @@ type EditorSettingsPanelProps = {
   onOffscreenRelationProxyVisibilityModeChange: (
     mode: OffscreenRelationProxyVisibilityMode,
   ) => void
+  onOffscreenRelationProxyTransitionModeChange: (
+    mode: OffscreenRelationProxyTransitionMode,
+  ) => void
 }
 
 export function EditorSettingsPanel({
@@ -43,6 +49,7 @@ export function EditorSettingsPanel({
   shouldAvoidOffscreenRelationProxyActiveNodes,
   offscreenRelationProxyPlacementMode,
   offscreenRelationProxyVisibilityMode,
+  offscreenRelationProxyTransitionMode,
   onWorkspaceThemeModeChange,
   onCodeEditorThemeOverrideEnabledChange,
   onCodeEditorOverrideThemeModeChange,
@@ -51,6 +58,7 @@ export function EditorSettingsPanel({
   onAvoidOffscreenRelationProxyActiveNodesChange,
   onOffscreenRelationProxyPlacementModeChange,
   onOffscreenRelationProxyVisibilityModeChange,
+  onOffscreenRelationProxyTransitionModeChange,
 }: EditorSettingsPanelProps) {
   return (
     <div className={styles.editorSettingsPanel}>
@@ -140,6 +148,13 @@ export function EditorSettingsPanel({
           value={offscreenRelationProxyVisibilityMode}
           onChange={onOffscreenRelationProxyVisibilityModeChange}
         />
+        <ThemeModeControl
+          isDisabled={!isOffscreenRelationProxiesEnabled}
+          label="Proxy transition"
+          modes={OFFSCREEN_RELATION_PROXY_TRANSITION_MODES}
+          value={offscreenRelationProxyTransitionMode}
+          onChange={onOffscreenRelationProxyTransitionModeChange}
+        />
       </section>
     </div>
   )
@@ -189,6 +204,7 @@ type ThemeModeControlMode =
   | CodeEditorThemeMode
   | OffscreenRelationProxyPlacementMode
   | OffscreenRelationProxyVisibilityMode
+  | OffscreenRelationProxyTransitionMode
 
 function getThemeModeLabel(mode: ThemeModeControlMode) {
   if (mode === 'workspace') {
@@ -209,6 +225,18 @@ function getThemeModeLabel(mode: ThemeModeControlMode) {
 
   if (mode === 'center') {
     return 'Center visible'
+  }
+
+  if (mode === 'none') {
+    return 'None'
+  }
+
+  if (mode === 'opacity') {
+    return 'Opacity'
+  }
+
+  if (mode === 'morph') {
+    return 'Morph'
   }
 
   if (mode === 'system') {

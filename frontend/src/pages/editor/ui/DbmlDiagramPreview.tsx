@@ -48,6 +48,7 @@ import {
   legacyOffscreenRelationProxyLayoutStrategy,
   type DbmlOffscreenRelationProxyLayout as OffscreenRelationProxyLayout,
 } from '../model/dbml-offscreen-relation-proxy-layout'
+import { getOffscreenRelationProxyTransitionLayouts } from '../model/dbml-offscreen-relation-proxy-transition'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
 import {
   useRelationHighlightModeSetting,
@@ -55,6 +56,7 @@ import {
   useSetRelationHighlightMode,
   useSetRelationLineStyle,
   type OffscreenRelationProxyPlacementMode,
+  type OffscreenRelationProxyTransitionMode,
 } from '../model/editor-theme'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
 import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
@@ -78,6 +80,7 @@ type DbmlDiagramPreviewProps = {
   isOffscreenRelationProxiesEnabled?: boolean
   offscreenRelationProxyPlacementMode?: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode?: DbmlOffscreenRelationProxyVisibilityMode
+  offscreenRelationProxyTransitionMode?: OffscreenRelationProxyTransitionMode
   shouldConnectOffscreenRelationProxyLines?: boolean
   shouldAvoidOffscreenRelationProxyActiveNodes?: boolean
   onTableFocus?: (table: DbmlDiagramTable) => void
@@ -158,6 +161,7 @@ export function DbmlDiagramPreview({
   isOffscreenRelationProxiesEnabled = false,
   offscreenRelationProxyPlacementMode = 'line',
   offscreenRelationProxyVisibilityMode = 'any-overlap',
+  offscreenRelationProxyTransitionMode = 'none',
   shouldConnectOffscreenRelationProxyLines = false,
   shouldAvoidOffscreenRelationProxyActiveNodes = false,
   onTableFocus = () => undefined,
@@ -301,6 +305,9 @@ export function DbmlDiagramPreview({
               offscreenRelationProxyVisibilityMode={
                 offscreenRelationProxyVisibilityMode
               }
+              offscreenRelationProxyTransitionMode={
+                offscreenRelationProxyTransitionMode
+              }
               shouldConnectOffscreenRelationProxyLines={
                 shouldConnectOffscreenRelationProxyLines
               }
@@ -339,6 +346,7 @@ type DiagramCanvasProps = {
   isOffscreenRelationProxiesEnabled: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: DbmlOffscreenRelationProxyVisibilityMode
+  offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
   shouldConnectOffscreenRelationProxyLines: boolean
   shouldAvoidOffscreenRelationProxyActiveNodes: boolean
   isEmpty: boolean
@@ -361,6 +369,7 @@ function DiagramCanvas({
   isOffscreenRelationProxiesEnabled,
   offscreenRelationProxyPlacementMode,
   offscreenRelationProxyVisibilityMode,
+  offscreenRelationProxyTransitionMode,
   shouldConnectOffscreenRelationProxyLines,
   shouldAvoidOffscreenRelationProxyActiveNodes,
   isEmpty,
@@ -423,35 +432,43 @@ function DiagramCanvas({
       offscreenRelationProxyVisibilityMode,
     ],
   )
-  const offscreenRelationProxyLayouts = useMemo(
-    () =>
-      diagramViewport
-        ? legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
-            proxies: offscreenRelationProxies,
+  const offscreenRelationProxyLayouts = useMemo(() => {
+    if (!diagramViewport) {
+      return []
+    }
+
+    const layouts = legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
+      proxies: offscreenRelationProxies,
+      viewport: diagramViewport,
+      obstacles: shouldAvoidOffscreenRelationProxyActiveNodes
+        ? getActiveTableProxyLayoutObstacles({
+            diagram,
+            focusedTableIds,
             viewport: diagramViewport,
-            obstacles: shouldAvoidOffscreenRelationProxyActiveNodes
-              ? getActiveTableProxyLayoutObstacles({
-                  diagram,
-                  focusedTableIds,
-                  viewport: diagramViewport,
-                })
-              : [],
-            options: {
-              placementMode: offscreenRelationProxyPlacementMode,
-              shouldAvoidActiveNodes:
-                shouldAvoidOffscreenRelationProxyActiveNodes,
-            },
           })
         : [],
-    [
-      diagramViewport,
-      diagram,
-      focusedTableIds,
-      offscreenRelationProxies,
-      offscreenRelationProxyPlacementMode,
-      shouldAvoidOffscreenRelationProxyActiveNodes,
-    ],
-  )
+      options: {
+        placementMode: offscreenRelationProxyPlacementMode,
+        shouldAvoidActiveNodes: shouldAvoidOffscreenRelationProxyActiveNodes,
+      },
+    })
+
+    return getOffscreenRelationProxyTransitionLayouts({
+      layouts,
+      viewport: diagramViewport,
+      options: {
+        mode: offscreenRelationProxyTransitionMode,
+      },
+    })
+  }, [
+    diagramViewport,
+    diagram,
+    focusedTableIds,
+    offscreenRelationProxies,
+    offscreenRelationProxyPlacementMode,
+    offscreenRelationProxyTransitionMode,
+    shouldAvoidOffscreenRelationProxyActiveNodes,
+  ])
   const flowElements = useMemo(
     () =>
       shouldConnectOffscreenRelationProxyLines

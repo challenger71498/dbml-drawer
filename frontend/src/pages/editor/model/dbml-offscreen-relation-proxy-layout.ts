@@ -15,6 +15,7 @@ export type DbmlOffscreenRelationProxyLayout = {
   proxy: DbmlOffscreenRelationProxy
   style: {
     left: number
+    opacity?: number
     top: number
     transform: string
   }
@@ -128,13 +129,17 @@ function getActiveNodeAvoidingRawProxyLayouts(
     return layouts
   }
 
-  return layouts.map((layout) =>
-    getRawLayoutWithoutActiveNodeOverlap(
+  return layouts.map((layout) => {
+    const effectiveObstacles = activeTableObstacles.filter(
+      (obstacle) => obstacle.id !== layout.proxy.table.id,
+    )
+
+    return getRawLayoutWithoutActiveNodeOverlap(
       layout,
       viewport,
-      activeTableObstacles,
-    ),
-  )
+      effectiveObstacles,
+    )
+  })
 }
 
 function getRawLayoutWithoutActiveNodeOverlap(

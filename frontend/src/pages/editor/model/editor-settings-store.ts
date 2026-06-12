@@ -26,6 +26,7 @@ import {
   normalizeEditorSidebarWidth,
   normalizeEditorThemeMode,
   normalizeOffscreenRelationProxyPlacementMode,
+  normalizeOffscreenRelationProxyTransitionMode,
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
   normalizeRelationLineStyle,
@@ -35,6 +36,7 @@ import {
   type CodeEditorThemeMode,
   type EditorThemeMode,
   type OffscreenRelationProxyPlacementMode,
+  type OffscreenRelationProxyTransitionMode,
   type OffscreenRelationProxyVisibilityMode,
   type ResolvedEditorTheme,
 } from './editor-theme-options'
@@ -49,6 +51,7 @@ export type EditorSettingsState = {
   shouldAvoidOffscreenRelationProxyActiveNodes: boolean
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
+  offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
   editorSidebarWidth: number
   isEditorSidebarExpanded: boolean
   relationLineStyle: DbmlRelationLineStyle
@@ -70,6 +73,9 @@ export type EditorSettingsState = {
   setOffscreenRelationProxyVisibilityMode: (
     mode: OffscreenRelationProxyVisibilityMode,
   ) => void
+  setOffscreenRelationProxyTransitionMode: (
+    mode: OffscreenRelationProxyTransitionMode,
+  ) => void
   setEditorSidebarWidth: (width: number) => void
   setEditorSidebarExpanded: (isExpanded: boolean) => void
   setRelationLineStyle: (style: DbmlRelationLineStyle) => void
@@ -88,6 +94,7 @@ export type EditorSettings = Pick<
   | 'shouldAvoidOffscreenRelationProxyActiveNodes'
   | 'offscreenRelationProxyPlacementMode'
   | 'offscreenRelationProxyVisibilityMode'
+  | 'offscreenRelationProxyTransitionMode'
   | 'editorSidebarWidth'
   | 'isEditorSidebarExpanded'
   | 'relationLineStyle'
@@ -102,6 +109,7 @@ export type EditorSettings = Pick<
   | 'setShouldAvoidOffscreenRelationProxyActiveNodes'
   | 'setOffscreenRelationProxyPlacementMode'
   | 'setOffscreenRelationProxyVisibilityMode'
+  | 'setOffscreenRelationProxyTransitionMode'
   | 'setEditorSidebarWidth'
   | 'setEditorSidebarExpanded'
   | 'setRelationLineStyle'
@@ -124,6 +132,7 @@ type EditorSettingsData = Omit<
   | 'setShouldAvoidOffscreenRelationProxyActiveNodes'
   | 'setOffscreenRelationProxyPlacementMode'
   | 'setOffscreenRelationProxyVisibilityMode'
+  | 'setOffscreenRelationProxyTransitionMode'
   | 'setEditorSidebarWidth'
   | 'setEditorSidebarExpanded'
   | 'setRelationLineStyle'
@@ -161,6 +170,8 @@ const useEditorSettingsStore = create<EditorSettingsState>()(
         set({ offscreenRelationProxyPlacementMode: mode }),
       setOffscreenRelationProxyVisibilityMode: (mode) =>
         set({ offscreenRelationProxyVisibilityMode: mode }),
+      setOffscreenRelationProxyTransitionMode: (mode) =>
+        set({ offscreenRelationProxyTransitionMode: mode }),
       setEditorSidebarWidth: (width) =>
         set({ editorSidebarWidth: normalizeEditorSidebarWidth(width) }),
       setEditorSidebarExpanded: (isExpanded) =>
@@ -221,6 +232,9 @@ export function useEditorSettings(): EditorSettings {
   const offscreenRelationProxyVisibilityMode = useEditorSettingsStore(
     (state) => state.offscreenRelationProxyVisibilityMode,
   )
+  const offscreenRelationProxyTransitionMode = useEditorSettingsStore(
+    (state) => state.offscreenRelationProxyTransitionMode,
+  )
   const editorSidebarWidth = useEditorSettingsStore(
     (state) => state.editorSidebarWidth,
   )
@@ -264,6 +278,9 @@ export function useEditorSettings(): EditorSettings {
   )
   const setOffscreenRelationProxyVisibilityMode = useEditorSettingsStore(
     (state) => state.setOffscreenRelationProxyVisibilityMode,
+  )
+  const setOffscreenRelationProxyTransitionMode = useEditorSettingsStore(
+    (state) => state.setOffscreenRelationProxyTransitionMode,
   )
   const setEditorSidebarWidth = useEditorSettingsStore(
     (state) => state.setEditorSidebarWidth,
@@ -332,6 +349,7 @@ export function useEditorSettings(): EditorSettings {
     shouldAvoidOffscreenRelationProxyActiveNodes,
     offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode,
+    offscreenRelationProxyTransitionMode,
     editorSidebarWidth,
     isEditorSidebarExpanded,
     relationLineStyle,
@@ -346,6 +364,7 @@ export function useEditorSettings(): EditorSettings {
     setShouldAvoidOffscreenRelationProxyActiveNodes,
     setOffscreenRelationProxyPlacementMode,
     setOffscreenRelationProxyVisibilityMode,
+    setOffscreenRelationProxyTransitionMode,
     setEditorSidebarWidth,
     setEditorSidebarExpanded,
     setRelationLineStyle,
@@ -412,6 +431,7 @@ function getDefaultEditorSettingsState(): EditorSettingsData {
     shouldAvoidOffscreenRelationProxyActiveNodes: false,
     offscreenRelationProxyPlacementMode: 'line',
     offscreenRelationProxyVisibilityMode: 'any-overlap',
+    offscreenRelationProxyTransitionMode: 'none',
     editorSidebarWidth: EDITOR_SIDEBAR_DEFAULT_WIDTH,
     isEditorSidebarExpanded: true,
     relationLineStyle: 'bezier',
@@ -439,6 +459,8 @@ function partializeEditorSettingsState(
       state.offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode:
       state.offscreenRelationProxyVisibilityMode,
+    offscreenRelationProxyTransitionMode:
+      state.offscreenRelationProxyTransitionMode,
     editorSidebarWidth: state.editorSidebarWidth,
     isEditorSidebarExpanded: state.isEditorSidebarExpanded,
     relationLineStyle: state.relationLineStyle,
@@ -484,6 +506,10 @@ function normalizePersistedEditorSettingsState(
     offscreenRelationProxyVisibilityMode:
       normalizeOffscreenRelationProxyVisibilityMode(
         state.offscreenRelationProxyVisibilityMode,
+      ),
+    offscreenRelationProxyTransitionMode:
+      normalizeOffscreenRelationProxyTransitionMode(
+        state.offscreenRelationProxyTransitionMode,
       ),
     editorSidebarWidth: normalizeEditorSidebarWidth(state.editorSidebarWidth),
     isEditorSidebarExpanded: normalizeBoolean(

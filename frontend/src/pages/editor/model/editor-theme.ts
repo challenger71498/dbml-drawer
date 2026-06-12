@@ -18,6 +18,7 @@ export {
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
   LIGHT_SOLARIZED_MONACO_THEME,
   OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES,
+  OFFSCREEN_RELATION_PROXY_TRANSITION_MODES,
   OFFSCREEN_RELATION_PROXY_VISIBILITY_MODES,
   PURE_WHITE_LIGHT_MONACO_THEME,
   clampEditorSidebarWidth,
@@ -28,6 +29,7 @@ export {
   normalizeEditorSidebarWidth,
   normalizeEditorThemeMode,
   normalizeOffscreenRelationProxyPlacementMode,
+  normalizeOffscreenRelationProxyTransitionMode,
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
   normalizeRelationLineStyle,
@@ -37,6 +39,7 @@ export {
   type CodeEditorThemeMode,
   type EditorThemeMode,
   type OffscreenRelationProxyPlacementMode,
+  type OffscreenRelationProxyTransitionMode,
   type OffscreenRelationProxyVisibilityMode,
   type ResolvedEditorTheme,
 } from './editor-theme-options'
