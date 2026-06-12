@@ -438,3 +438,70 @@ The diagram preview SHALL optionally render compact proxies for directly connect
 
 - **WHEN** the user pans or zooms the diagram viewport
 - **THEN** the diagram preview MUST update offscreen relation proxy visibility based on the new viewport bounds
+
+### Requirement: Offscreen relation proxy self-collision handling
+
+The diagram preview SHALL ignore a proxy's represented original table when applying active-node avoidance to that proxy.
+
+#### Scenario: Proxy does not avoid its own original table
+
+- **WHEN** offscreen relation proxies are enabled, active-node avoidance is enabled, and a proxy's represented original table is also in the active table set
+- **THEN** the proxy layout MUST NOT treat that represented original table as an avoidance obstacle for that proxy
+
+#### Scenario: Proxy still avoids other active tables
+
+- **WHEN** offscreen relation proxies are enabled, active-node avoidance is enabled, and another active table overlaps a candidate proxy position
+- **THEN** the proxy layout MUST continue to avoid that other active table according to the selected proxy layout strategy
+
+### Requirement: Offscreen relation proxy transition strategies
+
+The diagram preview SHALL apply offscreen relation proxy handoff behavior through a transition strategy that is independent from the proxy layout strategy.
+
+#### Scenario: None transition preserves immediate visibility behavior
+
+- **WHEN** the proxy transition mode is `none`
+- **THEN** the diagram preview MUST render and remove offscreen relation proxies using the selected proxy visibility mode without applying additional opacity or morph presentation changes
+
+#### Scenario: Opacity transition fades proxy during handoff
+
+- **WHEN** the proxy transition mode is `opacity` and a proxy's represented original table approaches the selected visibility threshold
+- **THEN** the diagram preview MUST reduce that proxy's opacity during the handoff range while preserving the proxy's computed layout position
+- **AND** the diagram preview SHOULD increase the represented original table node's opacity during the same handoff range
+
+#### Scenario: Opacity transition uses proxy transition completion visibility
+
+- **WHEN** the proxy transition mode is `opacity`
+- **THEN** the diagram preview SHOULD keep using transition handoff visibility until the represented original table is about 80% visible
+
+#### Scenario: Proxy hides represented original table node
+
+- **WHEN** an offscreen relation proxy is rendered for a represented original table and the proxy transition mode is not `opacity`
+- **THEN** the represented original table node SHOULD remain hidden while that proxy is rendered
+
+#### Scenario: Opacity transition preserves final visibility rule
+
+- **WHEN** the proxy transition mode is `opacity` and the represented original table satisfies the selected proxy visibility mode
+- **THEN** the diagram preview MUST stop rendering the proxy for that original table
+
+#### Scenario: Morph transition moves proxy toward original during handoff
+
+- **WHEN** the proxy transition mode is `morph` and a proxy's represented original table approaches the selected visibility threshold
+- **THEN** the diagram preview MUST move and size that proxy toward the represented original table during the handoff range
+- **AND** the morph handoff SHOULD complete when the represented original table is about 80% visible
+
+#### Scenario: Morph transition overrides regular proxy visibility mode
+
+- **WHEN** the proxy transition mode is `morph`
+- **THEN** the diagram preview SHOULD keep using morph visibility handoff even if the regular proxy visibility setting is `center`
+
+#### Scenario: Morph transition reveals original table content
+
+- **WHEN** the proxy transition mode is `morph` and handoff progress is active
+- **THEN** the diagram preview SHOULD fade compact proxy content out while fading represented original table content in
+- **AND** the diagram preview SHOULD NOT fade the whole proxy card opacity
+
+#### Scenario: Morph transition preserves relation handoff
+
+- **WHEN** a morphing proxy is used as a relation line endpoint
+- **THEN** the relation endpoint SHOULD transition from the compact proxy column port to the corresponding column port within the morphing proxy card during the initial morph handoff
+- **AND** the transition endpoint MUST remain aligned to the represented column row instead of jumping to the proxy card's top or bottom edge

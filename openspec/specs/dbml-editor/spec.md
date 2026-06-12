@@ -666,6 +666,11 @@ The DBML editor workspace SHALL provide a Settings preference for enabling or di
 - **WHEN** the Settings panel is expanded
 - **THEN** it MUST provide a choice between line-based and parallel-translated offscreen relation proxy placement
 
+#### Scenario: Settings panel shows proxy transition control
+
+- **WHEN** the Settings panel is expanded
+- **THEN** it MUST provide an offscreen relation proxy transition mode control with `None`, `Opacity`, and `Morph` choices
+
 #### Scenario: Proxy setting defaults disabled
 
 - **WHEN** no offscreen relation proxy preference has been stored for a user
@@ -681,6 +686,11 @@ The DBML editor workspace SHALL provide a Settings preference for enabling or di
 - **WHEN** no offscreen relation proxy placement preference has been stored for a user
 - **THEN** the editor workspace MUST use line-based offscreen relation proxy placement
 
+#### Scenario: Proxy transition setting defaults none
+
+- **WHEN** no offscreen relation proxy transition preference has been stored for a user
+- **THEN** the editor workspace MUST use the `none` proxy transition mode
+
 #### Scenario: User enables proxy setting
 
 - **WHEN** a user enables the offscreen relation proxy setting
@@ -695,6 +705,11 @@ The DBML editor workspace SHALL provide a Settings preference for enabling or di
 
 - **WHEN** a user selects an offscreen relation proxy placement mode
 - **THEN** the editor workspace MUST pass that placement mode to the diagram preview while offscreen relation proxies are active
+
+#### Scenario: User changes proxy transition setting
+
+- **WHEN** a user selects an offscreen relation proxy transition mode
+- **THEN** the editor workspace MUST pass that transition mode to the diagram preview while offscreen relation proxies are active
 
 #### Scenario: User disables proxy setting
 
@@ -715,3 +730,13 @@ The DBML editor workspace SHALL provide a Settings preference for enabling or di
 
 - **WHEN** a user changes the offscreen relation proxy placement setting and later reloads the editor workspace
 - **THEN** the workspace MUST restore the last selected proxy placement setting from local browser storage
+
+#### Scenario: Proxy transition setting persists locally
+
+- **WHEN** a user changes the offscreen relation proxy transition setting and later reloads the editor workspace
+- **THEN** the workspace MUST restore the last selected proxy transition mode from local browser storage
+
+#### Scenario: Unknown proxy transition setting normalizes to default
+
+- **WHEN** a persisted offscreen relation proxy transition setting is missing or unsupported
+- **THEN** the editor workspace MUST normalize it to the `none` proxy transition mode

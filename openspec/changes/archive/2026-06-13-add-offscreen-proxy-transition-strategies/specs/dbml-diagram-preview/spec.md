@@ -51,5 +51,5 @@ The diagram preview SHALL apply offscreen relation proxy handoff behavior throug
 
 #### Scenario: Morph transition preserves relation handoff
 - **WHEN** a morphing proxy is used as a relation line endpoint
-- **THEN** the relation endpoint SHOULD transition from the compact proxy column port to the represented original node's actual relation port over the full morph interval
-- **AND** the transition endpoint MUST end at the represented original node's actual relation port
+- **THEN** the relation endpoint SHOULD transition from the compact proxy column port to the corresponding column port within the morphing proxy card during the initial morph handoff
+- **AND** the transition endpoint MUST remain aligned to the represented column row instead of jumping to the proxy card's top or bottom edge

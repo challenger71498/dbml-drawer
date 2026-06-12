@@ -27,10 +27,10 @@
 ## 5. Morph Transition
 
 - [x] 5.1 Implement morph transition layout interpolation toward the original table screen rect
-- [x] 5.2 Interpolate proxy relation endpoints toward original relation endpoints during morph handoff
+- [x] 5.2 Interpolate proxy relation endpoints toward morphing proxy column ports during morph handoff
 - [x] 5.3 Crossfade compact proxy content into represented original table content during morph handoff
 - [x] 5.4 Keep morph proxies visible until represented original tables are about 80% visible
-- [x] 5.5 Smooth relation endpoints from compact proxy ports to original relation ports over the full morph interval
+- [x] 5.5 Smooth relation endpoints from compact proxy ports to morphing proxy column ports during the initial morph interval
 - [x] 5.6 Hide represented original nodes while proxies are rendered
 - [x] 5.7 Fade represented original nodes in while opacity proxies fade out
 - [x] 5.8 Align opacity transition completion visibility with morph
