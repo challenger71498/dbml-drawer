@@ -17,9 +17,9 @@ The diagram preview SHALL display validation and render status as lightweight pr
 - **WHEN** the diagram preview is ready to render the current valid document
 - **THEN** the preview MUST NOT show the previous `Ready` pill in the top toolbar area
 
-#### Scenario: Non-ready render state remains discoverable
-- **WHEN** the diagram preview is paused, pending, or unable to update because of the current DBML state
-- **THEN** the preview MUST show the render state in the preview upper-left status area without restoring the removed preview header
+#### Scenario: Paused render state remains discoverable
+- **WHEN** the diagram preview is paused or unable to update because of the current DBML state
+- **THEN** the preview MUST show the paused render state in the preview upper-left status area without restoring the removed preview header
 
 ### Requirement: Compact preview relation style control
 The diagram preview SHALL provide a compact upper-right control for selecting relation line style modes.

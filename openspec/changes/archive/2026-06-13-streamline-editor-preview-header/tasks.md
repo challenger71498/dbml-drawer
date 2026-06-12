@@ -21,7 +21,7 @@
 - [x] 3.1 Remove the `Valid` and `Ready` pills from the editor top toolbar area.
 - [x] 3.2 Add an upper-left preview validation overlay that renders only for invalid DBML.
 - [x] 3.3 Reuse the editor validation diagnostic message in the invalid preview overlay.
-- [x] 3.4 Add an upper-left preview render status treatment for paused, pending, or non-ready states without restoring the preview header.
+- [x] 3.4 Add an upper-left preview render status treatment for paused states without restoring the preview header.
 - [x] 3.5 Add a compact upper-right preview relation line style control for Solid, Gradient, and Dynamic.
 - [x] 3.6 Keep the compact preview relation style control and Settings panel relation style control synchronized through the same state.
 
