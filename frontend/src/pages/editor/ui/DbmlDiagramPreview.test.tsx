@@ -1051,6 +1051,33 @@ Table posts {
     const layoutedDiagram = moveTable(
       await layoutDbmlDiagram(diagram),
       'table:public.users',
+      { x: 0, y: -1200 },
+    )
+
+    render(
+      <InteractivePreviewHarness
+        diagram={layoutedDiagram}
+        isOffscreenRelationProxiesEnabled
+        offscreenRelationProxyPlacementMode="parallel"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('diagram-node-table:public.posts'))
+
+    const proxy = await screen.findByTestId(
+      'offscreen-relation-proxy:table:public.users',
+    )
+
+    expect(Number.parseFloat(proxy.style.left)).toBe(38)
+    expect(Number.parseFloat(proxy.style.top)).toBe(14)
+  })
+
+  it('keeps parallel proxies away from the compact relation style control safe area', async () => {
+    installDiagramSurfaceBounds()
+    const diagram = createDbmlDiagram(parseDbmlDocument(PROXY_RELATION_SOURCE))
+    const layoutedDiagram = moveTable(
+      await layoutDbmlDiagram(diagram),
+      'table:public.users',
       { x: 200, y: -1200 },
     )
 
@@ -1068,7 +1095,7 @@ Table posts {
       'offscreen-relation-proxy:table:public.users',
     )
 
-    expect(Number.parseFloat(proxy.style.left)).toBe(238)
+    expect(Number.parseFloat(proxy.style.left)).toBe(162)
     expect(Number.parseFloat(proxy.style.top)).toBe(14)
   })
 

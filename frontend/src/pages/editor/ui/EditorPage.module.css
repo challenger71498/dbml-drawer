@@ -290,7 +290,7 @@
 .diagramOverlayTopLeft,
 .diagramOverlayTopRight {
   position: absolute;
-  z-index: 6;
+  z-index: 8;
   top: 0.75rem;
   display: grid;
   gap: 0.45rem;

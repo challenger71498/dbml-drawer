@@ -38,6 +38,7 @@ import {
 } from '../model/dbml-offscreen-relation-proxies'
 import {
   getActiveTableProxyLayoutObstacles,
+  getPreviewTopRightControlProxyLayoutObstacle,
   getScaledProxyCardHeight,
   getScaledProxyCardWidth,
   getScaledProxyColumnHeight,
@@ -394,13 +395,18 @@ function DiagramCanvas({
     const layouts = legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
       proxies: offscreenRelationProxies,
       viewport: diagramViewport,
-      obstacles: shouldAvoidOffscreenRelationProxyActiveNodes
-        ? getActiveTableProxyLayoutObstacles({
-            diagram,
-            focusedTableIds,
-            viewport: diagramViewport,
-          })
-        : [],
+      obstacles: [
+        getPreviewTopRightControlProxyLayoutObstacle({
+          viewport: diagramViewport,
+        }),
+        ...(shouldAvoidOffscreenRelationProxyActiveNodes
+          ? getActiveTableProxyLayoutObstacles({
+              diagram,
+              focusedTableIds,
+              viewport: diagramViewport,
+            })
+          : []),
+      ],
       options: {
         placementMode: offscreenRelationProxyPlacementMode,
         shouldAvoidActiveNodes: shouldAvoidOffscreenRelationProxyActiveNodes,

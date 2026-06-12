@@ -10,6 +10,10 @@ const PROXY_CARD_HEADER_HEIGHT = 30
 const PROXY_CARD_COLUMN_HEIGHT = 30
 const PROXY_CARD_GAP = 10
 const PROXY_CARD_EDGE_GAP = 14
+const PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_WIDTH = 232
+const PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_TOP = 12
+const PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_RIGHT = 12
+const PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_HEIGHT = 70
 
 export type DbmlOffscreenRelationProxyLayout = {
   proxy: DbmlOffscreenRelationProxy
@@ -36,7 +40,7 @@ export type DbmlOffscreenRelationProxyLayoutRect = {
 
 export type DbmlOffscreenRelationProxyLayoutObstacle = {
   id: string
-  kind: 'active-node'
+  kind: 'active-node' | 'safe-area'
   rect: DbmlOffscreenRelationProxyLayoutRect
 }
 
@@ -70,6 +74,10 @@ function getLegacyOffscreenRelationProxyLayouts({
   obstacles,
   options,
 }: DbmlOffscreenRelationProxyLayoutInput<LegacyOffscreenRelationProxyLayoutOptions>) {
+  const layoutObstacles = getEffectiveProxyLayoutObstacles(
+    obstacles,
+    options.shouldAvoidActiveNodes,
+  )
   const rawLayouts = proxies.map((proxy) => ({
     proxy,
     ...getRawProxyCardPosition(proxy, viewport, options.placementMode),
@@ -77,7 +85,7 @@ function getLegacyOffscreenRelationProxyLayouts({
   const activeNodeResolvedRawLayouts = getActiveNodeAvoidingRawProxyLayouts(
     rawLayouts,
     viewport,
-    options.shouldAvoidActiveNodes ? obstacles : [],
+    layoutObstacles,
   )
   const sideResolvedLayouts = getNonOverlappingProxyLayoutsBySide(
     activeNodeResolvedRawLayouts,
@@ -97,10 +105,19 @@ function getLegacyOffscreenRelationProxyLayouts({
         top: layout.style.top,
       })),
       viewport,
-      options.shouldAvoidActiveNodes ? obstacles : [],
+      layoutObstacles,
     ),
     viewport,
     options.placementMode,
+  )
+}
+
+function getEffectiveProxyLayoutObstacles(
+  obstacles: readonly DbmlOffscreenRelationProxyLayoutObstacle[],
+  shouldAvoidActiveNodes: boolean,
+) {
+  return obstacles.filter(
+    (obstacle) => obstacle.kind === 'safe-area' || shouldAvoidActiveNodes,
   )
 }
 
@@ -137,7 +154,9 @@ function getActiveNodeAvoidingRawProxyLayouts(
 
   return layouts.map((layout) => {
     const effectiveObstacles = activeTableObstacles.filter(
-      (obstacle) => obstacle.id !== layout.proxy.table.id,
+      (obstacle) =>
+        obstacle.kind !== 'active-node' ||
+        obstacle.id !== layout.proxy.table.id,
     )
 
     return getRawLayoutWithoutActiveNodeOverlap(
@@ -594,6 +613,34 @@ export function getActiveTableProxyLayoutObstacles({
       rect: getTableScreenRect(table, viewport),
     }))
     .filter((obstacle) => rectanglesOverlap(obstacle.rect, viewportRect))
+}
+
+export function getPreviewTopRightControlProxyLayoutObstacle({
+  viewport,
+}: {
+  viewport: DbmlDiagramViewport
+}): DbmlOffscreenRelationProxyLayoutObstacle {
+  return {
+    id: 'preview-top-right-relation-style-control',
+    kind: 'safe-area',
+    rect: {
+      left: Math.max(
+        PROXY_CARD_EDGE_GAP,
+        viewport.width -
+          PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_WIDTH -
+          PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_RIGHT,
+      ),
+      top: PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_TOP,
+      width: Math.max(
+        0,
+        Math.min(
+          PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_WIDTH,
+          viewport.width - PROXY_CARD_EDGE_GAP * 2,
+        ),
+      ),
+      height: PREVIEW_TOP_RIGHT_CONTROL_SAFE_AREA_HEIGHT,
+    },
+  }
 }
 
 function getTableScreenRect(

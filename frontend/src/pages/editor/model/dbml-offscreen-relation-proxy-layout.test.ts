@@ -55,6 +55,32 @@ describe('dbml offscreen relation proxy layout', () => {
 
     expect(layout.style.top).toBe(60)
   })
+
+  it('moves a proxy away from safe area obstacles even when active-node avoidance is disabled', () => {
+    const proxy = createProxy(createTable('users', 900, 20))
+    const [layout] = legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
+      proxies: [proxy],
+      viewport: { x: 0, y: 0, zoom: 1, width: 800, height: 600 },
+      obstacles: [
+        {
+          id: 'preview-top-right-relation-style-control',
+          kind: 'safe-area',
+          rect: {
+            left: 554,
+            top: 12,
+            width: 232,
+            height: 70,
+          },
+        },
+      ],
+      options: {
+        placementMode: 'parallel',
+        shouldAvoidActiveNodes: false,
+      },
+    })
+
+    expect(layout.style.top).toBe(92)
+  })
 })
 
 function createProxy(
