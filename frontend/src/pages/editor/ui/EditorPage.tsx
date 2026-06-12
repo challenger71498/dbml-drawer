@@ -1,14 +1,8 @@
+import { Suspense, lazy, useCallback, useMemo, useRef, useState } from 'react'
 import {
-  Suspense,
-  lazy,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type MouseEvent,
-  type PointerEvent,
-} from 'react'
+  ActivitySidebar,
+  useActivitySidebar,
+} from '@/shared/ui/activity-sidebar'
 import {
   DbmlCodeEditor,
   type DbmlCodeEditorHandle,
@@ -22,7 +16,6 @@ import {
   PresetsIcon,
   SettingsIcon,
 } from './EditorInspectorIcons'
-import { EditorSidebarShell } from './EditorSidebarShell'
 import { EditorSettingsPanel } from './EditorSettingsPanel'
 import { isEditorDevModeEnabled } from '../lib/editor-dev-mode'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
@@ -38,10 +31,10 @@ import {
 import { useDbmlDocument } from '../model/dbml-document'
 import { useEditorDiagramInteractionStore } from '../model/editor-diagram-interaction-store'
 import {
+  EDITOR_SIDEBAR_DEFAULT_WIDTH,
   EDITOR_SIDEBAR_KEYBOARD_STEP,
   EDITOR_SIDEBAR_MAX_WIDTH,
   EDITOR_SIDEBAR_MIN_WIDTH,
-  clampEditorSidebarWidth,
   type EditorThemeMode,
   useEditorSettings,
 } from '../model/editor-theme'
@@ -82,10 +75,6 @@ export function EditorPage({
   isEditorDevMode = isEditorDevModeEnabled(),
 }: EditorPageProps) {
   const editorRef = useRef<DbmlCodeEditorHandle | null>(null)
-  const editorSidebarResizeRef = useRef<{
-    startX: number
-    startWidth: number
-  } | null>(null)
   const [isInspectorExpanded, setInspectorExpanded] = useState(false)
   const [hoveredDiagramTarget, setHoveredDiagramTarget] =
     useState<DbmlDiagramSelectionTarget | null>(null)
@@ -122,6 +111,19 @@ export function EditorPage({
     setEditorSidebarWidth,
     setEditorSidebarExpanded,
   } = useEditorSettings()
+  const editorSidebar = useActivitySidebar<'dbml-editor'>({
+    defaultActiveActivityId: 'dbml-editor',
+    defaultExpanded: isEditorSidebarExpanded,
+    defaultWidth: EDITOR_SIDEBAR_DEFAULT_WIDTH,
+    isExpanded: isEditorSidebarExpanded,
+    keyboardStep: EDITOR_SIDEBAR_KEYBOARD_STEP,
+    maxWidth: EDITOR_SIDEBAR_MAX_WIDTH,
+    minWidth: EDITOR_SIDEBAR_MIN_WIDTH,
+    resizeHandleEdge: 'right',
+    width: editorSidebarWidth,
+    onExpandedChange: setEditorSidebarExpanded,
+    onWidthChange: setEditorSidebarWidth,
+  })
   const {
     documentText,
     setDocumentText,
@@ -233,7 +235,7 @@ export function EditorPage({
         id: 'diagnostics',
         label: 'Diagnostics',
         panelLabel: 'Diagnostics',
-        icon: <DiagnosticsIcon className={styles.editorActivityIcon} />,
+        icon: <DiagnosticsIcon />,
         renderPanel: () => (
           <Suspense
             fallback={<div className={styles.inspectorPanelFallback} />}
@@ -246,7 +248,7 @@ export function EditorPage({
         id: 'presets',
         label: 'DBML presets',
         panelLabel: 'DBML presets',
-        icon: <PresetsIcon className={styles.editorActivityIcon} />,
+        icon: <PresetsIcon />,
         renderPanel: () => (
           <Suspense
             fallback={<div className={styles.inspectorPanelFallback} />}
@@ -259,7 +261,7 @@ export function EditorPage({
         id: 'diagram-settings',
         label: 'Diagram settings',
         panelLabel: 'Diagram settings',
-        icon: <DiagramSettingsIcon className={styles.editorActivityIcon} />,
+        icon: <DiagramSettingsIcon />,
         renderPanel: () => (
           <Suspense
             fallback={<div className={styles.inspectorPanelFallback} />}
@@ -285,19 +287,16 @@ export function EditorPage({
   ])
 
   const editorPanelId = 'editor-left-sidebar-panel-dbml'
+  const editorActivityState = editorSidebar.getActivityState('dbml-editor')
 
   const pageClassName = [
     styles.editorPage,
-    isEditorSidebarExpanded ? styles.editorPageLeftSidebarExpanded : '',
+    editorSidebar.isExpanded ? styles.editorPageLeftSidebarExpanded : '',
     styles.editorPageWithInspector,
     isInspectorExpanded ? styles.editorPageInspectorExpanded : '',
   ]
     .filter(Boolean)
     .join(' ')
-
-  const handleEditorSidebarToggle = useCallback(() => {
-    setEditorSidebarExpanded(!isEditorSidebarExpanded)
-  }, [isEditorSidebarExpanded, setEditorSidebarExpanded])
 
   const handleCodeEditorThemeOverrideEnabledChange = useCallback(
     (isEnabled: boolean) => {
@@ -315,20 +314,12 @@ export function EditorPage({
     [setCodeEditorOverrideThemeMode],
   )
 
-  const handleEditorSidebarClose = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
-      setEditorSidebarExpanded(false)
-      event.currentTarget.blur()
-    },
-    [setEditorSidebarExpanded],
-  )
-
   const settingsActivity = useMemo<EditorInspectorActivity>(
     () => ({
       id: 'settings',
       label: 'Settings',
       panelLabel: 'Settings',
-      icon: <SettingsIcon className={styles.editorActivityIcon} />,
+      icon: <SettingsIcon />,
       renderPanel: () => (
         <EditorSettingsPanel
           codeEditorOverrideThemeMode={codeEditorOverrideThemeMode}
@@ -392,80 +383,6 @@ export function EditorPage({
     ],
   )
 
-  const handleEditorSidebarResizePointerDown = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      event.preventDefault()
-      event.currentTarget.setPointerCapture?.(event.pointerId)
-      editorSidebarResizeRef.current = {
-        startX: event.clientX,
-        startWidth: editorSidebarWidth,
-      }
-    },
-    [editorSidebarWidth],
-  )
-
-  const handleEditorSidebarResizePointerMove = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      const resizeState = editorSidebarResizeRef.current
-
-      if (!resizeState) {
-        return
-      }
-
-      setEditorSidebarWidth(
-        clampEditorSidebarWidth(
-          resizeState.startWidth + event.clientX - resizeState.startX,
-        ),
-      )
-    },
-    [setEditorSidebarWidth],
-  )
-
-  const handleEditorSidebarResizePointerEnd = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      event.currentTarget.releasePointerCapture?.(event.pointerId)
-      editorSidebarResizeRef.current = null
-    },
-    [],
-  )
-
-  const handleEditorSidebarResizeKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault()
-        setEditorSidebarWidth(
-          clampEditorSidebarWidth(
-            editorSidebarWidth - EDITOR_SIDEBAR_KEYBOARD_STEP,
-          ),
-        )
-        return
-      }
-
-      if (event.key === 'ArrowRight') {
-        event.preventDefault()
-        setEditorSidebarWidth(
-          clampEditorSidebarWidth(
-            editorSidebarWidth + EDITOR_SIDEBAR_KEYBOARD_STEP,
-          ),
-        )
-        return
-      }
-
-      if (event.key === 'Home') {
-        event.preventDefault()
-        setEditorSidebarWidth(EDITOR_SIDEBAR_MIN_WIDTH)
-        return
-      }
-
-      if (event.key === 'End') {
-        event.preventDefault()
-        setEditorSidebarWidth(EDITOR_SIDEBAR_MAX_WIDTH)
-        return
-      }
-    },
-    [editorSidebarWidth, setEditorSidebarWidth],
-  )
-
   return (
     <main
       className={pageClassName}
@@ -474,7 +391,7 @@ export function EditorPage({
       data-workspace-theme={resolvedWorkspaceTheme}
       data-workspace-theme-mode={workspaceThemeMode}
     >
-      <EditorSidebarShell
+      <ActivitySidebar
         side="left"
         panelPlacement="after-activity-bar"
         label="Editor authoring activities"
@@ -484,32 +401,24 @@ export function EditorPage({
             {
               id: 'dbml-editor',
               label: 'DBML editor',
-              icon: <DbmlEditorIcon className={styles.editorActivityIcon} />,
+              icon: <DbmlEditorIcon />,
               panelId: editorPanelId,
-              isActive: isEditorSidebarExpanded,
-              isExpanded: isEditorSidebarExpanded,
-              onSelect: handleEditorSidebarToggle,
+              isActive: editorActivityState.isActive,
+              isExpanded: editorActivityState.isExpanded,
+              onSelect: (event) =>
+                editorSidebar.selectActivity('dbml-editor', event),
             },
           ],
         }}
-        isExpanded={isEditorSidebarExpanded}
-        panelWidth={editorSidebarWidth}
+        isExpanded={editorSidebar.isExpanded}
+        panelWidth={editorSidebar.panelWidth}
         panelId={editorPanelId}
         panelLabel="DBML editor"
         closeLabel="Close DBML editor"
-        onClose={handleEditorSidebarClose}
-        resizeHandle={{
+        onClose={editorSidebar.close}
+        resizeHandle={editorSidebar.getResizeHandle({
           label: 'Resize DBML editor',
-          min: EDITOR_SIDEBAR_MIN_WIDTH,
-          max: EDITOR_SIDEBAR_MAX_WIDTH,
-          value: editorSidebarWidth,
-          valueText: `${editorSidebarWidth}px`,
-          onKeyDown: handleEditorSidebarResizeKeyDown,
-          onPointerCancel: handleEditorSidebarResizePointerEnd,
-          onPointerDown: handleEditorSidebarResizePointerDown,
-          onPointerMove: handleEditorSidebarResizePointerMove,
-          onPointerUp: handleEditorSidebarResizePointerEnd,
-        }}
+        })}
       >
         <div className={styles.editorSurface}>
           <DbmlCodeEditor
@@ -520,7 +429,7 @@ export function EditorPage({
             onChange={setDocumentText}
           />
         </div>
-      </EditorSidebarShell>
+      </ActivitySidebar>
 
       <section
         className={styles.editorWorkspace}

@@ -700,7 +700,7 @@ describe('EditorPage', () => {
     })
 
     expect(
-      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+      editorSidebar.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('480px')
     expect(resizeHandle).toHaveAttribute('aria-valuenow', '480')
     expect(resizeHandle).toHaveAttribute('aria-valuemax', '720')
@@ -719,20 +719,20 @@ describe('EditorPage', () => {
     })
 
     expect(
-      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+      editorSidebar.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('600px')
     expect(resizeHandle).toHaveAttribute('aria-valuenow', '600')
 
     fireEvent.keyDown(resizeHandle, { key: 'ArrowLeft' })
 
     expect(
-      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+      editorSidebar.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('576px')
 
     fireEvent.keyDown(resizeHandle, { key: 'Home' })
 
     expect(
-      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+      editorSidebar.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('320px')
 
     fireEvent.pointerDown(resizeHandle, {
@@ -749,7 +749,7 @@ describe('EditorPage', () => {
     })
 
     expect(
-      editorSidebar.style.getPropertyValue('--editor-sidebar-panel-width'),
+      editorSidebar.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('720px')
   })
 
@@ -778,7 +778,7 @@ describe('EditorPage', () => {
       ).getByRole('button', { name: 'Close inspector' }),
     ).toBeInTheDocument()
     expect(
-      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+      inspector.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('384px')
     expect(resizeHandle).toHaveAttribute('aria-valuemax', '720')
 
@@ -796,19 +796,19 @@ describe('EditorPage', () => {
     })
 
     expect(
-      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+      inspector.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('624px')
 
     fireEvent.keyDown(resizeHandle, { key: 'ArrowRight' })
 
     expect(
-      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+      inspector.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('600px')
 
     fireEvent.keyDown(resizeHandle, { key: 'ArrowLeft' })
 
     expect(
-      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+      inspector.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('624px')
 
     fireEvent.pointerDown(resizeHandle, {
@@ -825,7 +825,7 @@ describe('EditorPage', () => {
     })
 
     expect(
-      inspector.style.getPropertyValue('--editor-sidebar-panel-width'),
+      inspector.style.getPropertyValue('--activity-sidebar-panel-width'),
     ).toBe('720px')
   })
 

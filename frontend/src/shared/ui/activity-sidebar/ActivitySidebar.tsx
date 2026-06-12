@@ -1,52 +1,19 @@
+import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 import type {
-  CSSProperties,
-  KeyboardEvent,
-  MouseEvent,
-  PointerEvent,
-  ReactNode,
-} from 'react'
-import { CloseIcon } from './EditorInspectorIcons'
-import styles from './EditorPage.module.css'
+  ActivitySidebarActivity,
+  ActivitySidebarActivityGroups,
+  ActivitySidebarPanelPlacement,
+  ActivitySidebarResizeHandle,
+  ActivitySidebarSide,
+} from './activity-sidebar'
+import styles from './ActivitySidebar.module.css'
 
-export type EditorSidebarShellSide = 'left' | 'right'
-export type EditorSidebarPanelPlacement =
-  | 'before-activity-bar'
-  | 'after-activity-bar'
-
-export type EditorSidebarShellActivity = {
-  id: string
-  label: string
-  icon: ReactNode
-  panelId: string
-  isActive: boolean
-  isExpanded: boolean
-  onSelect: (event: MouseEvent<HTMLButtonElement>) => void
-}
-
-export type EditorSidebarShellActivityGroups = {
-  top?: readonly EditorSidebarShellActivity[]
-  bottom?: readonly EditorSidebarShellActivity[]
-}
-
-type EditorSidebarResizeHandleProps = {
-  label: string
-  min: number
-  max?: number
-  value: number
-  valueText: string
-  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void
-  onPointerCancel: (event: PointerEvent<HTMLDivElement>) => void
-  onPointerDown: (event: PointerEvent<HTMLDivElement>) => void
-  onPointerMove: (event: PointerEvent<HTMLDivElement>) => void
-  onPointerUp: (event: PointerEvent<HTMLDivElement>) => void
-}
-
-type EditorSidebarShellProps = {
-  side: EditorSidebarShellSide
-  panelPlacement: EditorSidebarPanelPlacement
+type ActivitySidebarProps<TActivityId extends string = string> = {
+  side: ActivitySidebarSide
+  panelPlacement: ActivitySidebarPanelPlacement
   label: string
   activityBarLabel: string
-  activityGroups: EditorSidebarShellActivityGroups
+  activityGroups: ActivitySidebarActivityGroups<TActivityId>
   isExpanded: boolean
   panelWidth?: number
   panelId?: string
@@ -54,20 +21,20 @@ type EditorSidebarShellProps = {
   children?: ReactNode
   closeLabel?: string
   onClose?: (event: MouseEvent<HTMLButtonElement>) => void
-  resizeHandle?: EditorSidebarResizeHandleProps
+  resizeHandle?: ActivitySidebarResizeHandle
 }
 
 const activityBarSideClassNames = {
-  left: styles.editorSidebarActivityBarLeft,
-  right: styles.editorSidebarActivityBarRight,
-} satisfies Record<EditorSidebarShellSide, string>
+  left: styles.activityBarLeft,
+  right: styles.activityBarRight,
+} satisfies Record<ActivitySidebarSide, string>
 
 const panelSideClassNames = {
-  left: styles.editorSidebarPanelLeft,
-  right: styles.editorSidebarPanelRight,
-} satisfies Record<EditorSidebarShellSide, string>
+  left: styles.panelLeft,
+  right: styles.panelRight,
+} satisfies Record<ActivitySidebarSide, string>
 
-export function EditorSidebarShell({
+export function ActivitySidebar<TActivityId extends string = string>({
   side,
   panelPlacement,
   label,
@@ -81,15 +48,15 @@ export function EditorSidebarShell({
   closeLabel,
   onClose,
   resizeHandle,
-}: EditorSidebarShellProps) {
+}: ActivitySidebarProps<TActivityId>) {
   const style = panelWidth
     ? ({
-        '--editor-sidebar-panel-width': `${panelWidth}px`,
+        '--activity-sidebar-panel-width': `${panelWidth}px`,
       } as CSSProperties)
     : undefined
   const panel =
     isExpanded && panelId && panelLabel ? (
-      <EditorSidebarPanel
+      <ActivitySidebarPanel
         closeLabel={closeLabel}
         onClose={onClose}
         panelId={panelId}
@@ -98,15 +65,15 @@ export function EditorSidebarShell({
         side={side}
       >
         {children}
-      </EditorSidebarPanel>
+      </ActivitySidebarPanel>
     ) : null
   const activityBar = (
     <div
-      className={`${styles.editorSidebarActivityBar} ${activityBarSideClassNames[side]}`}
+      className={`${styles.activityBar} ${activityBarSideClassNames[side]}`}
       aria-label={activityBarLabel}
     >
-      <EditorSidebarActivityGroup activities={activityGroups.top ?? []} />
-      <EditorSidebarActivityGroup
+      <ActivitySidebarActivityGroup activities={activityGroups.top ?? []} />
+      <ActivitySidebarActivityGroup
         activities={activityGroups.bottom ?? []}
         placement="bottom"
       />
@@ -116,12 +83,10 @@ export function EditorSidebarShell({
   return (
     <aside
       aria-label={label}
-      className={`${styles.editorSidebarDock} ${
-        isExpanded ? styles.editorSidebarDockExpanded : ''
-      } ${
+      className={`${styles.dock} ${isExpanded ? styles.dockExpanded : ''} ${
         panelPlacement === 'before-activity-bar'
-          ? styles.editorSidebarDockPanelBefore
-          : styles.editorSidebarDockPanelAfter
+          ? styles.dockPanelBefore
+          : styles.dockPanelAfter
       }`}
       style={style}
     >
@@ -132,11 +97,11 @@ export function EditorSidebarShell({
   )
 }
 
-function EditorSidebarActivityGroup({
+function ActivitySidebarActivityGroup<TActivityId extends string = string>({
   activities,
   placement = 'top',
 }: {
-  activities: readonly EditorSidebarShellActivity[]
+  activities: readonly ActivitySidebarActivity<TActivityId>[]
   placement?: 'top' | 'bottom'
 }) {
   if (activities.length === 0) {
@@ -145,14 +110,14 @@ function EditorSidebarActivityGroup({
 
   return (
     <div
-      className={`${styles.editorSidebarActivityGroup} ${
-        placement === 'bottom' ? styles.editorSidebarActivityGroupBottom : ''
+      className={`${styles.activityGroup} ${
+        placement === 'bottom' ? styles.activityGroupBottom : ''
       }`}
     >
       {activities.map((activity) => (
         <button
-          className={`${styles.editorActivityButton} ${
-            activity.isActive ? styles.editorActivityButtonActive : ''
+          className={`${styles.activityButton} ${
+            activity.isActive ? styles.activityButtonActive : ''
           }`}
           type="button"
           aria-controls={activity.panelId}
@@ -170,7 +135,7 @@ function EditorSidebarActivityGroup({
   )
 }
 
-function EditorSidebarPanel({
+function ActivitySidebarPanel({
   side,
   panelId,
   panelLabel,
@@ -179,39 +144,39 @@ function EditorSidebarPanel({
   onClose,
   resizeHandle,
 }: {
-  side: EditorSidebarShellSide
+  side: ActivitySidebarSide
   panelId: string
   panelLabel: string
   children: ReactNode
   closeLabel?: string
   onClose?: (event: MouseEvent<HTMLButtonElement>) => void
-  resizeHandle?: EditorSidebarResizeHandleProps
+  resizeHandle?: ActivitySidebarResizeHandle
 }) {
   const headingId = `${panelId}-heading`
 
   return (
     <section
-      className={`${styles.editorSidebarPanel} ${panelSideClassNames[side]}`}
+      className={`${styles.panel} ${panelSideClassNames[side]}`}
       id={panelId}
       aria-labelledby={headingId}
     >
-      <div className={styles.editorSidebarHeader}>
+      <div className={styles.header}>
         <h2 id={headingId}>{panelLabel}</h2>
         {onClose && closeLabel ? (
           <button
-            className={styles.editorSidebarClose}
+            className={styles.closeButton}
             type="button"
             aria-label={closeLabel}
             onClick={onClose}
           >
-            <CloseIcon className={styles.editorActivityIcon} />
+            <CloseIcon className={styles.activityIcon} />
           </button>
         ) : null}
       </div>
-      <div className={styles.editorSidebarPanelContent}>{children}</div>
+      <div className={styles.panelContent}>{children}</div>
       {resizeHandle ? (
         <div
-          className={styles.editorSidebarResizeHandle}
+          className={styles.resizeHandle}
           role="separator"
           aria-label={resizeHandle.label}
           aria-orientation="vertical"
@@ -228,5 +193,25 @@ function EditorSidebarPanel({
         />
       ) : null}
     </section>
+  )
+}
+
+function CloseIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height="20"
+      viewBox="0 0 20 20"
+      width="20"
+    >
+      <path
+        d="M5.5 5.5 14.5 14.5M14.5 5.5 5.5 14.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
   )
 }

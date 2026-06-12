@@ -183,7 +183,12 @@ The DBML editor workspace SHALL provide a left-side sidebar for DBML authoring c
 
 ### Requirement: Editor sidebar shell consistency
 
-The DBML editor workspace SHALL render editor sidebars with a shared page-local shell for common activity bar and panel chrome while preserving activity-specific content and behavior.
+The DBML editor workspace SHALL render editor sidebars through the shared activity sidebar UI package for common activity bar, panel chrome, controller behavior, and resize interactions while preserving activity-specific content and behavior.
+
+#### Scenario: Editor sidebars consume shared activity sidebar
+
+- **WHEN** the editor workspace renders the left DBML editor sidebar or right inspector sidebar
+- **THEN** each sidebar MUST be built from the shared activity sidebar UI and controller primitives rather than a page-local sidebar shell implementation
 
 #### Scenario: Shared activity button chrome
 

@@ -1,0 +1,270 @@
+.dock {
+  --activity-sidebar-panel-width: 24rem;
+
+  position: relative;
+  z-index: 20;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  grid-template-columns: 3rem;
+  overflow: hidden;
+  background: var(--editor-color-panel-bg);
+}
+
+.dockExpanded.dockPanelAfter {
+  grid-template-columns: 3rem var(--activity-sidebar-panel-width);
+}
+
+.dockExpanded.dockPanelBefore {
+  grid-template-columns: var(--activity-sidebar-panel-width) 3rem;
+}
+
+.activityBar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  background: var(--editor-color-panel-muted-bg);
+  flex-direction: column;
+}
+
+.activityGroup {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.activityGroupBottom {
+  margin-top: auto;
+}
+
+.activityBarLeft {
+  min-height: 0;
+  border-right: 1px solid var(--editor-color-border);
+}
+
+.activityBarRight {
+  border-left: 1px solid var(--editor-color-border);
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--editor-color-panel-bg);
+}
+
+.panelLeft {
+  min-height: 0;
+  border-right: 1px solid var(--editor-color-border);
+}
+
+.panelRight {
+  min-height: 0;
+  border-left: 1px solid var(--editor-color-border);
+}
+
+.header {
+  display: flex;
+  min-height: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0 0 0.6rem;
+  border-bottom: 1px solid var(--editor-color-border);
+  background: var(--editor-color-panel-muted-bg);
+}
+
+.header h2 {
+  transform: translateY(0.5px);
+  margin: 0;
+  color: var(--editor-color-text-subtle);
+  font-size: 0.68rem;
+  line-height: 1;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.panelContent {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.panelLeft .panelContent {
+  overflow: hidden;
+}
+
+.closeButton {
+  display: inline-flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--editor-color-text-muted);
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  border-color: var(--editor-color-border-control);
+  background: var(--editor-color-control-hover-bg);
+  color: var(--editor-color-control-active-bg);
+}
+
+.resizeHandle {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  width: 0.75rem;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resizeHandle::before {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: transparent;
+  content: '';
+}
+
+.panelLeft .resizeHandle {
+  right: -0.375rem;
+}
+
+.panelLeft .resizeHandle::before {
+  right: 0.3125rem;
+}
+
+.panelRight .resizeHandle {
+  left: -0.375rem;
+}
+
+.panelRight .resizeHandle::before {
+  left: 0.3125rem;
+}
+
+.resizeHandle:hover::before,
+.resizeHandle:focus-visible::before {
+  background: var(--editor-color-brand);
+}
+
+.resizeHandle:focus-visible {
+  outline: 2px solid var(--editor-color-brand);
+  outline-offset: -2px;
+}
+
+.activityButton {
+  display: inline-flex;
+  width: 100%;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--editor-color-text-muted);
+  cursor: pointer;
+}
+
+.activityButton:hover {
+  border-color: var(--editor-color-border-control);
+  background: var(--editor-color-control-hover-bg);
+  color: var(--editor-color-control-active-bg);
+}
+
+.activityButtonActive {
+  border-color: var(--editor-color-control-active-bg);
+  background: var(--editor-color-control-active-bg);
+  color: var(--editor-color-control-active-text);
+}
+
+.activityButtonActive:hover {
+  border-color: var(--editor-color-control-active-hover-bg);
+  background: var(--editor-color-control-active-hover-bg);
+  color: var(--editor-color-control-active-text);
+}
+
+.activityButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.activityIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (max-width: 840px) {
+  .activityBar {
+    order: 1;
+    min-height: 3rem;
+    flex-direction: row;
+  }
+
+  .activityGroup {
+    width: auto;
+    height: 100%;
+    flex-direction: row;
+  }
+
+  .activityGroupBottom {
+    margin-top: 0;
+    margin-left: auto;
+  }
+
+  .panel {
+    order: 2;
+  }
+
+  .activityBarLeft {
+    border-right: 0;
+    border-bottom: 1px solid var(--editor-color-border);
+  }
+
+  .panelLeft {
+    min-height: 24rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--editor-color-border);
+  }
+
+  .resizeHandle {
+    display: none;
+  }
+
+  .dock {
+    width: 100%;
+    min-height: 3rem;
+    grid-template-columns: 1fr;
+    grid-template-rows: 3rem;
+  }
+
+  .dockExpanded.dockPanelAfter,
+  .dockExpanded.dockPanelBefore {
+    grid-template-columns: 1fr;
+    grid-template-rows: 3rem minmax(16rem, auto);
+  }
+
+  .activityBarRight {
+    flex-direction: row;
+    border-top: 1px solid var(--editor-color-border);
+    border-left: 0;
+    border-bottom: 1px solid var(--editor-color-border);
+  }
+
+  .panelRight {
+    min-height: 16rem;
+    border-left: 0;
+  }
+}
