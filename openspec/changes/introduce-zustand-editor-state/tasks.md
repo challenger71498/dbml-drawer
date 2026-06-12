@@ -33,10 +33,20 @@
 - [x] 4.6 Update editor, diagnostics, presets, layout settings, and diagram preview wiring to consume document state through Zustand selectors.
 - [x] 4.7 Add or update tests for document updates, layout algorithm/option updates, diagnostics, layout refresh, and stale async layout protection.
 
-## 5. Verification
+## 5. Phase 4: Store Boundary Refinement
 
-- [x] 5.1 Run targeted editor store and UI tests after each phase.
-- [x] 5.2 Run `pnpm --dir frontend typecheck`.
-- [x] 5.3 Run `pnpm --dir frontend lint`.
-- [x] 5.4 Run relevant frontend tests for editor page, editor theme/preferences, DBML document, and diagram preview behavior.
-- [x] 5.5 Run OpenSpec validation for the completed change.
+- [x] 5.1 Split DBML code text into a focused DBML editor/code store.
+- [x] 5.2 Rename or reshape the preferences store into an editor settings store that owns user-controlled settings.
+- [x] 5.3 Move layout algorithm and layout option values into the editor settings store rather than a standalone layout option store.
+- [x] 5.4 Keep `useDbmlDocument` as the composition hook that combines DBML code state, editor settings state, validation, and async layout orchestration.
+- [x] 5.5 Keep diagnostics, layout pending state, and layouted diagram result out of Zustand unless a concrete cross-component store consumer exists.
+- [x] 5.6 Reserve a future diagram store for layouted diagram result, node positions, and manual node position overrides if those become source-of-truth state.
+- [x] 5.7 Update tests to cover the separated source stores and the composition hook behavior.
+
+## 6. Verification
+
+- [x] 6.1 Run targeted editor store and UI tests after each phase.
+- [x] 6.2 Run `pnpm --dir frontend typecheck`.
+- [x] 6.3 Run `pnpm --dir frontend lint`.
+- [x] 6.4 Run relevant frontend tests for editor page, editor theme/settings, DBML document, and diagram preview behavior.
+- [x] 6.5 Run OpenSpec validation for the completed change.

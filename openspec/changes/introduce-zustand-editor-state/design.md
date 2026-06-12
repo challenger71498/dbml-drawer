@@ -2,7 +2,7 @@
 
 The editor workspace currently coordinates multiple state categories from `EditorPage` and a few page-local hooks:
 
-- `useEditorThemePreferences` owns theme modes, code editor theme mode, offscreen relation proxy settings, system theme resolution, and localStorage read/write helpers.
+- `useEditorSettings` owns theme modes, code editor theme mode, offscreen relation proxy settings, system theme resolution, layout settings, and localStorage persistence helpers.
 - `EditorPage` owns sidebar expansion/width, diagram hover/focus targets, source reveal wiring, and most prop composition.
 - `DbmlDiagramPreview` owns relation line style, relation highlight mode, hovered proxy relation ids, React Flow viewport state, and rendering-local state.
 - `useDbmlDocument` owns DBML text, layout algorithm/options, debounced validation, diagnostics, async parse/layout, and layout result state.
@@ -38,9 +38,9 @@ Create stores near the editor model code:
 
 ```text
 frontend/src/pages/editor/model/
-  editor-preferences-store.ts
+  editor-settings-store.ts
   editor-diagram-interaction-store.ts
-  dbml-document-store.ts
+  dbml-editor-store.ts
 ```
 
 Rationale:
@@ -88,12 +88,17 @@ Initial classification:
 | Diagnostics and layout result | Zustand document phase | Derived asynchronously from document state; migrate last. |
 | Active relation ids/table ids | Derived selectors/helpers | Do not store duplicated derived sets. |
 
+After Phase 3, the DBML document store owns state with distinct domain
+meanings: DBML code text, layout settings, validation state, and layout result
+lifecycle. Phase 4 should refine this boundary so each store represents a
+cohesive source-of-truth group instead of a broad document workflow bucket.
+
 ### Decision: Migrate in phases
 
-Phase 1: preferences store
+Phase 1: preferences/settings store
 
 - Add `zustand`.
-- Replace `useEditorThemePreferences` with a Zustand-backed preferences API.
+- Replace the previous theme preference hook with a Zustand-backed settings API.
 - Use Zustand `persist` middleware for persisted fields.
 - Keep system theme subscription as a small hook/helper that updates or derives resolved theme state.
 - Move sidebar width/expanded state and relation rendering preferences if doing so does not require changing user-visible behavior.
@@ -111,6 +116,22 @@ Phase 3: DBML document store
 - Keep parse/layout code in existing pure library functions.
 - Ensure stale async layout results cannot overwrite newer document state.
 
+Phase 4: store boundary refinement
+
+- Split DBML code text into a DBML editor/code store.
+- Move layout algorithm and layout option values into the editor settings store
+  rather than a standalone layout option store, because they are
+  user-controlled editor settings like relation rendering, offscreen proxy, and
+  theme/sidebar options.
+- Keep `useDbmlDocument` as a composition hook that reads DBML code state and
+  editor settings state, then orchestrates debounced validation and async layout.
+- Keep validation diagnostics, layout pending state, and layouted diagram result
+  local to the composition hook unless a concrete cross-component store consumer
+  appears.
+- If layouted diagram result, node positions, or future user-moved node
+  positions need store ownership, introduce a separate diagram store instead of
+  placing that state in the DBML editor/code store or editor settings store.
+
 ### Decision: Keep derived state out of stores
 
 Stores should contain source-of-truth values and actions. Values such as `resolvedWorkspaceTheme`, `resolvedCodeEditorTheme`, active relation ids, focused table ids, and endpoint column id sets should be derived through selectors or existing pure helpers.
@@ -120,15 +141,53 @@ Rationale:
 - Avoids duplicated state that can drift.
 - Makes tests focus on source state and derivation rules separately.
 
+### Decision: Separate source-state stores from composition hooks
+
+Stores should own coherent source state, while composition hooks may combine
+multiple stores into a workflow-specific view for a page.
+
+For the DBML editor workflow:
+
+```text
+dbml-editor-store
+  └─ documentText
+
+editor-settings-store
+  ├─ theme/sidebar/relation/proxy settings
+  ├─ selectedLayoutAlgorithmId
+  └─ selectedLayoutOptionValues
+
+dbml-document hook
+  ├─ reads DBML editor state
+  ├─ reads editor settings state
+  ├─ validates DBML
+  ├─ runs async parse/layout
+  └─ returns diagnostics/layouted diagram workflow state
+
+dbml-diagram-store (future, only if needed)
+  ├─ layouted diagram result
+  ├─ node positions
+  └─ future manual position overrides
+```
+
+Rationale:
+
+- DBML code text and layout settings are independent source-state domains.
+- Layout settings behave like editor settings, not DBML source content.
+- Layout result and future node position state are diagram state, not settings
+  state and not source code state.
+- Keeping `useDbmlDocument` as a facade preserves one consuming API for
+  `EditorPage` while allowing stores to stay cohesive.
+
 ### Decision: Prefer idiomatic phase implementations over legacy compatibility
 
 The migration should remain phased, but each phase should be implemented using
 the common Zustand pattern for that state category rather than carrying
 compatibility adapters from the previous local state implementation.
 
-For Phase 1 preferences:
+For editor settings:
 
-- Use one Zustand `persist` key for the editor preference store.
+- Use one Zustand `persist` key for the editor settings store.
 - Use `partialize` to make the persisted shape explicit.
 - Use `merge` and normalizer helpers to keep invalid persisted values from
   leaking into runtime state.
@@ -149,11 +208,13 @@ as before.
 
 ## Migration Plan
 
-1. Add Zustand dependency and preference store tests.
-2. Migrate preferences while keeping existing UI behavior and replacing legacy per-setting storage with a single Zustand persist key.
+1. Add Zustand dependency and settings store tests.
+2. Migrate settings while keeping existing UI behavior and replacing legacy per-setting storage with a single Zustand persist key.
 3. Migrate diagram interaction state after preference migration is stable.
 4. Migrate DBML document state and async validation/layout lifecycle last.
-5. Run frontend typecheck, lint, targeted tests, and relevant editor tests after each phase.
+5. Refine Phase 3 store boundaries into DBML editor state, editor settings
+   state, and composition-hook-managed workflow state.
+6. Run frontend typecheck, lint, targeted tests, and relevant editor tests after each phase.
 
 Rollback is straightforward per phase: each phase should be committed separately so a problematic store migration can be reverted without losing earlier phases.
 

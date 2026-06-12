@@ -9,7 +9,7 @@ import {
 
 export {
   EDITOR_CODE_EDITOR_THEME_MODES,
-  EDITOR_PREFERENCES_STORAGE_KEY,
+  EDITOR_SETTINGS_STORAGE_KEY,
   EDITOR_SIDEBAR_DEFAULT_WIDTH,
   EDITOR_SIDEBAR_KEYBOARD_STEP,
   EDITOR_SIDEBAR_MAX_WIDTH,
@@ -41,12 +41,12 @@ export {
   type ResolvedEditorTheme,
 } from './editor-theme-options'
 export {
-  resetEditorPreferencesStoreForTests,
-  useEditorPreferencesStore,
-  useEditorThemePreferences,
-  type EditorPreferencesState,
-  type EditorThemePreferences,
-} from './editor-preferences-store'
+  resetEditorSettingsStoreForTests,
+  useEditorSettingsStore,
+  useEditorSettings,
+  type EditorSettings,
+  type EditorSettingsState,
+} from './editor-settings-store'
 
 export function getMonacoTheme(theme: ResolvedEditorTheme) {
   if (theme === 'dark') {

@@ -24,7 +24,7 @@ import {
   DBML_RELATION_REFERENCE_COLOR,
   DBML_RELATION_SOURCE_COLOR,
 } from '../model/dbml-diagram-rendering'
-import { resetEditorPreferencesStoreForTests } from '../model/editor-theme'
+import { resetEditorSettingsStoreForTests } from '../model/editor-theme'
 import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
 import { DbmlDiagramSelectionViewProvider } from './DbmlDiagramSelectionViewProvider'
@@ -293,7 +293,7 @@ describe('DbmlDiagramPreview', () => {
     reactFlowProps.getZoom.mockReturnValue(1)
     reactFlowProps.setCenter.mockClear()
     window.localStorage?.clear()
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
     vi.restoreAllMocks()
   })
 

@@ -10,7 +10,14 @@ import type {
   DbmlRelationLineStyle,
 } from './dbml-diagram-rendering'
 import {
-  EDITOR_PREFERENCES_STORAGE_KEY,
+  DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
+  getDefaultDbmlLayoutOptionValues,
+  normalizeDbmlLayoutOptionValues,
+  type DbmlLayoutAlgorithmId,
+  type DbmlLayoutOptionValueMap,
+} from './dbml-layout-settings'
+import {
+  EDITOR_SETTINGS_STORAGE_KEY,
   EDITOR_SIDEBAR_DEFAULT_WIDTH,
   getSystemTheme,
   getSystemThemeQuery,
@@ -32,7 +39,7 @@ import {
   type ResolvedEditorTheme,
 } from './editor-theme-options'
 
-export type EditorPreferencesState = {
+export type EditorSettingsState = {
   systemTheme: ResolvedEditorTheme
   workspaceThemeMode: EditorThemeMode
   codeEditorThemeMode: CodeEditorThemeMode
@@ -46,6 +53,8 @@ export type EditorPreferencesState = {
   isEditorSidebarExpanded: boolean
   relationLineStyle: DbmlRelationLineStyle
   relationHighlightMode: DbmlRelationHighlightMode
+  selectedLayoutAlgorithmId: DbmlLayoutAlgorithmId
+  selectedLayoutOptionValues: DbmlLayoutOptionValueMap
   setSystemTheme: (theme: ResolvedEditorTheme) => void
   setWorkspaceThemeMode: (mode: EditorThemeMode) => void
   setCodeEditorThemeMode: (mode: CodeEditorThemeMode) => void
@@ -65,10 +74,12 @@ export type EditorPreferencesState = {
   setEditorSidebarExpanded: (isExpanded: boolean) => void
   setRelationLineStyle: (style: DbmlRelationLineStyle) => void
   setRelationHighlightMode: (mode: DbmlRelationHighlightMode) => void
+  selectLayoutAlgorithm: (algorithmId: DbmlLayoutAlgorithmId) => void
+  setSelectedLayoutOptionValue: (optionId: string, value: string) => void
 }
 
-export type EditorThemePreferences = Pick<
-  EditorPreferencesState,
+export type EditorSettings = Pick<
+  EditorSettingsState,
   | 'workspaceThemeMode'
   | 'codeEditorThemeMode'
   | 'codeEditorOverrideThemeMode'
@@ -81,6 +92,8 @@ export type EditorThemePreferences = Pick<
   | 'isEditorSidebarExpanded'
   | 'relationLineStyle'
   | 'relationHighlightMode'
+  | 'selectedLayoutAlgorithmId'
+  | 'selectedLayoutOptionValues'
   | 'setWorkspaceThemeMode'
   | 'setCodeEditorThemeMode'
   | 'setCodeEditorOverrideThemeMode'
@@ -93,13 +106,15 @@ export type EditorThemePreferences = Pick<
   | 'setEditorSidebarExpanded'
   | 'setRelationLineStyle'
   | 'setRelationHighlightMode'
+  | 'selectLayoutAlgorithm'
+  | 'setSelectedLayoutOptionValue'
 > & {
   resolvedWorkspaceTheme: ResolvedEditorTheme
   resolvedCodeEditorTheme: ResolvedEditorTheme
 }
 
-type EditorPreferencesData = Omit<
-  EditorPreferencesState,
+type EditorSettingsData = Omit<
+  EditorSettingsState,
   | 'setSystemTheme'
   | 'setWorkspaceThemeMode'
   | 'setCodeEditorThemeMode'
@@ -113,17 +128,16 @@ type EditorPreferencesData = Omit<
   | 'setEditorSidebarExpanded'
   | 'setRelationLineStyle'
   | 'setRelationHighlightMode'
+  | 'selectLayoutAlgorithm'
+  | 'setSelectedLayoutOptionValue'
 >
 
-type PersistedEditorPreferencesState = Omit<
-  EditorPreferencesData,
-  'systemTheme'
->
+type PersistedEditorSettingsState = Omit<EditorSettingsData, 'systemTheme'>
 
-export const useEditorPreferencesStore = create<EditorPreferencesState>()(
+export const useEditorSettingsStore = create<EditorSettingsState>()(
   persist(
     (set) => ({
-      ...getDefaultEditorPreferencesState(),
+      ...getDefaultEditorSettingsState(),
       setSystemTheme: (theme) => set({ systemTheme: theme }),
       setWorkspaceThemeMode: (mode) => set({ workspaceThemeMode: mode }),
       setCodeEditorThemeMode: (mode) =>
@@ -153,99 +167,121 @@ export const useEditorPreferencesStore = create<EditorPreferencesState>()(
         set({ isEditorSidebarExpanded: isExpanded }),
       setRelationLineStyle: (style) => set({ relationLineStyle: style }),
       setRelationHighlightMode: (mode) => set({ relationHighlightMode: mode }),
+      selectLayoutAlgorithm: (algorithmId) =>
+        set({
+          selectedLayoutAlgorithmId: algorithmId,
+          selectedLayoutOptionValues:
+            getDefaultDbmlLayoutOptionValues(algorithmId),
+        }),
+      setSelectedLayoutOptionValue: (optionId, value) =>
+        set((state) => ({
+          selectedLayoutOptionValues: normalizeDbmlLayoutOptionValues({
+            ...state.selectedLayoutOptionValues,
+            [optionId]: value,
+          }),
+        })),
     }),
     {
-      name: EDITOR_PREFERENCES_STORAGE_KEY,
-      storage: createJSONStorage(createEditorPreferencesStorage),
-      partialize: (state): PersistedEditorPreferencesState =>
-        partializeEditorPreferencesState(state),
+      name: EDITOR_SETTINGS_STORAGE_KEY,
+      storage: createJSONStorage(createEditorSettingsStorage),
+      partialize: (state): PersistedEditorSettingsState =>
+        partializeEditorSettingsState(state),
       merge: (persistedState, currentState) => ({
         ...currentState,
-        ...normalizePersistedEditorPreferencesState(persistedState),
+        ...normalizePersistedEditorSettingsState(persistedState),
         systemTheme: getSystemTheme(),
       }),
     },
   ),
 )
 
-export function useEditorThemePreferences(): EditorThemePreferences {
-  const systemTheme = useEditorPreferencesStore((state) => state.systemTheme)
-  const workspaceThemeMode = useEditorPreferencesStore(
+export function useEditorSettings(): EditorSettings {
+  const systemTheme = useEditorSettingsStore((state) => state.systemTheme)
+  const workspaceThemeMode = useEditorSettingsStore(
     (state) => state.workspaceThemeMode,
   )
-  const codeEditorThemeMode = useEditorPreferencesStore(
+  const codeEditorThemeMode = useEditorSettingsStore(
     (state) => state.codeEditorThemeMode,
   )
-  const codeEditorOverrideThemeMode = useEditorPreferencesStore(
+  const codeEditorOverrideThemeMode = useEditorSettingsStore(
     (state) => state.codeEditorOverrideThemeMode,
   )
-  const isOffscreenRelationProxiesEnabled = useEditorPreferencesStore(
+  const isOffscreenRelationProxiesEnabled = useEditorSettingsStore(
     (state) => state.isOffscreenRelationProxiesEnabled,
   )
-  const shouldConnectOffscreenRelationProxyLines = useEditorPreferencesStore(
+  const shouldConnectOffscreenRelationProxyLines = useEditorSettingsStore(
     (state) => state.shouldConnectOffscreenRelationProxyLines,
   )
-  const shouldAvoidOffscreenRelationProxyActiveNodes =
-    useEditorPreferencesStore(
-      (state) => state.shouldAvoidOffscreenRelationProxyActiveNodes,
-    )
-  const offscreenRelationProxyPlacementMode = useEditorPreferencesStore(
+  const shouldAvoidOffscreenRelationProxyActiveNodes = useEditorSettingsStore(
+    (state) => state.shouldAvoidOffscreenRelationProxyActiveNodes,
+  )
+  const offscreenRelationProxyPlacementMode = useEditorSettingsStore(
     (state) => state.offscreenRelationProxyPlacementMode,
   )
-  const offscreenRelationProxyVisibilityMode = useEditorPreferencesStore(
+  const offscreenRelationProxyVisibilityMode = useEditorSettingsStore(
     (state) => state.offscreenRelationProxyVisibilityMode,
   )
-  const editorSidebarWidth = useEditorPreferencesStore(
+  const editorSidebarWidth = useEditorSettingsStore(
     (state) => state.editorSidebarWidth,
   )
-  const isEditorSidebarExpanded = useEditorPreferencesStore(
+  const isEditorSidebarExpanded = useEditorSettingsStore(
     (state) => state.isEditorSidebarExpanded,
   )
-  const relationLineStyle = useEditorPreferencesStore(
+  const relationLineStyle = useEditorSettingsStore(
     (state) => state.relationLineStyle,
   )
-  const relationHighlightMode = useEditorPreferencesStore(
+  const relationHighlightMode = useEditorSettingsStore(
     (state) => state.relationHighlightMode,
   )
-  const setSystemTheme = useEditorPreferencesStore(
-    (state) => state.setSystemTheme,
+  const selectedLayoutAlgorithmId = useEditorSettingsStore(
+    (state) => state.selectedLayoutAlgorithmId,
   )
-  const setWorkspaceThemeMode = useEditorPreferencesStore(
+  const selectedLayoutOptionValues = useEditorSettingsStore(
+    (state) => state.selectedLayoutOptionValues,
+  )
+  const setSystemTheme = useEditorSettingsStore((state) => state.setSystemTheme)
+  const setWorkspaceThemeMode = useEditorSettingsStore(
     (state) => state.setWorkspaceThemeMode,
   )
-  const setCodeEditorThemeMode = useEditorPreferencesStore(
+  const setCodeEditorThemeMode = useEditorSettingsStore(
     (state) => state.setCodeEditorThemeMode,
   )
-  const setCodeEditorOverrideThemeMode = useEditorPreferencesStore(
+  const setCodeEditorOverrideThemeMode = useEditorSettingsStore(
     (state) => state.setCodeEditorOverrideThemeMode,
   )
-  const setOffscreenRelationProxiesEnabled = useEditorPreferencesStore(
+  const setOffscreenRelationProxiesEnabled = useEditorSettingsStore(
     (state) => state.setOffscreenRelationProxiesEnabled,
   )
-  const setShouldConnectOffscreenRelationProxyLines = useEditorPreferencesStore(
+  const setShouldConnectOffscreenRelationProxyLines = useEditorSettingsStore(
     (state) => state.setShouldConnectOffscreenRelationProxyLines,
   )
   const setShouldAvoidOffscreenRelationProxyActiveNodes =
-    useEditorPreferencesStore(
+    useEditorSettingsStore(
       (state) => state.setShouldAvoidOffscreenRelationProxyActiveNodes,
     )
-  const setOffscreenRelationProxyPlacementMode = useEditorPreferencesStore(
+  const setOffscreenRelationProxyPlacementMode = useEditorSettingsStore(
     (state) => state.setOffscreenRelationProxyPlacementMode,
   )
-  const setOffscreenRelationProxyVisibilityMode = useEditorPreferencesStore(
+  const setOffscreenRelationProxyVisibilityMode = useEditorSettingsStore(
     (state) => state.setOffscreenRelationProxyVisibilityMode,
   )
-  const setEditorSidebarWidth = useEditorPreferencesStore(
+  const setEditorSidebarWidth = useEditorSettingsStore(
     (state) => state.setEditorSidebarWidth,
   )
-  const setEditorSidebarExpanded = useEditorPreferencesStore(
+  const setEditorSidebarExpanded = useEditorSettingsStore(
     (state) => state.setEditorSidebarExpanded,
   )
-  const setRelationLineStyle = useEditorPreferencesStore(
+  const setRelationLineStyle = useEditorSettingsStore(
     (state) => state.setRelationLineStyle,
   )
-  const setRelationHighlightMode = useEditorPreferencesStore(
+  const setRelationHighlightMode = useEditorSettingsStore(
     (state) => state.setRelationHighlightMode,
+  )
+  const selectLayoutAlgorithm = useEditorSettingsStore(
+    (state) => state.selectLayoutAlgorithm,
+  )
+  const setSelectedLayoutOptionValue = useEditorSettingsStore(
+    (state) => state.setSelectedLayoutOptionValue,
   )
 
   useEffect(() => {
@@ -300,6 +336,8 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     isEditorSidebarExpanded,
     relationLineStyle,
     relationHighlightMode,
+    selectedLayoutAlgorithmId,
+    selectedLayoutOptionValues,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
     setCodeEditorOverrideThemeMode,
@@ -312,20 +350,22 @@ export function useEditorThemePreferences(): EditorThemePreferences {
     setEditorSidebarExpanded,
     setRelationLineStyle,
     setRelationHighlightMode,
+    selectLayoutAlgorithm,
+    setSelectedLayoutOptionValue,
   }
 }
 
-export function resetEditorPreferencesStoreForTests() {
-  useEditorPreferencesStore.setState(
+export function resetEditorSettingsStoreForTests() {
+  useEditorSettingsStore.setState(
     {
-      ...getDefaultEditorPreferencesState(),
-      ...readPersistedEditorPreferencesState(),
+      ...getDefaultEditorSettingsState(),
+      ...readPersistedEditorSettingsState(),
     },
     false,
   )
 }
 
-function getDefaultEditorPreferencesState(): EditorPreferencesData {
+function getDefaultEditorSettingsState(): EditorSettingsData {
   return {
     systemTheme: getSystemTheme(),
     workspaceThemeMode: 'system',
@@ -340,12 +380,16 @@ function getDefaultEditorPreferencesState(): EditorPreferencesData {
     isEditorSidebarExpanded: true,
     relationLineStyle: 'bezier',
     relationHighlightMode: 'gradient',
+    selectedLayoutAlgorithmId: DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
+    selectedLayoutOptionValues: getDefaultDbmlLayoutOptionValues(
+      DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
+    ),
   }
 }
 
-function partializeEditorPreferencesState(
-  state: EditorPreferencesState,
-): PersistedEditorPreferencesState {
+function partializeEditorSettingsState(
+  state: EditorSettingsState,
+): PersistedEditorSettingsState {
   return {
     workspaceThemeMode: state.workspaceThemeMode,
     codeEditorThemeMode: state.codeEditorThemeMode,
@@ -363,12 +407,14 @@ function partializeEditorPreferencesState(
     isEditorSidebarExpanded: state.isEditorSidebarExpanded,
     relationLineStyle: state.relationLineStyle,
     relationHighlightMode: state.relationHighlightMode,
+    selectedLayoutAlgorithmId: state.selectedLayoutAlgorithmId,
+    selectedLayoutOptionValues: state.selectedLayoutOptionValues,
   }
 }
 
-function normalizePersistedEditorPreferencesState(
+function normalizePersistedEditorSettingsState(
   value: unknown,
-): PersistedEditorPreferencesState {
+): PersistedEditorSettingsState {
   const state = isRecord(value) ? value : {}
 
   return {
@@ -408,13 +454,22 @@ function normalizePersistedEditorPreferencesState(
     relationHighlightMode: normalizeRelationHighlightMode(
       state.relationHighlightMode,
     ),
+    selectedLayoutAlgorithmId:
+      typeof state.selectedLayoutAlgorithmId === 'string'
+        ? state.selectedLayoutAlgorithmId
+        : DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
+    selectedLayoutOptionValues: normalizeDbmlLayoutOptionValues(
+      isStringRecord(state.selectedLayoutOptionValues)
+        ? state.selectedLayoutOptionValues
+        : getDefaultDbmlLayoutOptionValues(DEFAULT_DBML_LAYOUT_ALGORITHM_ID),
+    ),
   }
 }
 
-function readPersistedEditorPreferencesState():
-  | PersistedEditorPreferencesState
+function readPersistedEditorSettingsState():
+  | PersistedEditorSettingsState
   | undefined {
-  const storageValue = getEditorPreferencesStorageValue()
+  const storageValue = getEditorSettingsStorageValue()
 
   if (!storageValue) {
     return undefined
@@ -427,13 +482,13 @@ function readPersistedEditorPreferencesState():
         ? parsedValue.state
         : undefined
 
-    return normalizePersistedEditorPreferencesState(persistedState)
+    return normalizePersistedEditorSettingsState(persistedState)
   } catch {
     return undefined
   }
 }
 
-function createEditorPreferencesStorage(): StateStorage {
+function createEditorSettingsStorage(): StateStorage {
   return {
     getItem(name) {
       return getStorage()?.getItem(name) ?? null
@@ -447,9 +502,9 @@ function createEditorPreferencesStorage(): StateStorage {
   }
 }
 
-function getEditorPreferencesStorageValue() {
+function getEditorSettingsStorageValue() {
   try {
-    return getStorage()?.getItem(EDITOR_PREFERENCES_STORAGE_KEY) ?? null
+    return getStorage()?.getItem(EDITOR_SETTINGS_STORAGE_KEY) ?? null
   } catch {
     return null
   }
@@ -469,4 +524,11 @@ function getStorage() {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return (
+    isRecord(value) &&
+    Object.values(value).every((item) => typeof item === 'string')
+  )
 }

@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  EDITOR_PREFERENCES_STORAGE_KEY,
+  EDITOR_SETTINGS_STORAGE_KEY,
   normalizeBoolean,
   normalizeCodeEditorThemeMode,
   normalizeEditorSidebarWidth,
@@ -10,25 +10,25 @@ import {
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
   normalizeRelationLineStyle,
-  resetEditorPreferencesStoreForTests,
-  useEditorPreferencesStore,
-  useEditorThemePreferences,
+  resetEditorSettingsStoreForTests,
+  useEditorSettingsStore,
+  useEditorSettings,
 } from './editor-theme'
 
 type ThemeChangeListener = () => void
 
-describe('editor theme preferences', () => {
+describe('editor theme settings', () => {
   afterEach(() => {
     cleanup()
     window.localStorage?.clear()
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
     vi.restoreAllMocks()
   })
 
   it('falls back to defaults for invalid persisted preference values', () => {
     installLocalStorageMock()
     installMatchMediaMock(false)
-    setStoredEditorPreferences({
+    setStoredEditorSettings({
       workspaceThemeMode: 'sepia',
       codeEditorThemeMode: 'invalid',
       codeEditorOverrideThemeMode: 'workspace',
@@ -42,7 +42,7 @@ describe('editor theme preferences', () => {
       relationLineStyle: 'arc',
       relationHighlightMode: 'blink',
     })
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
 
     expect(normalizeEditorThemeMode('light-solarized')).toBe('light-solarized')
     expect(normalizeEditorThemeMode('workspace')).toBe('system')
@@ -66,7 +66,7 @@ describe('editor theme preferences', () => {
     )
     expect(normalizeRelationHighlightMode('dynamic')).toBe('dynamic')
 
-    const state = useEditorPreferencesStore.getState()
+    const state = useEditorSettingsStore.getState()
 
     expect(state.workspaceThemeMode).toBe('system')
     expect(state.codeEditorThemeMode).toBe('workspace')
@@ -80,12 +80,22 @@ describe('editor theme preferences', () => {
     expect(state.isEditorSidebarExpanded).toBe(true)
     expect(state.relationLineStyle).toBe('bezier')
     expect(state.relationHighlightMode).toBe('gradient')
+    expect(state.selectedLayoutAlgorithmId).toBe('org.eclipse.elk.layered')
+    expect(state.selectedLayoutOptionValues).toEqual({
+      'elk.direction': 'RIGHT',
+      'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.cycleBreaking.strategy': 'GREEDY',
+      'elk.layered.highDegreeNodes.treatment': 'false',
+      'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '96',
+    })
   })
 
   it('persists workspace and code editor theme modes independently', () => {
     installLocalStorageMock()
     installMatchMediaMock(false)
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
 
     const { unmount } = render(<ThemeHarness />)
 
@@ -94,11 +104,9 @@ describe('editor theme preferences', () => {
 
     expect(screen.getByTestId('workspace-mode')).toHaveTextContent('dark')
     expect(screen.getByTestId('code-editor-mode')).toHaveTextContent('light')
-    expect(getStoredEditorPreferences().workspaceThemeMode).toBe('dark')
-    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe('light')
-    expect(getStoredEditorPreferences().codeEditorOverrideThemeMode).toBe(
-      'light',
-    )
+    expect(getStoredEditorSettings().workspaceThemeMode).toBe('dark')
+    expect(getStoredEditorSettings().codeEditorThemeMode).toBe('light')
+    expect(getStoredEditorSettings().codeEditorOverrideThemeMode).toBe('light')
 
     unmount()
     render(<ThemeHarness />)
@@ -114,7 +122,7 @@ describe('editor theme preferences', () => {
   it('updates resolved themes when system preference changes', () => {
     installLocalStorageMock()
     const mediaQuery = installMatchMediaMock(false)
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
 
     render(<ThemeHarness />)
 
@@ -138,7 +146,7 @@ describe('editor theme preferences', () => {
   it('resolves code editor theme from the workspace theme mode', () => {
     installLocalStorageMock()
     installMatchMediaMock(false)
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
 
     render(<ThemeHarness />)
 
@@ -151,13 +159,13 @@ describe('editor theme preferences', () => {
     )
     expect(screen.getByTestId('workspace-resolved')).toHaveTextContent('dark')
     expect(screen.getByTestId('code-editor-resolved')).toHaveTextContent('dark')
-    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe('workspace')
+    expect(getStoredEditorSettings().codeEditorThemeMode).toBe('workspace')
   })
 
   it('persists the offscreen relation proxy settings with disabled defaults', () => {
     installLocalStorageMock()
     installMatchMediaMock(false)
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
 
     const { unmount } = render(<ThemeHarness />)
 
@@ -196,21 +204,21 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
       'center',
     )
-    expect(getStoredEditorPreferences().isOffscreenRelationProxiesEnabled).toBe(
+    expect(getStoredEditorSettings().isOffscreenRelationProxiesEnabled).toBe(
       true,
     )
     expect(
-      getStoredEditorPreferences().shouldConnectOffscreenRelationProxyLines,
+      getStoredEditorSettings().shouldConnectOffscreenRelationProxyLines,
     ).toBe(true)
     expect(
-      getStoredEditorPreferences().shouldAvoidOffscreenRelationProxyActiveNodes,
+      getStoredEditorSettings().shouldAvoidOffscreenRelationProxyActiveNodes,
     ).toBe(true)
-    expect(
-      getStoredEditorPreferences().offscreenRelationProxyPlacementMode,
-    ).toBe('parallel')
-    expect(
-      getStoredEditorPreferences().offscreenRelationProxyVisibilityMode,
-    ).toBe('center')
+    expect(getStoredEditorSettings().offscreenRelationProxyPlacementMode).toBe(
+      'parallel',
+    )
+    expect(getStoredEditorSettings().offscreenRelationProxyVisibilityMode).toBe(
+      'center',
+    )
 
     unmount()
     render(<ThemeHarness />)
@@ -230,10 +238,10 @@ describe('editor theme preferences', () => {
     )
   })
 
-  it('persists sidebar and relation rendering preferences', () => {
+  it('persists sidebar and relation rendering settings', () => {
     installLocalStorageMock()
     installMatchMediaMock(false)
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
 
     const { unmount } = render(<ThemeHarness />)
 
@@ -263,13 +271,13 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('relation-highlight-mode')).toHaveTextContent(
       'dynamic',
     )
-    expect(getStoredEditorPreferences().editorSidebarWidth).toBe(520)
-    expect(getStoredEditorPreferences().isEditorSidebarExpanded).toBe(false)
-    expect(getStoredEditorPreferences().relationLineStyle).toBe('orthogonal')
-    expect(getStoredEditorPreferences().relationHighlightMode).toBe('dynamic')
+    expect(getStoredEditorSettings().editorSidebarWidth).toBe(520)
+    expect(getStoredEditorSettings().isEditorSidebarExpanded).toBe(false)
+    expect(getStoredEditorSettings().relationLineStyle).toBe('orthogonal')
+    expect(getStoredEditorSettings().relationHighlightMode).toBe('dynamic')
 
     unmount()
-    resetEditorPreferencesStoreForTests()
+    resetEditorSettingsStoreForTests()
     render(<ThemeHarness />)
 
     expect(screen.getByTestId('editor-sidebar-width')).toHaveTextContent('520')
@@ -282,6 +290,42 @@ describe('editor theme preferences', () => {
     expect(screen.getByTestId('relation-highlight-mode')).toHaveTextContent(
       'dynamic',
     )
+  })
+
+  it('persists layout settings with layout option normalization', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    resetEditorSettingsStoreForTests()
+
+    const { unmount } = render(<ThemeHarness />)
+
+    expect(screen.getByTestId('layout-algorithm')).toHaveTextContent(
+      'org.eclipse.elk.layered',
+    )
+    expect(screen.getByTestId('layout-options')).toHaveTextContent(
+      'elk.direction=RIGHT',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use box layout' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear packing mode' }))
+
+    expect(screen.getByTestId('layout-algorithm')).toHaveTextContent(
+      'org.eclipse.elk.box',
+    )
+    expect(screen.getByTestId('layout-options')).toHaveTextContent('')
+    expect(getStoredEditorSettings().selectedLayoutAlgorithmId).toBe(
+      'org.eclipse.elk.box',
+    )
+    expect(getStoredEditorSettings().selectedLayoutOptionValues).toEqual({})
+
+    unmount()
+    resetEditorSettingsStoreForTests()
+    render(<ThemeHarness />)
+
+    expect(screen.getByTestId('layout-algorithm')).toHaveTextContent(
+      'org.eclipse.elk.box',
+    )
+    expect(screen.getByTestId('layout-options')).toHaveTextContent('')
   })
 })
 
@@ -300,6 +344,8 @@ function ThemeHarness() {
     isEditorSidebarExpanded,
     relationLineStyle,
     relationHighlightMode,
+    selectedLayoutAlgorithmId,
+    selectedLayoutOptionValues,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
     setOffscreenRelationProxiesEnabled,
@@ -311,7 +357,9 @@ function ThemeHarness() {
     setEditorSidebarExpanded,
     setRelationLineStyle,
     setRelationHighlightMode,
-  } = useEditorThemePreferences()
+    selectLayoutAlgorithm,
+    setSelectedLayoutOptionValue,
+  } = useEditorSettings()
 
   return (
     <div>
@@ -342,6 +390,12 @@ function ThemeHarness() {
       </span>
       <span data-testid="relation-line-style">{relationLineStyle}</span>
       <span data-testid="relation-highlight-mode">{relationHighlightMode}</span>
+      <span data-testid="layout-algorithm">{selectedLayoutAlgorithmId}</span>
+      <span data-testid="layout-options">
+        {Object.entries(selectedLayoutOptionValues)
+          .map(([key, value]) => `${key}=${value}`)
+          .join(',')}
+      </span>
       <button type="button" onClick={() => setWorkspaceThemeMode('dark')}>
         Workspace dark
       </button>
@@ -393,6 +447,18 @@ function ThemeHarness() {
       <button type="button" onClick={() => setRelationHighlightMode('dynamic')}>
         Use dynamic lines
       </button>
+      <button
+        type="button"
+        onClick={() => selectLayoutAlgorithm('org.eclipse.elk.box')}
+      >
+        Use box layout
+      </button>
+      <button
+        type="button"
+        onClick={() => setSelectedLayoutOptionValue('elk.box.packingMode', '')}
+      >
+        Clear packing mode
+      </button>
     </div>
   )
 }
@@ -435,13 +501,11 @@ function installMatchMediaMock(initialMatches: boolean) {
   return mediaQuery
 }
 
-function getStoredEditorPreferences() {
-  const storedValue = window.localStorage.getItem(
-    EDITOR_PREFERENCES_STORAGE_KEY,
-  )
+function getStoredEditorSettings() {
+  const storedValue = window.localStorage.getItem(EDITOR_SETTINGS_STORAGE_KEY)
 
   if (!storedValue) {
-    throw new Error('Expected editor preferences to be persisted.')
+    throw new Error('Expected editor settings to be persisted.')
   }
 
   const parsedValue = JSON.parse(storedValue) as {
@@ -451,9 +515,9 @@ function getStoredEditorPreferences() {
   return parsedValue.state ?? {}
 }
 
-function setStoredEditorPreferences(state: Record<string, unknown>) {
+function setStoredEditorSettings(state: Record<string, unknown>) {
   window.localStorage.setItem(
-    EDITOR_PREFERENCES_STORAGE_KEY,
+    EDITOR_SETTINGS_STORAGE_KEY,
     JSON.stringify({ state, version: 0 }),
   )
 }

@@ -43,7 +43,7 @@ import {
   EDITOR_SIDEBAR_MIN_WIDTH,
   clampEditorSidebarWidth,
   type EditorThemeMode,
-  useEditorThemePreferences,
+  useEditorSettings,
 } from '../model/editor-theme'
 import type { EditorInspectorActivity } from '../model/editor-inspector'
 import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
@@ -121,7 +121,7 @@ export function EditorPage({
     setOffscreenRelationProxyVisibilityMode,
     setEditorSidebarWidth,
     setEditorSidebarExpanded,
-  } = useEditorThemePreferences()
+  } = useEditorSettings()
   const {
     documentText,
     setDocumentText,

@@ -43,7 +43,7 @@ export const LIGHT_SOLARIZED_MONACO_THEME = 'dbml-drawer-light-solarized'
 export const GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME =
   'dbml-drawer-gruvbox-material-dark-medium'
 
-export const EDITOR_PREFERENCES_STORAGE_KEY = 'dbml-drawer.editor.preferences'
+export const EDITOR_SETTINGS_STORAGE_KEY = 'dbml-drawer.editor.settings'
 
 export const EDITOR_SIDEBAR_DEFAULT_WIDTH = 480
 export const EDITOR_SIDEBAR_MIN_WIDTH = 320

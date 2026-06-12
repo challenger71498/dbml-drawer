@@ -3,9 +3,9 @@
 ### Requirement: Editor-scoped Zustand state ownership
 The frontend SHALL use Zustand stores for DBML editor workspace state that is shared across editor components, persisted as an editor preference, or needed by multiple editor panels.
 
-#### Scenario: Shared editor preferences use Zustand
-- **WHEN** editor preferences such as workspace theme mode, code editor theme mode, sidebar preferences, relation rendering preferences, or offscreen relation proxy options are read or changed
-- **THEN** the editor workspace MUST read and update those preferences through editor-scoped Zustand state
+#### Scenario: Shared editor settings use Zustand
+- **WHEN** editor settings such as workspace theme mode, code editor theme mode, sidebar preferences, relation rendering preferences, layout options, or offscreen relation proxy options are read or changed
+- **THEN** the editor workspace MUST read and update those settings through editor-scoped Zustand state
 
 #### Scenario: Store modules remain editor-scoped
 - **WHEN** a developer inspects the Zustand store modules introduced by this change
@@ -26,30 +26,30 @@ The frontend SHALL keep component-only, high-frequency transient, third-party in
 - **WHEN** a state value changes frequently due to hover, pointer movement, React Flow viewport updates, or DOM interaction mechanics
 - **THEN** the frontend MUST keep it local or subscribe to it narrowly enough that unrelated editor panels do not rerender from those updates
 
-### Requirement: Preference persistence through Zustand
-The frontend SHALL persist editor preferences through the editor-scoped Zustand store using a store-owned persistence shape.
+### Requirement: Settings persistence through Zustand
+The frontend SHALL persist editor settings through the editor-scoped Zustand store using a store-owned persistence shape.
 
-#### Scenario: Preference store initializes from defaults
-- **WHEN** the editor workspace loads and no Zustand editor preference state has been persisted
-- **THEN** the preference store MUST initialize from the documented editor defaults
+#### Scenario: Settings store initializes from defaults
+- **WHEN** the editor workspace loads and no Zustand editor settings state has been persisted
+- **THEN** the settings store MUST initialize from the documented editor defaults
 
-#### Scenario: Persisted Zustand preferences are respected
-- **WHEN** the editor workspace loads and valid Zustand editor preference state has been persisted
-- **THEN** the preference store MUST initialize from that persisted Zustand state
+#### Scenario: Persisted Zustand settings are respected
+- **WHEN** the editor workspace loads and valid Zustand editor settings state has been persisted
+- **THEN** the settings store MUST initialize from that persisted Zustand state
 
-#### Scenario: Invalid persisted preferences normalize to defaults
-- **WHEN** persisted Zustand editor preference state contains invalid values
-- **THEN** the preference store MUST normalize those values to documented defaults
+#### Scenario: Invalid persisted settings normalize to defaults
+- **WHEN** persisted Zustand editor settings state contains invalid values
+- **THEN** the settings store MUST normalize those values to documented defaults
 
-#### Scenario: Preference changes persist
-- **WHEN** a user changes a persisted editor preference
-- **THEN** the updated preference MUST be written through the Zustand persistence mechanism under the preference store key so it applies on a later editor load
+#### Scenario: Setting changes persist
+- **WHEN** a user changes a persisted editor setting
+- **THEN** the updated setting MUST be written through the Zustand persistence mechanism under the settings store key so it applies on a later editor load
 
 ### Requirement: Phased migration behavior preservation
 The frontend SHALL migrate editor state to Zustand in phases without changing the observable editor workflow.
 
-#### Scenario: Phase 1 preserves preference behavior
-- **WHEN** editor preferences are migrated to Zustand
+#### Scenario: Phase 1 preserves settings behavior
+- **WHEN** editor settings are migrated to Zustand
 - **THEN** theme selection, code editor theme override, sidebar behavior, relation rendering options, and offscreen relation proxy options MUST continue to behave as before
 
 #### Scenario: Phase 2 preserves diagram interaction behavior
@@ -60,17 +60,36 @@ The frontend SHALL migrate editor state to Zustand in phases without changing th
 - **WHEN** DBML document state is migrated to Zustand
 - **THEN** editing DBML text, debounced validation, diagnostics, selected layout algorithm/options, stale layout protection, and diagram refresh behavior MUST continue to behave as before
 
+#### Scenario: Phase 4 refines source-state boundaries
+- **WHEN** Phase 3 store boundaries are refined
+- **THEN** DBML code text MUST be owned by a DBML editor/code store, user-controlled layout settings MUST be owned by editor settings state, and DBML validation/layout orchestration MUST remain available through the `useDbmlDocument` composition hook
+
+### Requirement: Store boundary cohesion
+The frontend SHALL keep independent source-state domains in separate editor-scoped stores and compose them through hooks when a UI workflow needs a combined view.
+
+#### Scenario: DBML code state is separate from settings
+- **WHEN** a developer inspects DBML source editing state
+- **THEN** DBML code text MUST be managed separately from layout algorithm and layout option settings
+
+#### Scenario: Layout options are editor settings
+- **WHEN** a user changes layout algorithm or layout option values
+- **THEN** those values MUST be treated as user-controlled editor settings rather than DBML source content
+
+#### Scenario: Diagram result state remains distinct
+- **WHEN** layouted diagram results, node positions, or future manual node position overrides need store ownership
+- **THEN** that state MUST belong to a diagram-focused store rather than the DBML editor/code store or editor settings store
+
 ### Requirement: Store test coverage
 The frontend SHALL cover Zustand store behavior with focused tests before relying on the stores from editor UI components.
 
-#### Scenario: Preference store behavior is tested
-- **WHEN** editor preferences are migrated to Zustand
-- **THEN** tests MUST verify default values, persisted values, invalid persisted value normalization, and preference update actions
+#### Scenario: Settings store behavior is tested
+- **WHEN** editor settings are migrated to Zustand
+- **THEN** tests MUST verify default values, persisted values, invalid persisted value normalization, layout setting updates, and settings update actions
 
 #### Scenario: Diagram interaction store behavior is tested
 - **WHEN** diagram interaction state is migrated to Zustand
 - **THEN** tests MUST verify focus, hover handling if stored, focus clearing, and derived selection inputs used by the editor workspace
 
-#### Scenario: DBML document store behavior is tested
-- **WHEN** DBML document state is migrated to Zustand
-- **THEN** tests MUST verify document updates, layout algorithm/option updates, validation result handling, and stale async layout protection
+#### Scenario: DBML editor and document composition behavior is tested
+- **WHEN** DBML document workflow state is refined into source stores and a composition hook
+- **THEN** tests MUST verify DBML editor text updates, layout setting updates, validation/layout cache behavior, and unchanged editor workflow behavior

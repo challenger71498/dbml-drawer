@@ -9,13 +9,13 @@ import {
 } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  EDITOR_PREFERENCES_STORAGE_KEY,
+  EDITOR_SETTINGS_STORAGE_KEY,
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
   LIGHT_SOLARIZED_MONACO_THEME,
   PURE_WHITE_LIGHT_MONACO_THEME,
-  resetEditorPreferencesStoreForTests,
+  resetEditorSettingsStoreForTests,
 } from '../model/editor-theme'
-import { resetDbmlDocumentStoreForTests } from '../model/dbml-document-store'
+import { resetDbmlEditorStoreForTests } from '../model/dbml-editor-store'
 import { resetEditorDiagramInteractionStoreForTests } from '../model/editor-diagram-interaction-store'
 import { EditorPage } from './EditorPage'
 
@@ -223,8 +223,8 @@ describe('EditorPage', () => {
     monacoApi.editor.defineTheme.mockClear()
     monacoApi.editor.setModelMarkers.mockClear()
     window.localStorage?.clear()
-    resetDbmlDocumentStoreForTests()
-    resetEditorPreferencesStoreForTests()
+    resetDbmlEditorStoreForTests()
+    resetEditorSettingsStoreForTests()
     resetEditorDiagramInteractionStoreForTests()
     vi.restoreAllMocks()
     vi.useRealTimers()
@@ -300,7 +300,7 @@ describe('EditorPage', () => {
       'data-workspace-theme-mode',
       'dark',
     )
-    expect(getStoredEditorPreferences().workspaceThemeMode).toBe('dark')
+    expect(getStoredEditorSettings().workspaceThemeMode).toBe('dark')
   })
 
   it('applies the code editor theme independently from the workspace theme', () => {
@@ -337,10 +337,8 @@ describe('EditorPage', () => {
       'data-monaco-theme',
       GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
     )
-    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe('dark')
-    expect(getStoredEditorPreferences().codeEditorOverrideThemeMode).toBe(
-      'dark',
-    )
+    expect(getStoredEditorSettings().codeEditorThemeMode).toBe('dark')
+    expect(getStoredEditorSettings().codeEditorOverrideThemeMode).toBe('dark')
   })
 
   it('applies the solarized light theme independently from the pure white light theme', () => {
@@ -376,10 +374,8 @@ describe('EditorPage', () => {
     expect(
       screen.getByRole('textbox', { name: 'DBML editor' }),
     ).toHaveAttribute('data-monaco-theme', LIGHT_SOLARIZED_MONACO_THEME)
-    expect(getStoredEditorPreferences().workspaceThemeMode).toBe(
-      'light-solarized',
-    )
-    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe(
+    expect(getStoredEditorSettings().workspaceThemeMode).toBe('light-solarized')
+    expect(getStoredEditorSettings().codeEditorThemeMode).toBe(
       'light-solarized',
     )
   })
@@ -413,7 +409,7 @@ describe('EditorPage', () => {
     expect(
       screen.getByRole('textbox', { name: 'DBML editor' }),
     ).toHaveAttribute('data-monaco-theme', LIGHT_SOLARIZED_MONACO_THEME)
-    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe('workspace')
+    expect(getStoredEditorSettings().codeEditorThemeMode).toBe('workspace')
   })
 
   it('preserves the explicit code editor override selection when override is disabled and re-enabled', () => {
@@ -524,18 +520,18 @@ describe('EditorPage', () => {
         name: 'Center visible',
       }),
     ).toHaveAttribute('aria-pressed', 'true')
-    expect(getStoredEditorPreferences().isOffscreenRelationProxiesEnabled).toBe(
+    expect(getStoredEditorSettings().isOffscreenRelationProxiesEnabled).toBe(
       true,
     )
     expect(
-      getStoredEditorPreferences().shouldConnectOffscreenRelationProxyLines,
+      getStoredEditorSettings().shouldConnectOffscreenRelationProxyLines,
     ).toBe(true)
-    expect(
-      getStoredEditorPreferences().offscreenRelationProxyPlacementMode,
-    ).toBe('parallel')
-    expect(
-      getStoredEditorPreferences().offscreenRelationProxyVisibilityMode,
-    ).toBe('center')
+    expect(getStoredEditorSettings().offscreenRelationProxyPlacementMode).toBe(
+      'parallel',
+    )
+    expect(getStoredEditorSettings().offscreenRelationProxyVisibilityMode).toBe(
+      'center',
+    )
 
     unmount()
     render(<EditorPage isEditorDevMode={false} />)
@@ -1136,13 +1132,11 @@ function openSettingsPanel() {
   return screen.getByRole('region', { name: 'Settings' })
 }
 
-function getStoredEditorPreferences() {
-  const storedValue = window.localStorage.getItem(
-    EDITOR_PREFERENCES_STORAGE_KEY,
-  )
+function getStoredEditorSettings() {
+  const storedValue = window.localStorage.getItem(EDITOR_SETTINGS_STORAGE_KEY)
 
   if (!storedValue) {
-    throw new Error('Expected editor preferences to be persisted.')
+    throw new Error('Expected editor settings to be persisted.')
   }
 
   const parsedValue = JSON.parse(storedValue) as {

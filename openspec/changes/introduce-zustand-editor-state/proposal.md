@@ -11,6 +11,11 @@ Introducing Zustand as the editor state layer will give shared editor state expl
   - Phase 1: editor preferences, including theme modes, code editor theme override, sidebar preferences, relation rendering preferences, and offscreen relation proxy options.
   - Phase 2: diagram interaction state, including focused and hovered diagram targets and relation selection inputs used by the editor workspace.
   - Phase 3: DBML document state, including document text, layout algorithm selection, layout option values, diagnostics, and layout lifecycle state.
+  - Phase 4: refine store boundaries after Phase 3 by splitting independent source-of-truth groups:
+    - DBML editor state owns DBML code text.
+    - Editor settings state owns user-controlled settings, including layout algorithm and layout option values.
+    - Diagram state is reserved for actual diagram result/position state, such as layouted diagram data or future user-moved node positions, if that state needs store ownership.
+    - `useDbmlDocument` remains the composition hook that reads the code/settings stores, runs validation and layout orchestration, and returns the combined workflow shape used by the editor page.
 - Define a clear decision rule for what belongs in Zustand versus component-local React state.
 - Preserve existing user-facing editor behavior, persistence behavior, validation behavior, and diagram rendering behavior during the migration.
 - Keep store boundaries editor-scoped unless a future feature needs the same state outside the editor route.
