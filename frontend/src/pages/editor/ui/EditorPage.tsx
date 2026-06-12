@@ -36,6 +36,10 @@ import {
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
 import {
+  EDITOR_SIDEBAR_KEYBOARD_STEP,
+  EDITOR_SIDEBAR_MAX_WIDTH,
+  EDITOR_SIDEBAR_MIN_WIDTH,
+  clampEditorSidebarWidth,
   type EditorThemeMode,
   useEditorThemePreferences,
 } from '../model/editor-theme'
@@ -72,11 +76,6 @@ type EditorPageProps = {
   isEditorDevMode?: boolean
 }
 
-const EDITOR_SIDEBAR_DEFAULT_WIDTH = 480
-const EDITOR_SIDEBAR_MIN_WIDTH = 320
-const EDITOR_SIDEBAR_MAX_WIDTH = 720
-const EDITOR_SIDEBAR_KEYBOARD_STEP = 24
-
 export function EditorPage({
   isEditorDevMode = isEditorDevModeEnabled(),
 }: EditorPageProps) {
@@ -85,10 +84,6 @@ export function EditorPage({
     startX: number
     startWidth: number
   } | null>(null)
-  const [editorSidebarWidth, setEditorSidebarWidth] = useState(
-    EDITOR_SIDEBAR_DEFAULT_WIDTH,
-  )
-  const [isEditorSidebarExpanded, setEditorSidebarExpanded] = useState(true)
   const [isInspectorExpanded, setInspectorExpanded] = useState(false)
   const [hoveredDiagramTarget, setHoveredDiagramTarget] =
     useState<DbmlDiagramSelectionTarget | null>(null)
@@ -97,6 +92,7 @@ export function EditorPage({
   const {
     workspaceThemeMode,
     codeEditorThemeMode,
+    codeEditorOverrideThemeMode,
     resolvedWorkspaceTheme,
     resolvedCodeEditorTheme,
     isOffscreenRelationProxiesEnabled,
@@ -104,18 +100,19 @@ export function EditorPage({
     shouldAvoidOffscreenRelationProxyActiveNodes,
     offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode,
+    editorSidebarWidth,
+    isEditorSidebarExpanded,
     setWorkspaceThemeMode,
     setCodeEditorThemeMode,
+    setCodeEditorOverrideThemeMode,
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
     setShouldAvoidOffscreenRelationProxyActiveNodes,
     setOffscreenRelationProxyPlacementMode,
     setOffscreenRelationProxyVisibilityMode,
+    setEditorSidebarWidth,
+    setEditorSidebarExpanded,
   } = useEditorThemePreferences()
-  const [codeEditorOverrideThemeMode, setCodeEditorOverrideThemeMode] =
-    useState<EditorThemeMode>(() =>
-      codeEditorThemeMode === 'workspace' ? 'system' : codeEditorThemeMode,
-    )
   const {
     documentText,
     setDocumentText,
@@ -300,8 +297,8 @@ export function EditorPage({
     .join(' ')
 
   const handleEditorSidebarToggle = useCallback(() => {
-    setEditorSidebarExpanded((isExpanded) => !isExpanded)
-  }, [])
+    setEditorSidebarExpanded(!isEditorSidebarExpanded)
+  }, [isEditorSidebarExpanded, setEditorSidebarExpanded])
 
   const handleCodeEditorThemeOverrideEnabledChange = useCallback(
     (isEnabled: boolean) => {
@@ -315,9 +312,8 @@ export function EditorPage({
   const handleCodeEditorOverrideThemeModeChange = useCallback(
     (mode: EditorThemeMode) => {
       setCodeEditorOverrideThemeMode(mode)
-      setCodeEditorThemeMode(mode)
     },
-    [setCodeEditorThemeMode],
+    [setCodeEditorOverrideThemeMode],
   )
 
   const handleEditorSidebarClose = useCallback(
@@ -325,7 +321,7 @@ export function EditorPage({
       setEditorSidebarExpanded(false)
       event.currentTarget.blur()
     },
-    [],
+    [setEditorSidebarExpanded],
   )
 
   const settingsActivity = useMemo<EditorInspectorActivity>(
@@ -423,7 +419,7 @@ export function EditorPage({
         ),
       )
     },
-    [],
+    [setEditorSidebarWidth],
   )
 
   const handleEditorSidebarResizePointerEnd = useCallback(
@@ -438,16 +434,20 @@ export function EditorPage({
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'ArrowLeft') {
         event.preventDefault()
-        setEditorSidebarWidth((currentWidth) =>
-          clampEditorSidebarWidth(currentWidth - EDITOR_SIDEBAR_KEYBOARD_STEP),
+        setEditorSidebarWidth(
+          clampEditorSidebarWidth(
+            editorSidebarWidth - EDITOR_SIDEBAR_KEYBOARD_STEP,
+          ),
         )
         return
       }
 
       if (event.key === 'ArrowRight') {
         event.preventDefault()
-        setEditorSidebarWidth((currentWidth) =>
-          clampEditorSidebarWidth(currentWidth + EDITOR_SIDEBAR_KEYBOARD_STEP),
+        setEditorSidebarWidth(
+          clampEditorSidebarWidth(
+            editorSidebarWidth + EDITOR_SIDEBAR_KEYBOARD_STEP,
+          ),
         )
         return
       }
@@ -464,7 +464,7 @@ export function EditorPage({
         return
       }
     },
-    [],
+    [editorSidebarWidth, setEditorSidebarWidth],
   )
 
   return (
@@ -592,14 +592,6 @@ export function EditorPage({
     </main>
   )
 }
-
-function clampEditorSidebarWidth(width: number) {
-  return Math.min(
-    EDITOR_SIDEBAR_MAX_WIDTH,
-    Math.max(EDITOR_SIDEBAR_MIN_WIDTH, Math.round(width)),
-  )
-}
-
 function isSameDiagramSelectionTarget(
   currentTarget: DbmlDiagramSelectionTarget | null,
   nextTarget: DbmlDiagramSelectionTarget | null,

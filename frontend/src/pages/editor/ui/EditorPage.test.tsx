@@ -9,15 +9,11 @@ import {
 } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
-  EDITOR_CODE_EDITOR_THEME_STORAGE_KEY,
-  EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
-  EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
-  EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
-  EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
-  EDITOR_WORKSPACE_THEME_STORAGE_KEY,
+  EDITOR_PREFERENCES_STORAGE_KEY,
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
   LIGHT_SOLARIZED_MONACO_THEME,
   PURE_WHITE_LIGHT_MONACO_THEME,
+  resetEditorPreferencesStoreForTests,
 } from '../model/editor-theme'
 import { EditorPage } from './EditorPage'
 
@@ -225,6 +221,7 @@ describe('EditorPage', () => {
     monacoApi.editor.defineTheme.mockClear()
     monacoApi.editor.setModelMarkers.mockClear()
     window.localStorage?.clear()
+    resetEditorPreferencesStoreForTests()
     vi.restoreAllMocks()
     vi.useRealTimers()
   })
@@ -299,9 +296,7 @@ describe('EditorPage', () => {
       'data-workspace-theme-mode',
       'dark',
     )
-    expect(
-      window.localStorage.getItem(EDITOR_WORKSPACE_THEME_STORAGE_KEY),
-    ).toBe('dark')
+    expect(getStoredEditorPreferences().workspaceThemeMode).toBe('dark')
   })
 
   it('applies the code editor theme independently from the workspace theme', () => {
@@ -338,9 +333,10 @@ describe('EditorPage', () => {
       'data-monaco-theme',
       GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
     )
-    expect(
-      window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
-    ).toBe('dark')
+    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe('dark')
+    expect(getStoredEditorPreferences().codeEditorOverrideThemeMode).toBe(
+      'dark',
+    )
   })
 
   it('applies the solarized light theme independently from the pure white light theme', () => {
@@ -376,12 +372,12 @@ describe('EditorPage', () => {
     expect(
       screen.getByRole('textbox', { name: 'DBML editor' }),
     ).toHaveAttribute('data-monaco-theme', LIGHT_SOLARIZED_MONACO_THEME)
-    expect(
-      window.localStorage.getItem(EDITOR_WORKSPACE_THEME_STORAGE_KEY),
-    ).toBe('light-solarized')
-    expect(
-      window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
-    ).toBe('light-solarized')
+    expect(getStoredEditorPreferences().workspaceThemeMode).toBe(
+      'light-solarized',
+    )
+    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe(
+      'light-solarized',
+    )
   })
 
   it('can resolve the code editor theme from the workspace theme', () => {
@@ -413,9 +409,7 @@ describe('EditorPage', () => {
     expect(
       screen.getByRole('textbox', { name: 'DBML editor' }),
     ).toHaveAttribute('data-monaco-theme', LIGHT_SOLARIZED_MONACO_THEME)
-    expect(
-      window.localStorage.getItem(EDITOR_CODE_EDITOR_THEME_STORAGE_KEY),
-    ).toBeNull()
+    expect(getStoredEditorPreferences().codeEditorThemeMode).toBe('workspace')
   })
 
   it('preserves the explicit code editor override selection when override is disabled and re-enabled', () => {
@@ -526,25 +520,17 @@ describe('EditorPage', () => {
         name: 'Center visible',
       }),
     ).toHaveAttribute('aria-pressed', 'true')
+    expect(getStoredEditorPreferences().isOffscreenRelationProxiesEnabled).toBe(
+      true,
+    )
     expect(
-      window.localStorage.getItem(
-        EDITOR_OFFSCREEN_RELATION_PROXIES_STORAGE_KEY,
-      ),
-    ).toBe('true')
+      getStoredEditorPreferences().shouldConnectOffscreenRelationProxyLines,
+    ).toBe(true)
     expect(
-      window.localStorage.getItem(
-        EDITOR_OFFSCREEN_RELATION_PROXY_LINES_STORAGE_KEY,
-      ),
-    ).toBe('true')
-    expect(
-      window.localStorage.getItem(
-        EDITOR_OFFSCREEN_RELATION_PROXY_PLACEMENT_STORAGE_KEY,
-      ),
+      getStoredEditorPreferences().offscreenRelationProxyPlacementMode,
     ).toBe('parallel')
     expect(
-      window.localStorage.getItem(
-        EDITOR_OFFSCREEN_RELATION_PROXY_VISIBILITY_STORAGE_KEY,
-      ),
+      getStoredEditorPreferences().offscreenRelationProxyVisibilityMode,
     ).toBe('center')
 
     unmount()
@@ -1144,6 +1130,22 @@ function openSettingsPanel() {
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }))
 
   return screen.getByRole('region', { name: 'Settings' })
+}
+
+function getStoredEditorPreferences() {
+  const storedValue = window.localStorage.getItem(
+    EDITOR_PREFERENCES_STORAGE_KEY,
+  )
+
+  if (!storedValue) {
+    throw new Error('Expected editor preferences to be persisted.')
+  }
+
+  const parsedValue = JSON.parse(storedValue) as {
+    state?: Record<string, unknown>
+  }
+
+  return parsedValue.state ?? {}
 }
 
 type ThemeChangeListener = () => void

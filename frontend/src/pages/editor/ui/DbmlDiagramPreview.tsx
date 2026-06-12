@@ -31,8 +31,6 @@ import {
 } from '../lib/map-dbml-diagram-flow'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
-  DEFAULT_DBML_RELATION_HIGHLIGHT_MODE,
-  DEFAULT_DBML_RELATION_LINE_STYLE,
   type DbmlRelationHighlightMode,
   type DbmlRelationLineStyle,
 } from '../model/dbml-diagram-rendering'
@@ -51,7 +49,10 @@ import {
   type DbmlOffscreenRelationProxyLayout as OffscreenRelationProxyLayout,
 } from '../model/dbml-offscreen-relation-proxy-layout'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
-import type { OffscreenRelationProxyPlacementMode } from '../model/editor-theme'
+import {
+  useEditorPreferencesStore,
+  type OffscreenRelationProxyPlacementMode,
+} from '../model/editor-theme'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
 import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
 import { DbmlRelationEdge } from './DbmlRelationEdge'
@@ -162,10 +163,18 @@ export function DbmlDiagramPreview({
   onColumnHover = NOOP_COLUMN_HOVER,
   onFocusClear = NOOP_FOCUS_CLEAR,
 }: DbmlDiagramPreviewProps) {
-  const [relationLineStyle, setRelationLineStyle] =
-    useState<DbmlRelationLineStyle>(DEFAULT_DBML_RELATION_LINE_STYLE)
-  const [relationHighlightMode, setRelationHighlightMode] =
-    useState<DbmlRelationHighlightMode>(DEFAULT_DBML_RELATION_HIGHLIGHT_MODE)
+  const relationLineStyle = useEditorPreferencesStore(
+    (state) => state.relationLineStyle,
+  )
+  const relationHighlightMode = useEditorPreferencesStore(
+    (state) => state.relationHighlightMode,
+  )
+  const setRelationLineStyle = useEditorPreferencesStore(
+    (state) => state.setRelationLineStyle,
+  )
+  const setRelationHighlightMode = useEditorPreferencesStore(
+    (state) => state.setRelationHighlightMode,
+  )
   const [hoveredProxyRelationIds, setHoveredProxyRelationIds] =
     useState<ReadonlySet<string> | null>(null)
   const effectiveActiveRelationIds = useMemo(() => {
