@@ -213,7 +213,7 @@ export function DbmlDiagramPreview({
       onColumnHover,
     ],
   )
-  const isEmpty = !diagram || diagram.tables.length === 0
+  const isEmpty = diagram !== null && diagram.tables.length === 0
   const diagramSurfaceRef = useRef<HTMLDivElement | null>(null)
 
   return (

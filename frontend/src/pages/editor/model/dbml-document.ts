@@ -112,6 +112,12 @@ export function useDbmlDocument() {
 
     return () => {
       isStale = true
+      if (
+        activeLayoutRequestIdRef.current === requestId &&
+        pendingLayoutCacheKeyRef.current === layoutCacheKey
+      ) {
+        pendingLayoutCacheKeyRef.current = null
+      }
     }
   }, [
     debouncedDocumentText,
