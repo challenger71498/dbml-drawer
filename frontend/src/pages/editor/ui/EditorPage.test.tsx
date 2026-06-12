@@ -15,6 +15,7 @@ import {
   PURE_WHITE_LIGHT_MONACO_THEME,
   resetEditorPreferencesStoreForTests,
 } from '../model/editor-theme'
+import { resetDbmlDocumentStoreForTests } from '../model/dbml-document-store'
 import { resetEditorDiagramInteractionStoreForTests } from '../model/editor-diagram-interaction-store'
 import { EditorPage } from './EditorPage'
 
@@ -222,6 +223,7 @@ describe('EditorPage', () => {
     monacoApi.editor.defineTheme.mockClear()
     monacoApi.editor.setModelMarkers.mockClear()
     window.localStorage?.clear()
+    resetDbmlDocumentStoreForTests()
     resetEditorPreferencesStoreForTests()
     resetEditorDiagramInteractionStoreForTests()
     vi.restoreAllMocks()

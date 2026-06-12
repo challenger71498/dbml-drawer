@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useDebouncedValue } from '@/shared/lib/debounce'
-import { INITIAL_DBML_DOCUMENT } from '../lib/dbml-default-document'
 import { validateDbml } from '../lib/validate-dbml'
-import type { LayoutedDbmlDiagram } from './dbml-layout'
 import {
-  DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
-  getDefaultDbmlLayoutOptionValues,
-  normalizeDbmlLayoutOptionValues,
+  useDbmlDocumentStore,
+  type DbmlDocumentLayoutRequest,
+} from './dbml-document-store'
+import {
   type DbmlLayoutAlgorithmId,
   type DbmlLayoutOptionValueMap,
 } from './dbml-layout-settings'
@@ -14,16 +13,31 @@ import {
 const VALIDATION_DELAY_MS = 300
 
 export function useDbmlDocument() {
-  const [documentText, setDocumentText] = useState(() => INITIAL_DBML_DOCUMENT)
-  const [selectedLayoutAlgorithmId, setSelectedLayoutAlgorithmId] =
-    useState<DbmlLayoutAlgorithmId>(() => DEFAULT_DBML_LAYOUT_ALGORITHM_ID)
-  const [selectedLayoutOptionValues, setSelectedLayoutOptionValues] =
-    useState<DbmlLayoutOptionValueMap>(() =>
-      getDefaultDbmlLayoutOptionValues(DEFAULT_DBML_LAYOUT_ALGORITHM_ID),
-    )
-  const [layoutedDiagram, setLayoutedDiagram] =
-    useState<LayoutedDbmlDiagram | null>(null)
-  const lastLayoutedCacheKeyRef = useRef<string | null>(null)
+  const documentText = useDbmlDocumentStore((state) => state.documentText)
+  const selectedLayoutAlgorithmId = useDbmlDocumentStore(
+    (state) => state.selectedLayoutAlgorithmId,
+  )
+  const selectedLayoutOptionValues = useDbmlDocumentStore(
+    (state) => state.selectedLayoutOptionValues,
+  )
+  const diagnostics = useDbmlDocumentStore((state) => state.diagnostics)
+  const layoutedDiagram = useDbmlDocumentStore((state) => state.layoutedDiagram)
+  const isDiagramPending = useDbmlDocumentStore(
+    (state) => state.isDiagramPending,
+  )
+  const setDocumentText = useDbmlDocumentStore((state) => state.setDocumentText)
+  const selectLayoutAlgorithm = useDbmlDocumentStore(
+    (state) => state.selectLayoutAlgorithm,
+  )
+  const setSelectedLayoutOptionValue = useDbmlDocumentStore(
+    (state) => state.setSelectedLayoutOptionValue,
+  )
+  const applyValidationResult = useDbmlDocumentStore(
+    (state) => state.applyValidationResult,
+  )
+  const startLayout = useDbmlDocumentStore((state) => state.startLayout)
+  const completeLayout = useDbmlDocumentStore((state) => state.completeLayout)
+  const failLayout = useDbmlDocumentStore((state) => state.failLayout)
   const debouncedDocumentText = useDebouncedValue(
     documentText,
     VALIDATION_DELAY_MS,
@@ -32,28 +46,11 @@ export function useDbmlDocument() {
     () => validateDbml(debouncedDocumentText),
     [debouncedDocumentText],
   )
-  const diagnostics = validationResult.diagnostics
   const isDiagramPaused = diagnostics.length > 0
-  const selectLayoutAlgorithm = useCallback(
-    (algorithmId: DbmlLayoutAlgorithmId) => {
-      setSelectedLayoutAlgorithmId(algorithmId)
-      setSelectedLayoutOptionValues(
-        getDefaultDbmlLayoutOptionValues(algorithmId),
-      )
-    },
-    [],
-  )
-  const setSelectedLayoutOptionValue = useCallback(
-    (optionId: string, value: string) => {
-      setSelectedLayoutOptionValues((currentValues) =>
-        normalizeDbmlLayoutOptionValues({
-          ...currentValues,
-          [optionId]: value,
-        }),
-      )
-    },
-    [],
-  )
+
+  useEffect(() => {
+    applyValidationResult(validationResult)
+  }, [applyValidationResult, validationResult])
 
   useEffect(() => {
     if (!validationResult.valid) {
@@ -65,47 +62,34 @@ export function useDbmlDocument() {
       algorithmId: selectedLayoutAlgorithmId,
       optionValues: selectedLayoutOptionValues,
     })
+    const request = startLayout(layoutCacheKey)
 
-    if (lastLayoutedCacheKeyRef.current === layoutCacheKey) {
+    if (!request) {
       return
     }
 
     let isStale = false
 
-    async function buildAndLayoutDiagram() {
-      const [
-        { createDbmlDiagram },
-        { layoutDbmlDiagram },
-        { parseDbmlDocument },
-      ] = await Promise.all([
-        import('../lib/create-dbml-diagram'),
-        import('../lib/layout-dbml-diagram'),
-        import('../lib/parse-dbml-document'),
-      ])
-      const parsedDatabase = parseDbmlDocument(debouncedDocumentText)
-      const diagram = createDbmlDiagram(parsedDatabase)
-      const nextLayoutedDiagram = await layoutDbmlDiagram(diagram, {
-        algorithmId: selectedLayoutAlgorithmId,
-        optionValues: selectedLayoutOptionValues,
-      })
-
-      if (isStale) {
-        return
-      }
-
-      lastLayoutedCacheKeyRef.current = layoutCacheKey
-      setLayoutedDiagram(nextLayoutedDiagram)
-    }
-
-    void buildAndLayoutDiagram().catch(() => undefined)
+    void buildAndLayoutDiagram({
+      documentText: debouncedDocumentText,
+      algorithmId: selectedLayoutAlgorithmId,
+      optionValues: selectedLayoutOptionValues,
+      request,
+      completeLayout,
+      failLayout,
+      isStale: () => isStale,
+    })
 
     return () => {
       isStale = true
     }
   }, [
+    completeLayout,
     debouncedDocumentText,
+    failLayout,
     selectedLayoutAlgorithmId,
     selectedLayoutOptionValues,
+    startLayout,
     validationResult,
   ])
 
@@ -118,7 +102,7 @@ export function useDbmlDocument() {
     setSelectedLayoutOptionValue,
     diagnostics,
     layoutedDiagram,
-    isDiagramPending: false,
+    isDiagramPending,
     isDiagramPaused,
   }
 }
@@ -138,4 +122,50 @@ export function createDbmlLayoutCacheKey({
     .join('\n')
 
   return `${algorithmId}\n${serializedOptionValues}\n${documentText}`
+}
+
+async function buildAndLayoutDiagram({
+  documentText,
+  algorithmId,
+  optionValues,
+  request,
+  completeLayout,
+  failLayout,
+  isStale,
+}: {
+  documentText: string
+  algorithmId: DbmlLayoutAlgorithmId
+  optionValues: DbmlLayoutOptionValueMap
+  request: DbmlDocumentLayoutRequest
+  completeLayout: ReturnType<
+    typeof useDbmlDocumentStore.getState
+  >['completeLayout']
+  failLayout: ReturnType<typeof useDbmlDocumentStore.getState>['failLayout']
+  isStale: () => boolean
+}) {
+  try {
+    const [
+      { createDbmlDiagram },
+      { layoutDbmlDiagram },
+      { parseDbmlDocument },
+    ] = await Promise.all([
+      import('../lib/create-dbml-diagram'),
+      import('../lib/layout-dbml-diagram'),
+      import('../lib/parse-dbml-document'),
+    ])
+    const parsedDatabase = parseDbmlDocument(documentText)
+    const diagram = createDbmlDiagram(parsedDatabase)
+    const nextLayoutedDiagram = await layoutDbmlDiagram(diagram, {
+      algorithmId,
+      optionValues,
+    })
+
+    if (!isStale()) {
+      completeLayout(request, nextLayoutedDiagram)
+    }
+  } catch {
+    if (!isStale()) {
+      failLayout(request)
+    }
+  }
 }

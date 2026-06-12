@@ -25,18 +25,18 @@
 
 ## 4. Phase 3: DBML Document Store
 
-- [ ] 4.1 Create an editor-scoped DBML document store under `frontend/src/pages/editor/model/`.
-- [ ] 4.2 Migrate DBML document text, selected layout algorithm, and selected layout option values to the document store.
-- [ ] 4.3 Migrate validation and diagnostics while preserving debounce behavior.
-- [ ] 4.4 Migrate async parse/layout lifecycle while preserving stale-result protection.
-- [ ] 4.5 Keep parser, diagram creation, layout, and validation helpers as pure library functions outside the store.
-- [ ] 4.6 Update editor, diagnostics, presets, layout settings, and diagram preview wiring to consume document state through Zustand selectors.
-- [ ] 4.7 Add or update tests for document updates, layout algorithm/option updates, diagnostics, layout refresh, and stale async layout protection.
+- [x] 4.1 Create an editor-scoped DBML document store under `frontend/src/pages/editor/model/`.
+- [x] 4.2 Migrate DBML document text, selected layout algorithm, and selected layout option values to the document store.
+- [x] 4.3 Migrate validation and diagnostics while preserving debounce behavior.
+- [x] 4.4 Migrate async parse/layout lifecycle while preserving stale-result protection.
+- [x] 4.5 Keep parser, diagram creation, layout, and validation helpers as pure library functions outside the store.
+- [x] 4.6 Update editor, diagnostics, presets, layout settings, and diagram preview wiring to consume document state through Zustand selectors.
+- [x] 4.7 Add or update tests for document updates, layout algorithm/option updates, diagnostics, layout refresh, and stale async layout protection.
 
 ## 5. Verification
 
 - [x] 5.1 Run targeted editor store and UI tests after each phase.
 - [x] 5.2 Run `pnpm --dir frontend typecheck`.
 - [x] 5.3 Run `pnpm --dir frontend lint`.
-- [ ] 5.4 Run relevant frontend tests for editor page, editor theme/preferences, DBML document, and diagram preview behavior.
-- [ ] 5.5 Run OpenSpec validation for the completed change.
+- [x] 5.4 Run relevant frontend tests for editor page, editor theme/preferences, DBML document, and diagram preview behavior.
+- [x] 5.5 Run OpenSpec validation for the completed change.
