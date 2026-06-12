@@ -16,12 +16,12 @@
 
 ## 3. Phase 2: Diagram Interaction Store
 
-- [ ] 3.1 Create an editor-scoped diagram interaction store under `frontend/src/pages/editor/model/`.
-- [ ] 3.2 Migrate focused diagram target state to the diagram interaction store.
-- [ ] 3.3 Decide whether hovered diagram target remains local or moves to the store with narrow subscriptions, then implement the chosen boundary.
-- [ ] 3.4 Keep active relation ids, focused table ids, and endpoint column ids as derived selectors or pure helper outputs rather than duplicated store state.
-- [ ] 3.5 Update diagram preview, selection view, and source reveal wiring to use the interaction store without changing behavior.
-- [ ] 3.6 Add or update tests for focus, hover if stored, focus clearing, derived selection inputs, and source reveal behavior.
+- [x] 3.1 Create an editor-scoped diagram interaction store under `frontend/src/pages/editor/model/`.
+- [x] 3.2 Migrate focused diagram target state to the diagram interaction store.
+- [x] 3.3 Decide whether hovered diagram target remains local or moves to the store with narrow subscriptions, then implement the chosen boundary.
+- [x] 3.4 Keep active relation ids, focused table ids, and endpoint column ids as derived selectors or pure helper outputs rather than duplicated store state.
+- [x] 3.5 Update diagram preview, selection view, and source reveal wiring to use the interaction store without changing behavior.
+- [x] 3.6 Add or update tests for focus, hover if stored, focus clearing, derived selection inputs, and source reveal behavior.
 
 ## 4. Phase 3: DBML Document Store
 

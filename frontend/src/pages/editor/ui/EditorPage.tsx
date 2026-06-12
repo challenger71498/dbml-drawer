@@ -32,9 +32,11 @@ import {
   getActiveTableIds,
   getRelationEndpointColumnIdsForTargets,
   getRelationIdsForTargets,
+  isSameDiagramSelectionTarget,
   type DbmlDiagramSelectionTarget,
 } from '../model/dbml-diagram-selection'
 import { useDbmlDocument } from '../model/dbml-document'
+import { useEditorDiagramInteractionStore } from '../model/editor-diagram-interaction-store'
 import {
   EDITOR_SIDEBAR_KEYBOARD_STEP,
   EDITOR_SIDEBAR_MAX_WIDTH,
@@ -87,8 +89,15 @@ export function EditorPage({
   const [isInspectorExpanded, setInspectorExpanded] = useState(false)
   const [hoveredDiagramTarget, setHoveredDiagramTarget] =
     useState<DbmlDiagramSelectionTarget | null>(null)
-  const [focusedDiagramTarget, setFocusedDiagramTarget] =
-    useState<DbmlDiagramSelectionTarget | null>(null)
+  const focusedDiagramTarget = useEditorDiagramInteractionStore(
+    (state) => state.focusedTarget,
+  )
+  const focusDiagramTarget = useEditorDiagramInteractionStore(
+    (state) => state.focusTarget,
+  )
+  const clearDiagramFocus = useEditorDiagramInteractionStore(
+    (state) => state.clearFocus,
+  )
   const {
     workspaceThemeMode,
     codeEditorThemeMode,
@@ -185,14 +194,10 @@ export function EditorPage({
         tableId: table.id,
       } satisfies DbmlDiagramSelectionTarget
 
-      setFocusedDiagramTarget((currentTarget) =>
-        isSameDiagramSelectionTarget(currentTarget, nextTarget)
-          ? currentTarget
-          : nextTarget,
-      )
+      focusDiagramTarget(nextTarget)
       revealSourcePosition(table.source)
     },
-    [revealSourcePosition],
+    [focusDiagramTarget, revealSourcePosition],
   )
 
   const handleColumnFocus = useCallback(
@@ -203,24 +208,18 @@ export function EditorPage({
         columnId: column.id,
       } satisfies DbmlDiagramSelectionTarget
 
-      setFocusedDiagramTarget((currentTarget) =>
-        isSameDiagramSelectionTarget(currentTarget, nextTarget)
-          ? currentTarget
-          : nextTarget,
-      )
+      focusDiagramTarget(nextTarget)
       revealSourcePosition(column.source)
     },
-    [revealSourcePosition],
+    [focusDiagramTarget, revealSourcePosition],
   )
 
   const handleDiagramFocusClear = useCallback(() => {
     setHoveredDiagramTarget((currentTarget) =>
       currentTarget === null ? currentTarget : null,
     )
-    setFocusedDiagramTarget((currentTarget) =>
-      currentTarget === null ? currentTarget : null,
-    )
-  }, [])
+    clearDiagramFocus()
+  }, [clearDiagramFocus])
 
   const inspectorActivities = useMemo<
     readonly EditorInspectorActivity[]
@@ -590,34 +589,6 @@ export function EditorPage({
         onExpandedChange={setInspectorExpanded}
       />
     </main>
-  )
-}
-function isSameDiagramSelectionTarget(
-  currentTarget: DbmlDiagramSelectionTarget | null,
-  nextTarget: DbmlDiagramSelectionTarget | null,
-) {
-  if (currentTarget === nextTarget) {
-    return true
-  }
-
-  if (!currentTarget || !nextTarget) {
-    return false
-  }
-
-  if (
-    currentTarget.type !== nextTarget.type ||
-    currentTarget.tableId !== nextTarget.tableId
-  ) {
-    return false
-  }
-
-  if (currentTarget.type === 'table') {
-    return true
-  }
-
-  return (
-    nextTarget.type === 'column' &&
-    currentTarget.columnId === nextTarget.columnId
   )
 }
 

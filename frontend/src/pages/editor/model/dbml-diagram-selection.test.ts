@@ -7,6 +7,7 @@ import {
   getActiveTableIds,
   getRelationEndpointColumnIdsForTargets,
   getRelationIdsForTargets,
+  isSameDiagramSelectionTarget,
   type DbmlDiagramSelectionTarget,
 } from './dbml-diagram-selection'
 
@@ -153,5 +154,25 @@ describe('dbml diagram selection', () => {
       'table:public.posts.column:user_id',
       'table:public.comments.column:post_id',
     ])
+  })
+
+  it('compares table and column targets by semantic identity', () => {
+    expect(
+      isSameDiagramSelectionTarget(TABLE_TARGET, {
+        type: 'table',
+        tableId: TABLE_TARGET.tableId,
+      }),
+    ).toBe(true)
+    expect(
+      isSameDiagramSelectionTarget(COLUMN_TARGET, {
+        type: 'column',
+        tableId: COLUMN_TARGET.tableId,
+        columnId: COLUMN_TARGET.columnId,
+      }),
+    ).toBe(true)
+    expect(isSameDiagramSelectionTarget(TABLE_TARGET, COLUMN_TARGET)).toBe(
+      false,
+    )
+    expect(isSameDiagramSelectionTarget(COLUMN_TARGET, null)).toBe(false)
   })
 })

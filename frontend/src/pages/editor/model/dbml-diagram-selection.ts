@@ -148,6 +148,35 @@ export function isColumnActive(
   return activeTarget?.type === 'column' && activeTarget.columnId === columnId
 }
 
+export function isSameDiagramSelectionTarget(
+  currentTarget: DbmlDiagramSelectionTarget | null,
+  nextTarget: DbmlDiagramSelectionTarget | null,
+) {
+  if (currentTarget === nextTarget) {
+    return true
+  }
+
+  if (!currentTarget || !nextTarget) {
+    return false
+  }
+
+  if (
+    currentTarget.type !== nextTarget.type ||
+    currentTarget.tableId !== nextTarget.tableId
+  ) {
+    return false
+  }
+
+  if (currentTarget.type === 'table') {
+    return true
+  }
+
+  return (
+    nextTarget.type === 'column' &&
+    currentTarget.columnId === nextTarget.columnId
+  )
+}
+
 function isRelationConnectedToTarget(
   relation: LayoutedDbmlDiagramRelation,
   target: DbmlDiagramSelectionTarget,

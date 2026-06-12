@@ -15,6 +15,7 @@ import {
   PURE_WHITE_LIGHT_MONACO_THEME,
   resetEditorPreferencesStoreForTests,
 } from '../model/editor-theme'
+import { resetEditorDiagramInteractionStoreForTests } from '../model/editor-diagram-interaction-store'
 import { EditorPage } from './EditorPage'
 
 const monacoEditor = vi.hoisted(() => ({
@@ -222,6 +223,7 @@ describe('EditorPage', () => {
     monacoApi.editor.setModelMarkers.mockClear()
     window.localStorage?.clear()
     resetEditorPreferencesStoreForTests()
+    resetEditorDiagramInteractionStoreForTests()
     vi.restoreAllMocks()
     vi.useRealTimers()
   })
