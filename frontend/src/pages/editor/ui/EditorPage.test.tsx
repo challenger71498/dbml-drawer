@@ -15,7 +15,10 @@ import {
   PURE_WHITE_LIGHT_MONACO_THEME,
   resetEditorSettingsStoreForTests,
 } from '../model/editor-theme'
-import { resetDbmlEditorStoreForTests } from '../model/dbml-editor-store'
+import {
+  resetDbmlEditorStoreForTests,
+  useDbmlEditorStore,
+} from '../model/dbml-editor-store'
 import { resetEditorDiagramInteractionStoreForTests } from '../model/editor-diagram-interaction-store'
 import { EditorPage } from './EditorPage'
 
@@ -261,6 +264,40 @@ describe('EditorPage', () => {
     expect(
       screen.queryByRole('heading', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('renders compact editor metadata header', () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    expect(
+      screen.getByRole('heading', { name: 'dbml_drawer' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Simple DBML document')).toBeInTheDocument()
+    expect(screen.getByText('PostgreSQL')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Diagram' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('Valid')).not.toBeInTheDocument()
+    expect(screen.queryByText('Ready')).not.toBeInTheDocument()
+  })
+
+  it('omits optional note and database metadata when DBML does not declare them', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    useDbmlEditorStore.getState().setDocumentText(`Table users {
+  id integer [pk]
+}
+`)
+
+    render(<EditorPage isEditorDevMode={false} />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Untitled DBML' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Simple DBML document')).not.toBeInTheDocument()
+    expect(screen.queryByText('PostgreSQL')).not.toBeInTheDocument()
+    expect(screen.queryByText('No note')).not.toBeInTheDocument()
+    expect(screen.queryByText('Unknown DB')).not.toBeInTheDocument()
   })
 
   it('applies and persists the workspace theme from settings', () => {
@@ -585,6 +622,65 @@ describe('EditorPage', () => {
     ).toHaveAttribute('aria-pressed', 'true')
   })
 
+  it('changes diagram routing from settings', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    openSettingsPanel()
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Edge routing' })).getByRole(
+        'button',
+        { name: 'Step' },
+      ),
+    )
+
+    expect(getStoredEditorSettings().relationLineStyle).toBe('orthogonal')
+  })
+
+  it('keeps settings and preview relation style controls synchronized', async () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    openSettingsPanel()
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Relation style' })).getByRole(
+        'button',
+        { name: 'Dynamic' },
+      ),
+    )
+
+    const dynamicPerformanceWarning = 'This option may impact battery life.'
+
+    expect(screen.getAllByText(dynamicPerformanceWarning)).toHaveLength(1)
+
+    const previewControl = await screen.findByRole('group', {
+      name: 'Relation highlight mode',
+    })
+    expect(
+      within(previewControl).getByRole('button', { name: 'Dynamic' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getAllByText(dynamicPerformanceWarning)).toHaveLength(2)
+
+    fireEvent.click(
+      within(previewControl).getByRole('button', { name: 'Solid' }),
+    )
+
+    expect(
+      within(screen.getByRole('group', { name: 'Relation style' })).getByRole(
+        'button',
+        { name: 'Solid' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(getStoredEditorSettings().relationHighlightMode).toBe('solid')
+    expect(
+      screen.queryByText(dynamicPerformanceWarning),
+    ).not.toBeInTheDocument()
+  })
+
   it('resolves system theme changes for workspace and code editor themes', () => {
     installLocalStorageMock()
     const mediaQuery = installMatchMediaMock(false)
@@ -622,9 +718,7 @@ describe('EditorPage', () => {
     const editorActivityBar = screen.getByRole('complementary', {
       name: 'Editor authoring activities',
     })
-    const editorWorkspace = screen
-      .getByRole('heading', { name: 'Editor' })
-      .closest('section')
+    const editorWorkspace = screen.getByLabelText('Editor workspace')
     const editorButton = within(editorActivityBar).getByRole('button', {
       name: 'DBML editor',
     })
@@ -958,7 +1052,9 @@ describe('EditorPage', () => {
     expect(
       screen.queryByLabelText('Diagram layout algorithm'),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Editor' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'dbml_drawer' }),
+    ).toBeInTheDocument()
   })
 
   it('keeps validation state active when development diagnostics are hidden', () => {
@@ -974,7 +1070,7 @@ describe('EditorPage', () => {
       vi.advanceTimersByTime(350)
     })
 
-    expect(screen.getByText('Needs attention')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toBeInTheDocument()
     expect(
       screen.queryByRole('heading', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()

@@ -43,6 +43,40 @@ export const EDITOR_RELATION_HIGHLIGHT_MODES = [
   'gradient',
   'dynamic',
 ] as const satisfies readonly DbmlRelationHighlightMode[]
+export const EDITOR_RELATION_LINE_STYLE_OPTIONS = [
+  {
+    value: 'bezier',
+    label: 'Bezier',
+  },
+  {
+    value: 'orthogonal',
+    label: 'Step',
+  },
+  {
+    value: 'rounded-orthogonal',
+    label: 'Rounded',
+  },
+] as const satisfies ReadonlyArray<{
+  value: DbmlRelationLineStyle
+  label: string
+}>
+export const EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS = [
+  {
+    value: 'solid',
+    label: 'Solid',
+  },
+  {
+    value: 'gradient',
+    label: 'Gradient',
+  },
+  {
+    value: 'dynamic',
+    label: 'Dynamic',
+  },
+] as const satisfies ReadonlyArray<{
+  value: DbmlRelationHighlightMode
+  label: string
+}>
 
 export const PURE_WHITE_LIGHT_MONACO_THEME = 'dbml-drawer-light-pure-white'
 export const LIGHT_SOLARIZED_MONACO_THEME = 'dbml-drawer-light-solarized'

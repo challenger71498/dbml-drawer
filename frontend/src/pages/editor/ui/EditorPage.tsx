@@ -10,6 +10,7 @@ import {
 } from './DbmlCodeEditor'
 import { EditorInspector } from './EditorInspector'
 import {
+  DatabaseIcon,
   DbmlEditorIcon,
   DiagramSettingsIcon,
   DiagnosticsIcon,
@@ -99,6 +100,8 @@ export function EditorPage({
     offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode,
     offscreenRelationProxyTransitionMode,
+    relationLineStyle,
+    relationHighlightMode,
     editorSidebarWidth,
     isEditorSidebarExpanded,
     setWorkspaceThemeMode,
@@ -110,6 +113,8 @@ export function EditorPage({
     setOffscreenRelationProxyPlacementMode,
     setOffscreenRelationProxyVisibilityMode,
     setOffscreenRelationProxyTransitionMode,
+    setRelationLineStyle,
+    setRelationHighlightMode,
     setEditorSidebarWidth,
     setEditorSidebarExpanded,
   } = useEditorSettings()
@@ -134,6 +139,7 @@ export function EditorPage({
     selectLayoutAlgorithm,
     setSelectedLayoutOptionValue,
     diagnostics,
+    documentMetadata,
     layoutedDiagram,
     isDiagramPending,
     isDiagramPaused,
@@ -336,6 +342,8 @@ export function EditorPage({
           offscreenRelationProxyTransitionMode={
             offscreenRelationProxyTransitionMode
           }
+          relationLineStyle={relationLineStyle}
+          relationHighlightMode={relationHighlightMode}
           shouldConnectOffscreenRelationProxyLines={
             shouldConnectOffscreenRelationProxyLines
           }
@@ -367,6 +375,8 @@ export function EditorPage({
           onOffscreenRelationProxyTransitionModeChange={
             setOffscreenRelationProxyTransitionMode
           }
+          onRelationLineStyleChange={setRelationLineStyle}
+          onRelationHighlightModeChange={setRelationHighlightMode}
           onWorkspaceThemeModeChange={setWorkspaceThemeMode}
         />
       ),
@@ -380,11 +390,15 @@ export function EditorPage({
       offscreenRelationProxyPlacementMode,
       offscreenRelationProxyTransitionMode,
       offscreenRelationProxyVisibilityMode,
+      relationHighlightMode,
+      relationLineStyle,
       setShouldAvoidOffscreenRelationProxyActiveNodes,
       setOffscreenRelationProxyPlacementMode,
       setOffscreenRelationProxyTransitionMode,
       setOffscreenRelationProxyVisibilityMode,
       setOffscreenRelationProxiesEnabled,
+      setRelationHighlightMode,
+      setRelationLineStyle,
       setShouldConnectOffscreenRelationProxyLines,
       shouldConnectOffscreenRelationProxyLines,
       shouldAvoidOffscreenRelationProxyActiveNodes,
@@ -441,21 +455,16 @@ export function EditorPage({
         </div>
       </ActivitySidebar>
 
-      <section
-        className={styles.editorWorkspace}
-        aria-labelledby="editor-heading"
-      >
-        <div className={styles.editorToolbar}>
-          <div>
-            <p className={styles.eyebrow}>DBML</p>
-            <h1 id="editor-heading">Editor</h1>
+      <section className={styles.editorWorkspace} aria-label="Editor workspace">
+        <header
+          className={styles.editorToolbar}
+          aria-labelledby="editor-heading"
+        >
+          <div className={styles.editorHeaderMetadata}>
+            <h1 id="editor-heading">{documentMetadata.projectName}</h1>
+            {documentMetadata.note ? <p>{documentMetadata.note}</p> : null}
           </div>
-          <div className={styles.editorToolbarActions}>
-            <span className={styles.documentState}>
-              {diagnostics.length === 0 ? 'Valid' : 'Needs attention'}
-            </span>
-          </div>
-        </div>
+        </header>
 
         <div className={styles.editorContent}>
           <div className={styles.editorMainPane}>
@@ -488,6 +497,7 @@ export function EditorPage({
                 }
                 isPending={isDiagramPending}
                 isPaused={isDiagramPaused}
+                validationMessage={diagnostics[0]?.message ?? null}
                 sourceColumnIds={
                   activeRelationEndpointColumnIds.sourceColumnIds
                 }
@@ -503,6 +513,15 @@ export function EditorPage({
             </Suspense>
           </div>
         </div>
+
+        {documentMetadata.databaseType ? (
+          <footer className={styles.editorFooter}>
+            <DatabaseIcon className={styles.editorFooterDatabaseIcon} />
+            <span className={styles.editorFooterDatabaseType}>
+              {documentMetadata.databaseType}
+            </span>
+          </footer>
+        ) : null}
       </section>
 
       <EditorInspector

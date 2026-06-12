@@ -1,4 +1,8 @@
 import type {
+  DbmlRelationHighlightMode,
+  DbmlRelationLineStyle,
+} from '../model/dbml-diagram-rendering'
+import type {
   CodeEditorThemeMode,
   EditorThemeMode,
   OffscreenRelationProxyPlacementMode,
@@ -6,6 +10,8 @@ import type {
   OffscreenRelationProxyVisibilityMode,
 } from '../model/editor-theme'
 import {
+  EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS,
+  EDITOR_RELATION_LINE_STYLE_OPTIONS,
   EDITOR_WORKSPACE_THEME_MODES,
   OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES,
   OFFSCREEN_RELATION_PROXY_TRANSITION_MODES,
@@ -23,6 +29,8 @@ type EditorSettingsPanelProps = {
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
   offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
+  relationLineStyle: DbmlRelationLineStyle
+  relationHighlightMode: DbmlRelationHighlightMode
   onWorkspaceThemeModeChange: (mode: EditorThemeMode) => void
   onCodeEditorThemeOverrideEnabledChange: (isEnabled: boolean) => void
   onCodeEditorOverrideThemeModeChange: (mode: EditorThemeMode) => void
@@ -38,6 +46,8 @@ type EditorSettingsPanelProps = {
   onOffscreenRelationProxyTransitionModeChange: (
     mode: OffscreenRelationProxyTransitionMode,
   ) => void
+  onRelationLineStyleChange: (style: DbmlRelationLineStyle) => void
+  onRelationHighlightModeChange: (mode: DbmlRelationHighlightMode) => void
 }
 
 export function EditorSettingsPanel({
@@ -50,6 +60,8 @@ export function EditorSettingsPanel({
   offscreenRelationProxyPlacementMode,
   offscreenRelationProxyVisibilityMode,
   offscreenRelationProxyTransitionMode,
+  relationLineStyle,
+  relationHighlightMode,
   onWorkspaceThemeModeChange,
   onCodeEditorThemeOverrideEnabledChange,
   onCodeEditorOverrideThemeModeChange,
@@ -59,6 +71,8 @@ export function EditorSettingsPanel({
   onOffscreenRelationProxyPlacementModeChange,
   onOffscreenRelationProxyVisibilityModeChange,
   onOffscreenRelationProxyTransitionModeChange,
+  onRelationLineStyleChange,
+  onRelationHighlightModeChange,
 }: EditorSettingsPanelProps) {
   return (
     <div className={styles.editorSettingsPanel}>
@@ -69,6 +83,26 @@ export function EditorSettingsPanel({
           value={workspaceThemeMode}
           onChange={onWorkspaceThemeModeChange}
         />
+      </section>
+
+      <section className={styles.editorSettingsSection}>
+        <ThemeModeControl
+          label="Edge routing"
+          modes={EDITOR_RELATION_LINE_STYLE_OPTIONS}
+          value={relationLineStyle}
+          onChange={onRelationLineStyleChange}
+        />
+        <ThemeModeControl
+          label="Relation style"
+          modes={EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS}
+          value={relationHighlightMode}
+          onChange={onRelationHighlightModeChange}
+        />
+        {relationHighlightMode === 'dynamic' ? (
+          <p className={styles.editorSettingsWarning}>
+            This option may impact battery life.
+          </p>
+        ) : null}
       </section>
 
       <section className={styles.editorSettingsSection}>
@@ -168,7 +202,7 @@ function ThemeModeControl<TMode extends ThemeModeControlMode>({
   isDisabled = false,
 }: {
   label: string
-  modes: readonly TMode[]
+  modes: readonly TMode[] | readonly ThemeModeControlOption<TMode>[]
   value: TMode
   onChange: (mode: TMode) => void
   isDisabled?: boolean
@@ -177,23 +211,30 @@ function ThemeModeControl<TMode extends ThemeModeControlMode>({
     <div className={styles.themeControl}>
       <span className={styles.themeControlLabel}>{label}</span>
       <div className={styles.themeModeGroup} role="group" aria-label={label}>
-        {modes.map((mode) => (
-          <button
-            aria-pressed={value === mode}
-            className={[
-              styles.themeModeButton,
-              value === mode ? styles.themeModeButtonActive : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            key={mode}
-            disabled={isDisabled}
-            onClick={() => onChange(mode)}
-            type="button"
-          >
-            {getThemeModeLabel(mode)}
-          </button>
-        ))}
+        {modes.map((modeOrOption) => {
+          const option = getThemeModeControlOption(modeOrOption)
+
+          return (
+            <button
+              aria-pressed={value === option.value}
+              className={[
+                styles.themeModeButton,
+                value === option.value ? styles.themeModeButtonActive : '',
+                value === option.value && option.value === 'dynamic'
+                  ? styles.themeModeButtonDynamicActive
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              key={option.value}
+              disabled={isDisabled}
+              onClick={() => onChange(option.value)}
+              type="button"
+            >
+              {option.label}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -205,8 +246,50 @@ type ThemeModeControlMode =
   | OffscreenRelationProxyPlacementMode
   | OffscreenRelationProxyVisibilityMode
   | OffscreenRelationProxyTransitionMode
+  | DbmlRelationLineStyle
+  | DbmlRelationHighlightMode
+
+type ThemeModeControlOption<TMode extends ThemeModeControlMode> = {
+  value: TMode
+  label: string
+}
+
+function getThemeModeControlOption<TMode extends ThemeModeControlMode>(
+  modeOrOption: TMode | ThemeModeControlOption<TMode>,
+): ThemeModeControlOption<TMode> {
+  return typeof modeOrOption === 'object'
+    ? modeOrOption
+    : {
+        value: modeOrOption,
+        label: getThemeModeLabel(modeOrOption),
+      }
+}
 
 function getThemeModeLabel(mode: ThemeModeControlMode) {
+  if (mode === 'bezier') {
+    return 'Bezier'
+  }
+
+  if (mode === 'orthogonal') {
+    return 'Step'
+  }
+
+  if (mode === 'rounded-orthogonal') {
+    return 'Rounded'
+  }
+
+  if (mode === 'solid') {
+    return 'Solid'
+  }
+
+  if (mode === 'gradient') {
+    return 'Gradient'
+  }
+
+  if (mode === 'dynamic') {
+    return 'Dynamic'
+  }
+
   if (mode === 'workspace') {
     return 'Workspace'
   }

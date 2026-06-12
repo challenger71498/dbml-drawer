@@ -2,6 +2,7 @@ import { useEffect, useMemo, useReducer, useRef } from 'react'
 import { useDebouncedValue } from '@/shared/lib/debounce'
 import { validateDbml } from '../lib/validate-dbml'
 import { useDbmlEditorStore } from './dbml-editor-store'
+import type { DbmlDatabase } from './dbml-entities'
 import type { LayoutedDbmlDiagram } from './dbml-layout'
 import {
   type DbmlLayoutAlgorithmId,
@@ -16,6 +17,12 @@ import {
 
 const VALIDATION_DELAY_MS = 300
 
+export type DbmlDocumentMetadata = {
+  projectName: string
+  note: string | null
+  databaseType: string | null
+}
+
 type DbmlDocumentLayoutState = {
   layoutedDiagram: LayoutedDbmlDiagram | null
   isDiagramPending: boolean
@@ -26,6 +33,11 @@ type DbmlDocumentLayoutAction =
   | { type: 'complete'; diagram: LayoutedDbmlDiagram }
   | { type: 'pause' }
   | { type: 'fail' }
+
+type DbmlDocumentMetadataAction = {
+  type: 'replace'
+  metadata: DbmlDocumentMetadata
+}
 
 export function useDbmlDocument() {
   const documentText = useDbmlEditorStore((state) => state.documentText)
@@ -52,8 +64,22 @@ export function useDbmlDocument() {
     () => validateDbml(debouncedDocumentText),
     [debouncedDocumentText],
   )
+  const [documentMetadata, dispatchDocumentMetadata] = useReducer(
+    reduceDbmlDocumentMetadata,
+    validationResult,
+    getInitialDbmlDocumentMetadata,
+  )
   const diagnostics = validationResult.diagnostics
   const isDiagramPaused = diagnostics.length > 0
+
+  useEffect(() => {
+    if (validationResult.valid) {
+      dispatchDocumentMetadata({
+        type: 'replace',
+        metadata: getDbmlDocumentMetadata(validationResult.database),
+      })
+    }
+  }, [validationResult])
 
   useEffect(() => {
     if (!validationResult.valid) {
@@ -134,9 +160,60 @@ export function useDbmlDocument() {
     selectLayoutAlgorithm,
     setSelectedLayoutOptionValue,
     diagnostics,
+    documentMetadata,
     layoutedDiagram,
     isDiagramPending,
     isDiagramPaused,
+  }
+}
+
+export function getDbmlDocumentMetadata(
+  database: DbmlDatabase,
+): DbmlDocumentMetadata {
+  return {
+    projectName: normalizeMetadataText(database.name, 'Untitled DBML'),
+    note: normalizeOptionalMetadataText(database.note),
+    databaseType: normalizeOptionalMetadataText(database.databaseType),
+  }
+}
+
+function getFallbackDbmlDocumentMetadata(): DbmlDocumentMetadata {
+  return {
+    projectName: 'Untitled DBML',
+    note: null,
+    databaseType: null,
+  }
+}
+
+function normalizeMetadataText(value: unknown, fallback: string) {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : fallback
+}
+
+function normalizeOptionalMetadataText(value: unknown) {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : null
+}
+
+function getInitialDbmlDocumentMetadata(
+  validationResult: ReturnType<typeof validateDbml>,
+): DbmlDocumentMetadata {
+  return validationResult.valid
+    ? getDbmlDocumentMetadata(validationResult.database)
+    : getFallbackDbmlDocumentMetadata()
+}
+
+function reduceDbmlDocumentMetadata(
+  state: DbmlDocumentMetadata,
+  action: DbmlDocumentMetadataAction,
+): DbmlDocumentMetadata {
+  switch (action.type) {
+    case 'replace':
+      return action.metadata
+    default:
+      return state
   }
 }
 

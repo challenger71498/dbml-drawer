@@ -1,11 +1,13 @@
 import { Parser } from '@dbml/core'
 import type { CompilerDiagnostic } from '@dbml/core'
 import type { DbmlDiagnostic } from '../model/dbml-diagnostics'
+import type { DbmlDatabase } from '../model/dbml-entities'
 
 export type DbmlValidationResult =
   | {
       valid: true
       diagnostics: []
+      database: DbmlDatabase
     }
   | {
       valid: false
@@ -14,11 +16,12 @@ export type DbmlValidationResult =
 
 export function validateDbml(source: string): DbmlValidationResult {
   try {
-    Parser.parse(source, 'dbml')
+    const database = Parser.parse(source, 'dbml')
 
     return {
       valid: true,
       diagnostics: [],
+      database,
     }
   } catch (error) {
     const diagnostics = normalizeDbmlError(error)

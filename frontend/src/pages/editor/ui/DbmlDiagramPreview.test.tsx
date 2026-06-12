@@ -24,7 +24,10 @@ import {
   DBML_RELATION_REFERENCE_COLOR,
   DBML_RELATION_SOURCE_COLOR,
 } from '../model/dbml-diagram-rendering'
-import { resetEditorSettingsStoreForTests } from '../model/editor-theme'
+import {
+  getEditorSettingsStateForTests,
+  resetEditorSettingsStoreForTests,
+} from '../model/editor-theme'
 import { EDITOR_COLOR_VARIABLES } from '../../../shared/design-tokens/generated/tokens'
 import type { LayoutedDbmlDiagram } from '../model/dbml-layout'
 import { DbmlDiagramSelectionViewProvider } from './DbmlDiagramSelectionViewProvider'
@@ -311,7 +314,9 @@ describe('DbmlDiagramPreview', () => {
       />,
     )
 
-    expect(screen.getByRole('heading', { name: 'Diagram' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'DBML diagram preview' }),
+    ).toBeInTheDocument()
     expect(screen.getByTestId('diagram-background')).toHaveAttribute(
       'data-color',
       EDITOR_COLOR_VARIABLES.diagramGridDot,
@@ -326,7 +331,7 @@ describe('DbmlDiagramPreview', () => {
       screen.getByTestId('diagram-node-table:public.users'),
     ).not.toHaveClass('nodrag', 'nopan')
     expect(getColumnRow('id')).toHaveClass('nodrag', 'nopan')
-    expect(screen.getByText('Ready')).toBeInTheDocument()
+    expect(screen.queryByText('Ready')).not.toBeInTheDocument()
   })
 
   it('renders relation edges with bezier paths', async () => {
@@ -347,11 +352,12 @@ describe('DbmlDiagramPreview', () => {
     )
   })
 
-  it('switches relation edge line styles', async () => {
+  it('renders relation edge line styles from settings', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
+    const settings = getEditorSettingsStateForTests()
 
-    render(
+    const { rerender } = render(
       <DbmlDiagramPreview
         diagram={layoutedDiagram}
         isPending={false}
@@ -359,37 +365,45 @@ describe('DbmlDiagramPreview', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Bezier' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
+    expect(
+      screen.queryByRole('button', { name: 'Bezier' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
+      'd',
+      expect.stringContaining(' C '),
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Step' }))
-
+    settings.setRelationLineStyle('orthogonal')
+    rerender(
+      <DbmlDiagramPreview
+        diagram={layoutedDiagram}
+        isPending={false}
+        isPaused={false}
+      />,
+    )
     expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
       'd',
       expect.stringContaining(' L '),
     )
-    expect(screen.getByRole('button', { name: 'Step' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
+
+    settings.setRelationLineStyle('rounded-orthogonal')
+    rerender(
+      <DbmlDiagramPreview
+        diagram={layoutedDiagram}
+        isPending={false}
+        isPaused={false}
+      />,
     )
-
-    fireEvent.click(screen.getByRole('button', { name: 'Rounded' }))
-
     expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
       'd',
       expect.stringContaining(' Q '),
     )
-    expect(screen.getByRole('button', { name: 'Rounded' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
   })
 
-  it('keeps active relation gradients when switching line styles', async () => {
+  it('keeps active relation gradients with non-bezier line styles', async () => {
     const diagram = createDbmlDiagram(parseDbmlDocument(RELATION_SOURCE))
     const layoutedDiagram = await layoutDbmlDiagram(diagram)
+    getEditorSettingsStateForTests().setRelationLineStyle('orthogonal')
 
     render(<InteractivePreviewHarness diagram={layoutedDiagram} />)
 
@@ -397,19 +411,9 @@ describe('DbmlDiagramPreview', () => {
 
     expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Step' }))
-
     expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
       'd',
       expect.stringContaining(' L '),
-    )
-    expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
-
-    fireEvent.click(screen.getByRole('button', { name: 'Rounded' }))
-
-    expect(screen.getByTestId('diagram-edge')).toHaveAttribute(
-      'd',
-      expect.stringContaining(' Q '),
     )
     expectActiveGradientEdge(screen.getByTestId('diagram-edge'))
   })
@@ -1377,11 +1381,13 @@ Table posts {
         diagram={layoutedDiagram}
         isPending={false}
         isPaused
+        validationMessage="Unexpected token"
       />,
     )
 
     expect(screen.getByText('users')).toBeInTheDocument()
-    expect(screen.getByText('Preview paused: invalid DBML')).toBeInTheDocument()
+    expect(screen.getByText('Unexpected token')).toBeInTheDocument()
+    expect(screen.getByText('Preview paused')).toBeInTheDocument()
   })
 
   it('shows an empty diagram state', () => {
@@ -1394,7 +1400,7 @@ Table posts {
     )
 
     expect(screen.getByText('No renderable tables')).toBeInTheDocument()
-    expect(screen.getByText('Empty')).toBeInTheDocument()
+    expect(screen.queryByText('Empty')).not.toBeInTheDocument()
   })
 
   it('disables React Flow keyboard shortcuts so editor typing is not intercepted', () => {

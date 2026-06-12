@@ -31,10 +31,6 @@ import {
 } from '../lib/map-dbml-diagram-flow'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
-  type DbmlRelationHighlightMode,
-  type DbmlRelationLineStyle,
-} from '../model/dbml-diagram-rendering'
-import {
   getOffscreenRelationProxies,
   type DbmlDiagramViewport,
   type DbmlOffscreenRelationProxy,
@@ -52,10 +48,10 @@ import {
 import { getOffscreenRelationProxyTransitionLayouts } from '../model/dbml-offscreen-relation-proxy-transition'
 import type { DbmlDiagramSelectionTarget } from '../model/dbml-diagram-selection'
 import {
+  EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS,
   useRelationHighlightModeSetting,
   useRelationLineStyleSetting,
   useSetRelationHighlightMode,
-  useSetRelationLineStyle,
   type OffscreenRelationProxyPlacementMode,
   type OffscreenRelationProxyTransitionMode,
 } from '../model/editor-theme'
@@ -84,6 +80,7 @@ type DbmlDiagramPreviewProps = {
   offscreenRelationProxyTransitionMode?: OffscreenRelationProxyTransitionMode
   shouldConnectOffscreenRelationProxyLines?: boolean
   shouldAvoidOffscreenRelationProxyActiveNodes?: boolean
+  validationMessage?: string | null
   onTableFocus?: (table: DbmlDiagramTable) => void
   onTableHover?: (target: DbmlDiagramSelectionTarget | null) => void
   onColumnFocus?: (column: DbmlDiagramColumn) => void
@@ -111,42 +108,6 @@ const NOOP_FOCUS_CLEAR = () => undefined
 const NOOP_COLUMN_FOCUS = () => undefined
 const NOOP_COLUMN_HOVER = () => undefined
 
-const RELATION_LINE_STYLE_OPTIONS = [
-  {
-    value: 'bezier',
-    label: 'Bezier',
-  },
-  {
-    value: 'orthogonal',
-    label: 'Step',
-  },
-  {
-    value: 'rounded-orthogonal',
-    label: 'Rounded',
-  },
-] satisfies Array<{
-  value: DbmlRelationLineStyle
-  label: string
-}>
-
-const RELATION_HIGHLIGHT_MODE_OPTIONS = [
-  {
-    value: 'solid',
-    label: 'Solid',
-  },
-  {
-    value: 'gradient',
-    label: 'Gradient',
-  },
-  {
-    value: 'dynamic',
-    label: 'Dynamic',
-  },
-] satisfies Array<{
-  value: DbmlRelationHighlightMode
-  label: string
-}>
-
 export function DbmlDiagramPreview({
   diagram,
   isPending,
@@ -165,6 +126,7 @@ export function DbmlDiagramPreview({
   offscreenRelationProxyTransitionMode = 'none',
   shouldConnectOffscreenRelationProxyLines = false,
   shouldAvoidOffscreenRelationProxyActiveNodes = false,
+  validationMessage = null,
   onTableFocus = () => undefined,
   onTableHover = () => undefined,
   onColumnFocus = NOOP_COLUMN_FOCUS,
@@ -173,7 +135,6 @@ export function DbmlDiagramPreview({
 }: DbmlDiagramPreviewProps) {
   const relationLineStyle = useRelationLineStyleSetting()
   const relationHighlightMode = useRelationHighlightModeSetting()
-  const setRelationLineStyle = useSetRelationLineStyle()
   const setRelationHighlightMode = useSetRelationHighlightMode()
   const [hoveredProxyRelationIds, setHoveredProxyRelationIds] =
     useState<ReadonlySet<string> | null>(null)
@@ -224,51 +185,38 @@ export function DbmlDiagramPreview({
   return (
     <section
       className={styles.diagramPanel}
-      aria-labelledby="diagram-heading"
+      aria-label="DBML diagram preview"
       aria-busy={isPending}
     >
-      <div className={styles.diagramHeader}>
-        <div>
-          <p className={styles.eyebrow}>Preview</p>
-          <h2 id="diagram-heading">Diagram</h2>
+      <div className={styles.diagramSurface} ref={diagramSurfaceRef}>
+        <div className={styles.diagramOverlayTopLeft}>
+          {validationMessage ? (
+            <p className={styles.diagramValidationStatus} role="status">
+              <span aria-hidden="true">!</span>
+              <span>{validationMessage}</span>
+            </p>
+          ) : null}
+          {isPaused ? (
+            <p className={styles.diagramStatus}>Preview paused</p>
+          ) : null}
         </div>
-        <div className={styles.diagramHeaderActions}>
+        <div className={styles.diagramOverlayTopRight}>
           <div
-            className={styles.relationLineStyleControl}
-            role="group"
-            aria-label="Relation line style"
-          >
-            {RELATION_LINE_STYLE_OPTIONS.map((option) => (
-              <button
-                aria-pressed={relationLineStyle === option.value}
-                className={[
-                  styles.relationLineStyleButton,
-                  relationLineStyle === option.value
-                    ? styles.relationLineStyleButtonActive
-                    : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                key={option.value}
-                onClick={() => setRelationLineStyle(option.value)}
-                type="button"
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <div
-            className={styles.relationLineStyleControl}
+            className={styles.compactRelationStyleControl}
             role="group"
             aria-label="Relation highlight mode"
           >
-            {RELATION_HIGHLIGHT_MODE_OPTIONS.map((option) => (
+            {EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS.map((option) => (
               <button
                 aria-pressed={relationHighlightMode === option.value}
                 className={[
-                  styles.relationLineStyleButton,
+                  styles.compactRelationStyleButton,
                   relationHighlightMode === option.value
-                    ? styles.relationLineStyleButtonActive
+                    ? styles.compactRelationStyleButtonActive
+                    : '',
+                  relationHighlightMode === option.value &&
+                  option.value === 'dynamic'
+                    ? styles.compactRelationStyleButtonDynamicActive
                     : '',
                 ]
                   .filter(Boolean)
@@ -281,13 +229,12 @@ export function DbmlDiagramPreview({
               </button>
             ))}
           </div>
-          <span className={styles.documentState}>
-            {getPreviewStateLabel({ isPending, isPaused, isEmpty })}
-          </span>
+          {relationHighlightMode === 'dynamic' ? (
+            <p className={styles.compactRelationStyleWarning}>
+              This option may impact battery life.
+            </p>
+          ) : null}
         </div>
-      </div>
-
-      <div className={styles.diagramSurface} ref={diagramSurfaceRef}>
         <ReactFlowProvider>
           <DbmlDiagramSelectionViewProvider value={selectionViewState}>
             <DiagramCanvas
@@ -324,10 +271,6 @@ export function DbmlDiagramPreview({
             />
           </DbmlDiagramSelectionViewProvider>
         </ReactFlowProvider>
-
-        {isPaused ? (
-          <p className={styles.diagramStatus}>Preview paused: invalid DBML</p>
-        ) : null}
 
         {isEmpty ? (
           <p className={styles.diagramEmpty}>No renderable tables</p>
@@ -1005,24 +948,4 @@ function interpolate(from: number, to: number, progress: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value))
-}
-
-function getPreviewStateLabel({
-  isPending,
-  isPaused,
-  isEmpty,
-}: {
-  isPending: boolean
-  isPaused: boolean
-  isEmpty: boolean
-}) {
-  if (isPending) {
-    return 'Layout'
-  }
-
-  if (isPaused) {
-    return 'Paused'
-  }
-
-  return isEmpty ? 'Empty' : 'Ready'
 }

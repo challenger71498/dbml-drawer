@@ -45,28 +45,70 @@
 
 .editorToolbar {
   display: flex;
-  min-height: 5.25rem;
+  min-height: 0;
+  height: 4rem;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.25rem;
+  padding: 0 1rem;
   border-bottom: 1px solid var(--editor-color-border);
   background: var(--editor-color-panel-bg);
 }
 
-.eyebrow {
-  margin: 0 0 0.25rem;
+.editorHeaderMetadata {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.editorHeaderMetadata p {
+  min-width: 0;
+  margin: 0;
   color: var(--editor-color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .editorToolbar h1 {
   margin: 0;
   color: var(--editor-color-title);
-  font-size: 1.35rem;
-  line-height: 1.2;
+  font-size: 0.92rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.editorFooter {
+  display: flex;
+  height: 1.5rem;
+  min-height: 1.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  padding: 0 0.7rem;
+  border-top: 1px solid var(--editor-color-border);
+  background: var(--editor-color-panel-muted-bg);
+}
+
+.editorFooterDatabaseIcon {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--editor-color-text-subtle);
+  transform: translateY(1px);
+}
+
+.editorFooterDatabaseType {
+  color: var(--editor-color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .editorToolbarActions {
@@ -128,6 +170,12 @@
 .themeModeButtonActive,
 .themeModeButtonActive:hover {
   background: var(--editor-color-control-active-bg);
+  color: var(--editor-color-control-active-text);
+}
+
+.themeModeButtonDynamicActive,
+.themeModeButtonDynamicActive:hover {
+  background: var(--editor-color-warning);
   color: var(--editor-color-control-active-text);
 }
 
@@ -196,33 +244,6 @@
   background: var(--editor-color-diagram-bg);
 }
 
-.diagramHeader {
-  display: flex;
-  min-height: 4.25rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--editor-color-border);
-  background: var(--editor-color-panel-bg);
-}
-
-.diagramHeader h2 {
-  margin: 0;
-  color: var(--editor-color-title);
-  font-size: 1.05rem;
-  line-height: 1.2;
-}
-
-.diagramHeaderActions {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
 .relationLineStyleControl {
   display: inline-flex;
   overflow: hidden;
@@ -266,6 +287,26 @@
   overflow: hidden;
 }
 
+.diagramOverlayTopLeft,
+.diagramOverlayTopRight {
+  position: absolute;
+  z-index: 6;
+  top: 0.75rem;
+  display: grid;
+  gap: 0.45rem;
+  pointer-events: none;
+}
+
+.diagramOverlayTopLeft {
+  left: 0.75rem;
+  max-width: min(34rem, calc(100% - 18rem));
+}
+
+.diagramOverlayTopRight {
+  right: 0.75rem;
+  justify-items: end;
+}
+
 .diagramSurface :global(.react-flow__controls) {
   overflow: hidden;
   border: 1px solid var(--editor-color-border-control);
@@ -289,7 +330,6 @@
   fill: currentColor;
 }
 
-.diagramStatus,
 .diagramEmpty {
   position: absolute;
   z-index: 5;
@@ -305,12 +345,118 @@
   box-shadow: 0 8px 18px var(--editor-color-floating-shadow);
 }
 
+.diagramStatus,
+.diagramValidationStatus {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--editor-color-border-control);
+  border-radius: 8px;
+  background: var(--editor-color-panel-bg);
+  color: var(--editor-color-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow: 0 8px 18px var(--editor-color-floating-shadow);
+  pointer-events: auto;
+}
+
+.diagramValidationStatus {
+  border-color: var(--editor-color-diagnostics-error-border);
+  background: var(--editor-color-diagnostics-error-bg);
+  color: var(--editor-color-diagnostics-text);
+}
+
+.diagramValidationStatus span:first-child {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--editor-color-diagnostics-error-border);
+  color: var(--editor-color-panel-bg);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.diagramValidationStatus span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .diagramStatus {
-  top: 1rem;
+  color: var(--editor-color-text-muted);
 }
 
 .diagramEmpty {
-  top: 4rem;
+  top: 3.75rem;
+}
+
+.compactRelationStyleControl {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--editor-color-border-control);
+  border-radius: 6px;
+  background: var(--editor-color-panel-muted-bg);
+  box-shadow: 0 8px 18px var(--editor-color-floating-shadow);
+  pointer-events: auto;
+}
+
+.compactRelationStyleButton {
+  min-width: 0;
+  min-height: 1.6rem;
+  padding: 0 0.42rem;
+  border: 0;
+  border-right: 1px solid var(--editor-color-border-control);
+  background: transparent;
+  color: var(--editor-color-text-muted);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.compactRelationStyleButton:last-child {
+  border-right: 0;
+}
+
+.compactRelationStyleButton:hover {
+  background: var(--editor-color-control-hover-soft-bg);
+  color: var(--editor-color-control-active-bg);
+}
+
+.compactRelationStyleButtonActive,
+.compactRelationStyleButtonActive:hover {
+  background: var(--editor-color-control-active-bg);
+  color: var(--editor-color-control-active-text);
+}
+
+.compactRelationStyleButtonDynamicActive,
+.compactRelationStyleButtonDynamicActive:hover {
+  background: var(--editor-color-warning);
+  color: var(--editor-color-control-active-text);
+}
+
+.compactRelationStyleWarning {
+  max-width: 13rem;
+  margin: 0;
+  color: var(--editor-color-text);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: right;
+  text-shadow: 0 1px 1px var(--editor-color-floating-shadow);
+  pointer-events: auto;
 }
 
 .offscreenProxyOverlay {
@@ -600,6 +746,19 @@
   gap: 0.65rem;
 }
 
+.editorSettingsWarning {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid
+    color-mix(in srgb, var(--editor-color-warning), transparent 45%);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--editor-color-warning), transparent 88%);
+  color: var(--editor-color-text);
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
 .editorSettingsToggleField {
   display: flex;
   gap: 0.5rem;
@@ -812,13 +971,7 @@
 }
 
 @media (max-width: 520px) {
-  .editorToolbar,
-  .diagramHeader {
-    align-items: flex-start;
-  }
-
-  .editorToolbar,
-  .diagramHeader {
-    flex-direction: column;
+  .editorHeaderMetadata p {
+    display: none;
   }
 }

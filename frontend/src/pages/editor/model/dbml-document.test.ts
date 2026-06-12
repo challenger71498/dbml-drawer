@@ -1,7 +1,10 @@
 import { StrictMode, createElement, type ReactNode } from 'react'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { resetDbmlEditorStoreForTests } from './dbml-editor-store'
+import {
+  resetDbmlEditorStoreForTests,
+  useDbmlEditorStore,
+} from './dbml-editor-store'
 import { useDbmlDocument, createDbmlLayoutCacheKey } from './dbml-document'
 import type { LayoutedDbmlDiagram } from './dbml-layout'
 import { resetEditorSettingsStoreForTests } from './editor-settings-store'
@@ -40,6 +43,7 @@ describe('dbml document model', () => {
     layoutDbmlDiagram.mockReset()
     resetDbmlEditorStoreForTests()
     resetEditorSettingsStoreForTests()
+    vi.useRealTimers()
   })
 
   it('changes the layout cache key when the layout algorithm changes', () => {
@@ -98,5 +102,41 @@ describe('dbml document model', () => {
       expect(result.current.layoutedDiagram).toBe(layoutedDiagram)
     })
     expect(layoutDbmlDiagram).toHaveBeenCalled()
+  })
+
+  it('keeps the last valid document metadata when the document becomes invalid', () => {
+    vi.useFakeTimers()
+    layoutDbmlDiagram.mockResolvedValue(layoutedDiagram)
+    useDbmlEditorStore.getState().setDocumentText(`Project crm {
+  database_type: "PostgreSQL"
+  Note: "Customer workspace"
+}
+
+Table users {
+  id integer [pk]
+}
+`)
+
+    const { result } = renderHook(() => useDbmlDocument())
+
+    expect(result.current.documentMetadata).toEqual({
+      projectName: 'crm',
+      note: 'Customer workspace',
+      databaseType: 'PostgreSQL',
+    })
+
+    act(() => {
+      result.current.setDocumentText('Table users {')
+    })
+    act(() => {
+      vi.advanceTimersByTime(350)
+    })
+
+    expect(result.current.diagnostics).not.toHaveLength(0)
+    expect(result.current.documentMetadata).toEqual({
+      projectName: 'crm',
+      note: 'Customer workspace',
+      databaseType: 'PostgreSQL',
+    })
   })
 })
