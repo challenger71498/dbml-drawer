@@ -21,12 +21,20 @@ describe('dbml offscreen relation proxy transition', () => {
 
   it('fades a proxy as its original table approaches the viewport', () => {
     const [layout] = getOffscreenRelationProxyTransitionLayouts({
-      layouts: [createLayout(createTable('users', 805, 20))],
+      layouts: [
+        createLayout(
+          createTable('users', 598, 20, {
+            height: 180,
+            width: 260,
+          }),
+        ),
+      ],
       viewport: VIEWPORT,
       options: { mode: 'opacity' },
     })
 
     expect(layout.style.opacity).toBeLessThan(0.5)
+    expect(layout.originalOpacity).toBeGreaterThan(0.5)
     expect(layout.style.left).toBe(602)
     expect(layout.style.top).toBe(20)
   })
@@ -60,7 +68,7 @@ describe('dbml offscreen relation proxy transition', () => {
     expect(layout.screenRect?.width).toBeGreaterThan(250)
     expect(layout.style.height).toBeGreaterThan(160)
     expect(layout.style.left).toBe(layout.screenRect?.left)
-    expect(layout.style.opacity).toBeLessThan(0.2)
+    expect(layout.style.opacity).toBeUndefined()
     expect(layout.style.transform).toBe('scale(1)')
     expect(layout.style.width).toBeGreaterThan(250)
   })

@@ -175,9 +175,12 @@ function getTableVisibleRatio(
       viewportBounds.y + viewportBounds.height,
     ) - Math.max(tableBounds.y, viewportBounds.y),
   )
-  const tableArea = tableBounds.width * tableBounds.height
+  const horizontalRatio =
+    tableBounds.width > 0 ? overlapWidth / tableBounds.width : 0
+  const verticalRatio =
+    tableBounds.height > 0 ? overlapHeight / tableBounds.height : 0
 
-  return tableArea > 0 ? (overlapWidth * overlapHeight) / tableArea : 0
+  return Math.min(horizontalRatio, verticalRatio)
 }
 
 export function getTableBounds(

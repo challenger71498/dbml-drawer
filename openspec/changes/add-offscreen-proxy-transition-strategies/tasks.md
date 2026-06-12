@@ -30,5 +30,8 @@
 - [x] 5.2 Interpolate proxy relation endpoints toward original relation endpoints during morph handoff
 - [x] 5.3 Crossfade compact proxy content into represented original table content during morph handoff
 - [x] 5.4 Keep morph proxies visible until represented original tables are about 80% visible
-- [x] 5.5 Smooth relation endpoints from compact proxy ports during the first morph interval
-- [x] 5.6 Add or update tests for morph transition behavior
+- [x] 5.5 Smooth relation endpoints from compact proxy ports to original relation ports over the full morph interval
+- [x] 5.6 Hide represented original nodes while proxies are rendered
+- [x] 5.7 Fade represented original nodes in while opacity proxies fade out
+- [x] 5.8 Align opacity transition completion visibility with morph
+- [x] 5.9 Add or update tests for transition behavior

@@ -362,7 +362,7 @@ type DbmlTableFlowNode = Node<DbmlTableNodeData>
 
 const DIAGRAM_TABLE_HEADER_HEIGHT = 44
 const MORPH_ENDPOINT_HANDOFF_PROGRESS = 0.2
-const MORPH_COMPLETION_VISIBLE_RATIO = 0.8
+const PROXY_TRANSITION_COMPLETION_VISIBLE_RATIO = 0.8
 
 function DiagramCanvas({
   backgroundColor,
@@ -426,8 +426,9 @@ function DiagramCanvas({
             diagram,
             focusedTarget,
             minimumVisibleRatio:
-              offscreenRelationProxyTransitionMode === 'morph'
-                ? MORPH_COMPLETION_VISIBLE_RATIO
+              offscreenRelationProxyTransitionMode === 'morph' ||
+              offscreenRelationProxyTransitionMode === 'opacity'
+                ? PROXY_TRANSITION_COMPLETION_VISIBLE_RATIO
                 : undefined,
             viewport: diagramViewport,
             visibilityMode: offscreenRelationProxyVisibilityMode,
@@ -479,7 +480,7 @@ function DiagramCanvas({
     offscreenRelationProxyTransitionMode,
     shouldAvoidOffscreenRelationProxyActiveNodes,
   ])
-  const flowElements = useMemo(
+  const flowElementsWithProxyLineEndpoints = useMemo(
     () =>
       shouldConnectOffscreenRelationProxyLines
         ? getFlowElementsWithProxyLineEndpoints({
@@ -494,6 +495,14 @@ function DiagramCanvas({
       offscreenRelationProxyLayouts,
       shouldConnectOffscreenRelationProxyLines,
     ],
+  )
+  const flowElements = useMemo(
+    () =>
+      getFlowElementsWithHiddenProxyOriginalNodes({
+        elements: flowElementsWithProxyLineEndpoints,
+        proxyLayouts: offscreenRelationProxyLayouts,
+      }),
+    [flowElementsWithProxyLineEndpoints, offscreenRelationProxyLayouts],
   )
 
   const handleNodeMouseEnter = useCallback<NodeMouseHandler<DbmlTableFlowNode>>(
@@ -675,6 +684,7 @@ function OffscreenRelationProxyOverlay({
                 <OffscreenRelationProxyContent
                   columns={proxy.table.columns}
                   tableName={proxy.table.name}
+                  variant="original"
                   style={originalLayerStyle}
                 />
               ) : null}
@@ -689,10 +699,12 @@ function OffscreenRelationProxyOverlay({
 function OffscreenRelationProxyContent({
   columns,
   tableName,
+  variant = 'compact',
   style,
 }: {
   columns: readonly DbmlDiagramColumn[]
   tableName: string
+  variant?: 'compact' | 'original'
   style?: {
     opacity: number
     pointerEvents: 'auto' | 'none'
@@ -703,8 +715,10 @@ function OffscreenRelationProxyContent({
       <span
         className={[
           styles.diagramTableHeader,
-          styles.offscreenProxyHeader,
-        ].join(' ')}
+          variant === 'compact' ? styles.offscreenProxyHeader : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
         <span>{tableName}</span>
       </span>
@@ -782,6 +796,53 @@ function getFlowElementsWithProxyLineEndpoints({
         data: {
           ...data,
           endpointOverride,
+        },
+      }
+    }),
+  }
+}
+
+function getFlowElementsWithHiddenProxyOriginalNodes({
+  elements,
+  proxyLayouts,
+}: {
+  elements: DbmlDiagramFlowElements
+  proxyLayouts: readonly OffscreenRelationProxyLayout[]
+}): DbmlDiagramFlowElements {
+  if (proxyLayouts.length === 0) {
+    return elements
+  }
+
+  const opacityByTableId = new Map<string, number>()
+
+  for (const layout of proxyLayouts) {
+    opacityByTableId.set(
+      layout.proxy.table.id,
+      Math.min(
+        opacityByTableId.get(layout.proxy.table.id) ?? 1,
+        layout.originalOpacity ?? 0,
+      ),
+    )
+  }
+
+  if (opacityByTableId.size === 0) {
+    return elements
+  }
+
+  return {
+    ...elements,
+    nodes: elements.nodes.map((node) => {
+      const opacity = opacityByTableId.get(node.id)
+
+      if (opacity === undefined) {
+        return node
+      }
+
+      return {
+        ...node,
+        style: {
+          ...node.style,
+          opacity,
         },
       }
     }),

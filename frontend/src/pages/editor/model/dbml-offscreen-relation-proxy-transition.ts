@@ -11,11 +11,9 @@ import type {
 } from './dbml-offscreen-relation-proxies'
 import type { OffscreenRelationProxyTransitionMode } from './editor-theme'
 
-const OPACITY_HANDOFF_DISTANCE = 40
 const MIN_PROXY_OPACITY = 0.1
-const MORPH_HANDOFF_DISTANCE = 80
-const MORPH_COMPLETE_VISIBILITY_RATIO = 0.8
-const MIN_MORPH_OPACITY = 0.1
+const PROXY_HANDOFF_DISTANCE = 80
+const PROXY_COMPLETE_VISIBILITY_RATIO = 0.8
 
 export type DbmlOffscreenRelationProxyTransitionOptions = {
   mode: OffscreenRelationProxyTransitionMode
@@ -87,17 +85,22 @@ function getOpacityTransitionLayouts({
     height: viewport.height,
   }
 
-  return layouts.map((layout) => ({
-    ...layout,
-    style: {
-      ...layout.style,
-      opacity: getProxyOpacity({
-        proxy: layout.proxy,
-        viewport,
-        viewportRect,
-      }),
-    },
-  }))
+  return layouts.map((layout) => {
+    const progress = getOpacityHandoffProgress({
+      proxy: layout.proxy,
+      viewport,
+      viewportRect,
+    })
+
+    return {
+      ...layout,
+      originalOpacity: progress,
+      style: {
+        ...layout.style,
+        opacity: 1 - progress * (1 - MIN_PROXY_OPACITY),
+      },
+    }
+  })
 }
 
 function getMorphTransitionLayouts({
@@ -113,7 +116,7 @@ function getMorphTransitionLayouts({
 
   return layouts.map((layout) => {
     const tableRect = getTableScreenRect(layout.proxy.table, viewport)
-    const progress = getMorphHandoffProgress({
+    const progress = getProxyHandoffProgress({
       tableRect,
       viewportRect,
     })
@@ -133,7 +136,6 @@ function getMorphTransitionLayouts({
         ...layout.style,
         height: screenRect.height / viewport.zoom,
         left: screenRect.left,
-        opacity: interpolate(1, MIN_MORPH_OPACITY, progress),
         top: screenRect.top,
         transform: `scale(${formatTransformNumber(viewport.zoom)})`,
         width: screenRect.width / viewport.zoom,
@@ -142,7 +144,7 @@ function getMorphTransitionLayouts({
   })
 }
 
-function getProxyOpacity({
+function getOpacityHandoffProgress({
   proxy,
   viewport,
   viewportRect,
@@ -151,13 +153,10 @@ function getProxyOpacity({
   viewport: DbmlDiagramViewport
   viewportRect: DbmlOffscreenRelationProxyLayoutRect
 }) {
-  const progress = getHandoffProgress({
-    rect: getTableScreenRect(proxy.table, viewport),
+  return getProxyHandoffProgress({
+    tableRect: getTableScreenRect(proxy.table, viewport),
     viewportRect,
-    distance: OPACITY_HANDOFF_DISTANCE,
   })
-
-  return 1 - progress * (1 - MIN_PROXY_OPACITY)
 }
 
 function getProxyScreenRect(
@@ -172,21 +171,7 @@ function getProxyScreenRect(
   }
 }
 
-function getHandoffProgress({
-  rect,
-  viewportRect,
-  distance,
-}: {
-  rect: DbmlOffscreenRelationProxyLayoutRect
-  viewportRect: DbmlOffscreenRelationProxyLayoutRect
-  distance: number
-}) {
-  return (
-    1 - clamp(getRectDistanceToViewport(rect, viewportRect) / distance, 0, 1)
-  )
-}
-
-function getMorphHandoffProgress({
+function getProxyHandoffProgress({
   tableRect,
   viewportRect,
 }: {
@@ -200,7 +185,7 @@ function getMorphHandoffProgress({
     viewportRect,
   )
 
-  return 1 - clamp(startDistance / MORPH_HANDOFF_DISTANCE, 0, 1)
+  return 1 - clamp(startDistance / PROXY_HANDOFF_DISTANCE, 0, 1)
 }
 
 function interpolateRect(
@@ -245,8 +230,8 @@ function getPointDistanceToMorphCompletion(
   viewportRect: DbmlOffscreenRelationProxyLayoutRect,
 ) {
   const viewportCenter = getTableScreenCenter(viewportRect)
-  const insetX = tableRect.width * (MORPH_COMPLETE_VISIBILITY_RATIO - 0.5)
-  const insetY = tableRect.height * (MORPH_COMPLETE_VISIBILITY_RATIO - 0.5)
+  const insetX = tableRect.width * (PROXY_COMPLETE_VISIBILITY_RATIO - 0.5)
+  const insetY = tableRect.height * (PROXY_COMPLETE_VISIBILITY_RATIO - 0.5)
   const horizontalDistance =
     point.x >= viewportCenter.x
       ? point.x - (viewportRect.left + viewportRect.width - insetX)
@@ -260,26 +245,6 @@ function getPointDistanceToMorphCompletion(
     Math.max(0, horizontalDistance),
     Math.max(0, verticalDistance),
   )
-}
-
-function getRectDistanceToViewport(
-  rect: DbmlOffscreenRelationProxyLayoutRect,
-  viewportRect: DbmlOffscreenRelationProxyLayoutRect,
-) {
-  const horizontalDistance =
-    rect.left > viewportRect.left + viewportRect.width
-      ? rect.left - (viewportRect.left + viewportRect.width)
-      : viewportRect.left > rect.left + rect.width
-        ? viewportRect.left - (rect.left + rect.width)
-        : 0
-  const verticalDistance =
-    rect.top > viewportRect.top + viewportRect.height
-      ? rect.top - (viewportRect.top + viewportRect.height)
-      : viewportRect.top > rect.top + rect.height
-        ? viewportRect.top - (rect.top + rect.height)
-        : 0
-
-  return Math.hypot(horizontalDistance, verticalDistance)
 }
 
 function clamp(value: number, min: number, max: number) {

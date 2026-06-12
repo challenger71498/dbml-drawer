@@ -165,6 +165,32 @@ describe('dbml offscreen relation proxies', () => {
       }).map((proxy) => proxy.table.id),
     ).toEqual([partiallyVisibleUsers.id])
   })
+
+  it('keeps proxies visible until both axes pass the minimum visible ratio', () => {
+    const cornerVisibleUsers = createTable('users', 366, 96, ['id', 'email'])
+    const diagram: LayoutedDbmlDiagram = {
+      tables: [POSTS, cornerVisibleUsers],
+      relations: [
+        createRelation({
+          id: 'relation:users:corner',
+          sourceTable: POSTS,
+          sourceColumn: 'user_id',
+          targetTable: cornerVisibleUsers,
+          targetColumn: 'id',
+        }),
+      ],
+    }
+    const viewport = { x: 0, y: 0, zoom: 1, width: 600, height: 160 }
+
+    expect(
+      getOffscreenRelationProxies({
+        diagram,
+        focusedTarget: FOCUSED_TABLE_TARGET,
+        minimumVisibleRatio: 0.8,
+        viewport,
+      }).map((proxy) => proxy.table.id),
+    ).toEqual([cornerVisibleUsers.id])
+  })
 })
 
 function createTable(

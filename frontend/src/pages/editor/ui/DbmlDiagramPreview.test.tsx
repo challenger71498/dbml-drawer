@@ -105,6 +105,7 @@ vi.mock('@xyflow/react', () => ({
       className?: string
       type?: string
       data: unknown
+      style?: CSSProperties
       zIndex?: number
     }>
     [key: string]: unknown
@@ -126,6 +127,7 @@ vi.mock('@xyflow/react', () => ({
               data-node-id={node.id}
               data-z-index={String(node.zIndex ?? 0)}
               key={node.id}
+              style={node.style}
               onClick={(event) => props.onNodeClick?.(event, node)}
               onMouseEnter={(event) => props.onNodeMouseEnter?.(event, node)}
               onMouseLeave={(event) => props.onNodeMouseLeave?.(event, node)}
@@ -952,7 +954,7 @@ Table posts {
     const layoutedDiagram = moveTable(
       await layoutDbmlDiagram(diagram),
       'table:public.users',
-      { x: 605, y: 0 },
+      { x: 395, y: 0 },
     )
 
     render(
@@ -960,6 +962,7 @@ Table posts {
         diagram={layoutedDiagram}
         isOffscreenRelationProxiesEnabled
         offscreenRelationProxyTransitionMode="opacity"
+        offscreenRelationProxyVisibilityMode="center"
       />,
     )
 
@@ -970,6 +973,11 @@ Table posts {
     )
 
     expect(Number.parseFloat(proxy.style.opacity)).toBeLessThan(0.5)
+    expect(
+      Number.parseFloat(
+        screen.getByTestId('diagram-node-table:public.users').style.opacity,
+      ),
+    ).toBeGreaterThan(0.5)
   })
 
   it('morphs offscreen relation proxies toward the original table when selected', async () => {
@@ -997,10 +1005,13 @@ Table posts {
     )
 
     expect(Number.parseFloat(proxy.style.left)).toBeGreaterThan(380)
-    expect(Number.parseFloat(proxy.style.opacity)).toBeLessThan(0.2)
+    expect(proxy.style.opacity).toBe('')
     expect(proxy.style.transform).toBe('scale(1)')
     expect(Number.parseFloat(proxy.style.width)).toBeGreaterThan(250)
     expect(within(proxy).getByText('email')).toBeInTheDocument()
+    expect(
+      screen.getByTestId('diagram-node-table:public.users').style.opacity,
+    ).toBe('0')
   })
 
   it('places offscreen relation proxies by parallel translation when selected', async () => {

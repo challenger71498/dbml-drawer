@@ -21,6 +21,15 @@ The diagram preview SHALL apply offscreen relation proxy handoff behavior throug
 #### Scenario: Opacity transition fades proxy during handoff
 - **WHEN** the proxy transition mode is `opacity` and a proxy's represented original table approaches the selected visibility threshold
 - **THEN** the diagram preview MUST reduce that proxy's opacity during the handoff range while preserving the proxy's computed layout position
+- **AND** the diagram preview SHOULD increase the represented original table node's opacity during the same handoff range
+
+#### Scenario: Opacity transition uses proxy transition completion visibility
+- **WHEN** the proxy transition mode is `opacity`
+- **THEN** the diagram preview SHOULD keep using transition handoff visibility until the represented original table is about 80% visible
+
+#### Scenario: Proxy hides represented original table node
+- **WHEN** an offscreen relation proxy is rendered for a represented original table and the proxy transition mode is not `opacity`
+- **THEN** the represented original table node SHOULD remain hidden while that proxy is rendered
 
 #### Scenario: Opacity transition preserves final visibility rule
 - **WHEN** the proxy transition mode is `opacity` and the represented original table satisfies the selected proxy visibility mode
@@ -38,8 +47,9 @@ The diagram preview SHALL apply offscreen relation proxy handoff behavior throug
 #### Scenario: Morph transition reveals original table content
 - **WHEN** the proxy transition mode is `morph` and handoff progress is active
 - **THEN** the diagram preview SHOULD fade compact proxy content out while fading represented original table content in
+- **AND** the diagram preview SHOULD NOT fade the whole proxy card opacity
 
 #### Scenario: Morph transition preserves relation handoff
 - **WHEN** a morphing proxy is used as a relation line endpoint
-- **THEN** the relation endpoint SHOULD follow the connected column port within the morphing proxy card
-- **AND** the relation endpoint SHOULD transition from the compact proxy column port during the initial morph interval
+- **THEN** the relation endpoint SHOULD transition from the compact proxy column port to the represented original node's actual relation port over the full morph interval
+- **AND** the transition endpoint MUST end at the represented original node's actual relation port
