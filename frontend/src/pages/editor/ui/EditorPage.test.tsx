@@ -511,6 +511,9 @@ describe('EditorPage', () => {
     const proxyPlacementGroup = screen.getByRole('group', {
       name: 'Proxy placement',
     })
+    const proxyCollisionGroup = screen.getByRole('group', {
+      name: 'Proxy collision',
+    })
     const proxyVisibilityGroup = screen.getByRole('group', {
       name: 'Proxy visibility',
     })
@@ -526,6 +529,12 @@ describe('EditorPage', () => {
     ).toHaveAttribute('aria-pressed', 'true')
     expect(
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
+    ).toBeDisabled()
+    expect(
+      within(proxyCollisionGroup).getByRole('button', { name: 'Legacy' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(proxyCollisionGroup).getByRole('button', { name: 'Constrained' }),
     ).toBeDisabled()
     expect(
       within(proxyVisibilityGroup).getByRole('button', {
@@ -550,6 +559,9 @@ describe('EditorPage', () => {
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
     )
     fireEvent.click(
+      within(proxyCollisionGroup).getByRole('button', { name: 'Constrained' }),
+    )
+    fireEvent.click(
       within(proxyVisibilityGroup).getByRole('button', {
         name: 'Center visible',
       }),
@@ -563,6 +575,9 @@ describe('EditorPage', () => {
     expect(proxyLineToggle).not.toBeDisabled()
     expect(
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(proxyCollisionGroup).getByRole('button', { name: 'Constrained' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(
       within(proxyVisibilityGroup).getByRole('button', {
@@ -580,6 +595,9 @@ describe('EditorPage', () => {
     ).toBe(true)
     expect(getStoredEditorSettings().offscreenRelationProxyPlacementMode).toBe(
       'parallel',
+    )
+    expect(getStoredEditorSettings().offscreenRelationProxyCollisionMode).toBe(
+      'constrained',
     )
     expect(getStoredEditorSettings().offscreenRelationProxyVisibilityMode).toBe(
       'center',
@@ -606,6 +624,12 @@ describe('EditorPage', () => {
       within(screen.getByRole('group', { name: 'Proxy placement' })).getByRole(
         'button',
         { name: 'Parallel' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(screen.getByRole('group', { name: 'Proxy collision' })).getByRole(
+        'button',
+        { name: 'Constrained' },
       ),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(

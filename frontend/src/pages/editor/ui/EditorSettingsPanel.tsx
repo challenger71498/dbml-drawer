@@ -5,6 +5,7 @@ import type {
 import type {
   CodeEditorThemeMode,
   EditorThemeMode,
+  OffscreenRelationProxyCollisionMode,
   OffscreenRelationProxyPlacementMode,
   OffscreenRelationProxyTransitionMode,
   OffscreenRelationProxyVisibilityMode,
@@ -13,6 +14,7 @@ import {
   EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS,
   EDITOR_RELATION_LINE_STYLE_OPTIONS,
   EDITOR_WORKSPACE_THEME_MODES,
+  OFFSCREEN_RELATION_PROXY_COLLISION_MODES,
   OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES,
   OFFSCREEN_RELATION_PROXY_TRANSITION_MODES,
   OFFSCREEN_RELATION_PROXY_VISIBILITY_MODES,
@@ -26,6 +28,7 @@ type EditorSettingsPanelProps = {
   isOffscreenRelationProxiesEnabled: boolean
   shouldConnectOffscreenRelationProxyLines: boolean
   shouldAvoidOffscreenRelationProxyActiveNodes: boolean
+  offscreenRelationProxyCollisionMode: OffscreenRelationProxyCollisionMode
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
   offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
@@ -37,6 +40,9 @@ type EditorSettingsPanelProps = {
   onOffscreenRelationProxiesEnabledChange: (isEnabled: boolean) => void
   onConnectOffscreenRelationProxyLinesChange: (shouldConnect: boolean) => void
   onAvoidOffscreenRelationProxyActiveNodesChange: (shouldAvoid: boolean) => void
+  onOffscreenRelationProxyCollisionModeChange: (
+    mode: OffscreenRelationProxyCollisionMode,
+  ) => void
   onOffscreenRelationProxyPlacementModeChange: (
     mode: OffscreenRelationProxyPlacementMode,
   ) => void
@@ -57,6 +63,7 @@ export function EditorSettingsPanel({
   isOffscreenRelationProxiesEnabled,
   shouldConnectOffscreenRelationProxyLines,
   shouldAvoidOffscreenRelationProxyActiveNodes,
+  offscreenRelationProxyCollisionMode,
   offscreenRelationProxyPlacementMode,
   offscreenRelationProxyVisibilityMode,
   offscreenRelationProxyTransitionMode,
@@ -68,6 +75,7 @@ export function EditorSettingsPanel({
   onOffscreenRelationProxiesEnabledChange,
   onConnectOffscreenRelationProxyLinesChange,
   onAvoidOffscreenRelationProxyActiveNodesChange,
+  onOffscreenRelationProxyCollisionModeChange,
   onOffscreenRelationProxyPlacementModeChange,
   onOffscreenRelationProxyVisibilityModeChange,
   onOffscreenRelationProxyTransitionModeChange,
@@ -170,6 +178,13 @@ export function EditorSettingsPanel({
         </label>
         <ThemeModeControl
           isDisabled={!isOffscreenRelationProxiesEnabled}
+          label="Proxy collision"
+          modes={OFFSCREEN_RELATION_PROXY_COLLISION_MODES}
+          value={offscreenRelationProxyCollisionMode}
+          onChange={onOffscreenRelationProxyCollisionModeChange}
+        />
+        <ThemeModeControl
+          isDisabled={!isOffscreenRelationProxiesEnabled}
           label="Proxy placement"
           modes={OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES}
           value={offscreenRelationProxyPlacementMode}
@@ -243,6 +258,7 @@ function ThemeModeControl<TMode extends ThemeModeControlMode>({
 type ThemeModeControlMode =
   | EditorThemeMode
   | CodeEditorThemeMode
+  | OffscreenRelationProxyCollisionMode
   | OffscreenRelationProxyPlacementMode
   | OffscreenRelationProxyVisibilityMode
   | OffscreenRelationProxyTransitionMode
@@ -300,6 +316,14 @@ function getThemeModeLabel(mode: ThemeModeControlMode) {
 
   if (mode === 'parallel') {
     return 'Parallel'
+  }
+
+  if (mode === 'legacy') {
+    return 'Legacy'
+  }
+
+  if (mode === 'constrained') {
+    return 'Constrained'
   }
 
   if (mode === 'any-overlap') {

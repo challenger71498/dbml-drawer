@@ -9,6 +9,7 @@ export type ResolvedEditorTheme = 'light' | 'light-solarized' | 'dark'
 export type OffscreenRelationProxyPlacementMode = 'line' | 'parallel'
 export type OffscreenRelationProxyVisibilityMode = 'any-overlap' | 'center'
 export type OffscreenRelationProxyTransitionMode = 'none' | 'opacity' | 'morph'
+export type OffscreenRelationProxyCollisionMode = 'legacy' | 'constrained'
 
 export const EDITOR_WORKSPACE_THEME_MODES = [
   'light',
@@ -32,6 +33,10 @@ export const OFFSCREEN_RELATION_PROXY_TRANSITION_MODES = [
   'none',
   'opacity',
   'morph',
+] as const
+export const OFFSCREEN_RELATION_PROXY_COLLISION_MODES = [
+  'legacy',
+  'constrained',
 ] as const
 export const EDITOR_RELATION_LINE_STYLE_MODES = [
   'bezier',
@@ -150,6 +155,16 @@ export function normalizeOffscreenRelationProxyTransitionMode(
   )
     ? (value as OffscreenRelationProxyTransitionMode)
     : 'none'
+}
+
+export function normalizeOffscreenRelationProxyCollisionMode(
+  value: unknown,
+): OffscreenRelationProxyCollisionMode {
+  return OFFSCREEN_RELATION_PROXY_COLLISION_MODES.includes(
+    value as OffscreenRelationProxyCollisionMode,
+  )
+    ? (value as OffscreenRelationProxyCollisionMode)
+    : 'legacy'
 }
 
 export function normalizeRelationLineStyle(

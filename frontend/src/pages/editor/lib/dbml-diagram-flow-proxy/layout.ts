@@ -1,5 +1,8 @@
 import type { DbmlDiagramViewport, DbmlOffscreenRelationProxy } from './proxy'
-import type { OffscreenRelationProxyPlacementMode } from '../../model/editor-theme'
+import type {
+  OffscreenRelationProxyCollisionMode,
+  OffscreenRelationProxyPlacementMode,
+} from '../../model/editor-theme'
 import {
   getScaledProxyCardHeight,
   getScaledProxyCardWidth,
@@ -39,6 +42,7 @@ export type DbmlOffscreenRelationProxyLayoutObstacle = {
 }
 
 export type LegacyOffscreenRelationProxyLayoutOptions = {
+  collisionMode?: OffscreenRelationProxyCollisionMode
   placementMode: OffscreenRelationProxyPlacementMode
   shouldAvoidActiveNodes: boolean
 }
@@ -68,6 +72,15 @@ function getLegacyOffscreenRelationProxyLayouts({
   obstacles,
   options,
 }: DbmlOffscreenRelationProxyLayoutInput<LegacyOffscreenRelationProxyLayoutOptions>) {
+  if (options.collisionMode === 'constrained') {
+    return getConstrainedOffscreenRelationProxyLayouts({
+      proxies,
+      viewport,
+      obstacles,
+      options,
+    })
+  }
+
   const layoutObstacles = getEffectiveProxyLayoutObstacles(
     obstacles,
     options.shouldAvoidActiveNodes,
@@ -104,6 +117,112 @@ function getLegacyOffscreenRelationProxyLayouts({
     viewport,
     options.placementMode,
   )
+}
+
+function getConstrainedOffscreenRelationProxyLayouts({
+  proxies,
+  viewport,
+  obstacles,
+  options,
+}: DbmlOffscreenRelationProxyLayoutInput<LegacyOffscreenRelationProxyLayoutOptions>) {
+  const layoutObstacles = getEffectiveProxyLayoutObstacles(
+    obstacles,
+    options.shouldAvoidActiveNodes,
+  )
+  const rawLayouts = proxies.map((proxy) => ({
+    proxy,
+    ...getRawProxyCardPosition(proxy, viewport, options.placementMode),
+  }))
+  const orderedLayouts = [...rawLayouts].sort((first, second) =>
+    compareConstrainedRawLayouts(first, second, options.placementMode),
+  )
+  const placedLayouts: DbmlOffscreenRelationProxyLayout[] = []
+
+  for (const layout of orderedLayouts) {
+    placedLayouts.push(
+      getConstrainedProxyLayout({
+        layout,
+        placedLayouts,
+        viewport,
+        obstacles: layoutObstacles,
+        placementMode: options.placementMode,
+      }),
+    )
+  }
+
+  return placedLayouts
+}
+
+function getConstrainedProxyLayout({
+  layout,
+  placedLayouts,
+  viewport,
+  obstacles,
+  placementMode,
+}: {
+  layout: RawOffscreenRelationProxyLayout
+  placedLayouts: readonly DbmlOffscreenRelationProxyLayout[]
+  viewport: DbmlDiagramViewport
+  obstacles: readonly DbmlOffscreenRelationProxyLayoutObstacle[]
+  placementMode: OffscreenRelationProxyPlacementMode
+}): DbmlOffscreenRelationProxyLayout {
+  const isVerticalShift = isVerticalProxyStack(layout.proxy.side, placementMode)
+  const rect = getRawProxyLayoutRect(layout, viewport)
+  const position = getRawLayoutAxisPosition(layout, isVerticalShift)
+  const size = isVerticalShift ? rect.height : rect.width
+  const maxPosition =
+    (isVerticalShift ? viewport.height : viewport.width) -
+    size -
+    PROXY_CARD_EDGE_GAP
+  const effectiveObstacles = obstacles.filter(
+    (obstacle) =>
+      obstacle.kind !== 'active-node' || obstacle.id !== layout.proxy.table.id,
+  )
+  const proxyObstacleRects = placedLayouts.map((placedLayout) =>
+    getProxyLayoutRect(placedLayout, viewport),
+  )
+  const hardForbiddenIntervals = getForbiddenPositionIntervals({
+    gap: PROXY_CARD_GAP,
+    isVerticalShift,
+    obstacleRects: effectiveObstacles.map((obstacle) => obstacle.rect),
+    rect,
+  })
+  const proxyForbiddenIntervals = getForbiddenPositionIntervals({
+    gap: PROXY_CARD_GAP,
+    isVerticalShift,
+    obstacleRects: proxyObstacleRects,
+    rect,
+  })
+  const allowedIntervals = getAllowedPositionIntervals({
+    forbiddenIntervals: [...hardForbiddenIntervals, ...proxyForbiddenIntervals],
+    max: maxPosition,
+    min: PROXY_CARD_EDGE_GAP,
+  })
+  const nextPosition =
+    getClosestPositionInIntervals(allowedIntervals, position) ??
+    getFallbackConstrainedPosition({
+      hardObstacleRects: effectiveObstacles.map((obstacle) => obstacle.rect),
+      isVerticalShift,
+      max: maxPosition,
+      min: PROXY_CARD_EDGE_GAP,
+      position,
+      proxyObstacleRects,
+      rect,
+    })
+  const nextLayout = setRawLayoutAxisPosition(
+    layout,
+    isVerticalShift,
+    nextPosition,
+  )
+
+  return {
+    proxy: layout.proxy,
+    style: {
+      left: nextLayout.left,
+      top: nextLayout.top,
+      transform: `scale(${viewport.zoom})`,
+    },
+  }
 }
 
 function getEffectiveProxyLayoutObstacles(
@@ -357,8 +476,7 @@ function getNonOverlappingProxyLayouts(
   placementMode: OffscreenRelationProxyPlacementMode,
 ): DbmlOffscreenRelationProxyLayout[] {
   const side = layouts[0]?.proxy.side
-  const isVerticalStack =
-    placementMode === 'parallel' || side === 'left' || side === 'right'
+  const isVerticalStack = isVerticalProxyStack(side, placementMode)
   const collisionGroups = getOverlappingProxyLayoutGroups({
     layouts,
     viewport,
@@ -572,6 +690,312 @@ function getProxyLayoutRect(
     width: getScaledProxyCardWidth(viewport),
     height: getScaledProxyCardHeight(layout.proxy, viewport),
   }
+}
+
+function compareConstrainedRawLayouts(
+  first: RawOffscreenRelationProxyLayout,
+  second: RawOffscreenRelationProxyLayout,
+  placementMode: OffscreenRelationProxyPlacementMode,
+) {
+  const firstSidePriority = getProxySidePriority(first.proxy.side)
+  const secondSidePriority = getProxySidePriority(second.proxy.side)
+
+  if (firstSidePriority !== secondSidePriority) {
+    return firstSidePriority - secondSidePriority
+  }
+
+  const isVerticalShift = isVerticalProxyStack(first.proxy.side, placementMode)
+  const firstPosition = getRawLayoutAxisPosition(first, isVerticalShift)
+  const secondPosition = getRawLayoutAxisPosition(second, isVerticalShift)
+
+  if (firstPosition !== secondPosition) {
+    return firstPosition - secondPosition
+  }
+
+  return first.proxy.id.localeCompare(second.proxy.id)
+}
+
+function getProxySidePriority(side: DbmlOffscreenRelationProxy['side']) {
+  switch (side) {
+    case 'left':
+      return 0
+    case 'right':
+      return 1
+    case 'top':
+      return 2
+    case 'bottom':
+      return 3
+  }
+}
+
+function isVerticalProxyStack(
+  side: DbmlOffscreenRelationProxy['side'] | undefined,
+  placementMode: OffscreenRelationProxyPlacementMode,
+) {
+  return placementMode === 'parallel' || side === 'left' || side === 'right'
+}
+
+function getRawLayoutAxisPosition(
+  layout: RawOffscreenRelationProxyLayout,
+  isVerticalShift: boolean,
+) {
+  return isVerticalShift ? layout.top : layout.left
+}
+
+function setRawLayoutAxisPosition(
+  layout: RawOffscreenRelationProxyLayout,
+  isVerticalShift: boolean,
+  position: number,
+): RawOffscreenRelationProxyLayout {
+  return {
+    ...layout,
+    left: isVerticalShift ? layout.left : position,
+    top: isVerticalShift ? position : layout.top,
+  }
+}
+
+function getForbiddenPositionIntervals({
+  gap,
+  isVerticalShift,
+  obstacleRects,
+  rect,
+}: {
+  gap: number
+  isVerticalShift: boolean
+  obstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  rect: DbmlOffscreenRelationProxyLayoutRect
+}): PositionInterval[] {
+  const size = isVerticalShift ? rect.height : rect.width
+
+  return obstacleRects
+    .filter((obstacleRect) =>
+      intervalsOverlap(
+        isVerticalShift ? rect.left : rect.top,
+        isVerticalShift ? rect.left + rect.width : rect.top + rect.height,
+        isVerticalShift ? obstacleRect.left : obstacleRect.top,
+        isVerticalShift
+          ? obstacleRect.left + obstacleRect.width
+          : obstacleRect.top + obstacleRect.height,
+      ),
+    )
+    .map((obstacleRect) => {
+      const obstacleStart = isVerticalShift
+        ? obstacleRect.top
+        : obstacleRect.left
+      const obstacleEnd =
+        obstacleStart +
+        (isVerticalShift ? obstacleRect.height : obstacleRect.width)
+
+      return {
+        start: obstacleStart - size - gap,
+        end: obstacleEnd + gap,
+      }
+    })
+}
+
+function getAllowedPositionIntervals({
+  forbiddenIntervals,
+  max,
+  min,
+}: {
+  forbiddenIntervals: readonly PositionInterval[]
+  max: number
+  min: number
+}): PositionInterval[] {
+  if (max < min) {
+    return []
+  }
+
+  const mergedForbiddenIntervals = getMergedIntervals(
+    forbiddenIntervals
+      .map((interval) => ({
+        start: clampScreenPosition({
+          max,
+          min,
+          value: interval.start,
+        }),
+        end: clampScreenPosition({
+          max,
+          min,
+          value: interval.end,
+        }),
+      }))
+      .filter((interval) => interval.start <= interval.end),
+  )
+  const allowedIntervals: PositionInterval[] = []
+  let cursor = min
+
+  for (const interval of mergedForbiddenIntervals) {
+    if (interval.start > cursor) {
+      allowedIntervals.push({
+        start: cursor,
+        end: interval.start,
+      })
+    }
+
+    cursor = Math.max(cursor, interval.end)
+  }
+
+  if (cursor <= max) {
+    allowedIntervals.push({
+      start: cursor,
+      end: max,
+    })
+  }
+
+  return allowedIntervals
+}
+
+function getMergedIntervals(
+  intervals: readonly PositionInterval[],
+): PositionInterval[] {
+  const sortedIntervals = [...intervals].sort(
+    (first, second) => first.start - second.start,
+  )
+  const mergedIntervals: PositionInterval[] = []
+
+  for (const interval of sortedIntervals) {
+    const previousInterval = mergedIntervals.at(-1)
+
+    if (!previousInterval || interval.start > previousInterval.end) {
+      mergedIntervals.push({ ...interval })
+      continue
+    }
+
+    previousInterval.end = Math.max(previousInterval.end, interval.end)
+  }
+
+  return mergedIntervals
+}
+
+function getClosestPositionInIntervals(
+  intervals: readonly PositionInterval[],
+  position: number,
+) {
+  return intervals
+    .map((interval) =>
+      clampScreenPosition({
+        max: interval.end,
+        min: interval.start,
+        value: position,
+      }),
+    )
+    .sort(
+      (first, second) =>
+        Math.abs(first - position) - Math.abs(second - position) ||
+        first - second,
+    )[0]
+}
+
+function getFallbackConstrainedPosition({
+  hardObstacleRects,
+  isVerticalShift,
+  max,
+  min,
+  position,
+  proxyObstacleRects,
+  rect,
+}: {
+  hardObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  isVerticalShift: boolean
+  max: number
+  min: number
+  position: number
+  proxyObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  rect: DbmlOffscreenRelationProxyLayoutRect
+}) {
+  const size = isVerticalShift ? rect.height : rect.width
+  const candidates = new Set<number>([position, min, max])
+
+  for (const obstacleRect of [...hardObstacleRects, ...proxyObstacleRects]) {
+    const obstacleStart = isVerticalShift ? obstacleRect.top : obstacleRect.left
+    const obstacleEnd =
+      obstacleStart +
+      (isVerticalShift ? obstacleRect.height : obstacleRect.width)
+
+    candidates.add(obstacleStart - size - PROXY_CARD_GAP)
+    candidates.add(obstacleEnd + PROXY_CARD_GAP)
+  }
+
+  return [...candidates]
+    .map((candidate) =>
+      clampScreenPosition({
+        max,
+        min,
+        value: candidate,
+      }),
+    )
+    .sort(
+      (first, second) =>
+        getConstrainedFallbackScore({
+          hardObstacleRects,
+          isVerticalShift,
+          position: first,
+          proxyObstacleRects,
+          rect,
+          targetPosition: position,
+        }) -
+          getConstrainedFallbackScore({
+            hardObstacleRects,
+            isVerticalShift,
+            position: second,
+            proxyObstacleRects,
+            rect,
+            targetPosition: position,
+          }) || first - second,
+    )[0]
+}
+
+function getConstrainedFallbackScore({
+  hardObstacleRects,
+  isVerticalShift,
+  position,
+  proxyObstacleRects,
+  rect,
+  targetPosition,
+}: {
+  hardObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  isVerticalShift: boolean
+  position: number
+  proxyObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  rect: DbmlOffscreenRelationProxyLayoutRect
+  targetPosition: number
+}) {
+  const nextRect = {
+    ...rect,
+    left: isVerticalShift ? rect.left : position,
+    top: isVerticalShift ? position : rect.top,
+  }
+  const hardOverlapArea = hardObstacleRects.reduce(
+    (sum, obstacleRect) =>
+      sum + getRectangleOverlapArea(nextRect, obstacleRect),
+    0,
+  )
+  const proxyOverlapArea = proxyObstacleRects.reduce(
+    (sum, obstacleRect) =>
+      sum + getRectangleOverlapArea(nextRect, obstacleRect),
+    0,
+  )
+
+  return (
+    hardOverlapArea * 1_000_000_000 +
+    proxyOverlapArea * 1_000_000 +
+    Math.abs(position - targetPosition)
+  )
+}
+
+function intervalsOverlap(
+  firstStart: number,
+  firstEnd: number,
+  secondStart: number,
+  secondEnd: number,
+) {
+  return firstStart < secondEnd && firstEnd > secondStart
+}
+
+type PositionInterval = {
+  start: number
+  end: number
 }
 
 type RawOffscreenRelationProxyLayout = {

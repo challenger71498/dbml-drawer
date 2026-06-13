@@ -26,6 +26,7 @@ import {
   normalizeEditorSidebarWidth,
   normalizeEditorThemeMode,
   normalizeOffscreenRelationProxyPlacementMode,
+  normalizeOffscreenRelationProxyCollisionMode,
   normalizeOffscreenRelationProxyTransitionMode,
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
@@ -36,6 +37,7 @@ import {
   type CodeEditorThemeMode,
   type EditorThemeMode,
   type OffscreenRelationProxyPlacementMode,
+  type OffscreenRelationProxyCollisionMode,
   type OffscreenRelationProxyTransitionMode,
   type OffscreenRelationProxyVisibilityMode,
   type ResolvedEditorTheme,
@@ -49,6 +51,7 @@ export type EditorSettingsState = {
   isOffscreenRelationProxiesEnabled: boolean
   shouldConnectOffscreenRelationProxyLines: boolean
   shouldAvoidOffscreenRelationProxyActiveNodes: boolean
+  offscreenRelationProxyCollisionMode: OffscreenRelationProxyCollisionMode
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: OffscreenRelationProxyVisibilityMode
   offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
@@ -66,6 +69,9 @@ export type EditorSettingsState = {
   setShouldConnectOffscreenRelationProxyLines: (shouldConnect: boolean) => void
   setShouldAvoidOffscreenRelationProxyActiveNodes: (
     shouldAvoid: boolean,
+  ) => void
+  setOffscreenRelationProxyCollisionMode: (
+    mode: OffscreenRelationProxyCollisionMode,
   ) => void
   setOffscreenRelationProxyPlacementMode: (
     mode: OffscreenRelationProxyPlacementMode,
@@ -92,6 +98,7 @@ export type EditorSettings = Pick<
   | 'isOffscreenRelationProxiesEnabled'
   | 'shouldConnectOffscreenRelationProxyLines'
   | 'shouldAvoidOffscreenRelationProxyActiveNodes'
+  | 'offscreenRelationProxyCollisionMode'
   | 'offscreenRelationProxyPlacementMode'
   | 'offscreenRelationProxyVisibilityMode'
   | 'offscreenRelationProxyTransitionMode'
@@ -107,6 +114,7 @@ export type EditorSettings = Pick<
   | 'setOffscreenRelationProxiesEnabled'
   | 'setShouldConnectOffscreenRelationProxyLines'
   | 'setShouldAvoidOffscreenRelationProxyActiveNodes'
+  | 'setOffscreenRelationProxyCollisionMode'
   | 'setOffscreenRelationProxyPlacementMode'
   | 'setOffscreenRelationProxyVisibilityMode'
   | 'setOffscreenRelationProxyTransitionMode'
@@ -130,6 +138,7 @@ type EditorSettingsData = Omit<
   | 'setOffscreenRelationProxiesEnabled'
   | 'setShouldConnectOffscreenRelationProxyLines'
   | 'setShouldAvoidOffscreenRelationProxyActiveNodes'
+  | 'setOffscreenRelationProxyCollisionMode'
   | 'setOffscreenRelationProxyPlacementMode'
   | 'setOffscreenRelationProxyVisibilityMode'
   | 'setOffscreenRelationProxyTransitionMode'
@@ -166,6 +175,8 @@ const useEditorSettingsStore = create<EditorSettingsState>()(
         set({ shouldConnectOffscreenRelationProxyLines: shouldConnect }),
       setShouldAvoidOffscreenRelationProxyActiveNodes: (shouldAvoid) =>
         set({ shouldAvoidOffscreenRelationProxyActiveNodes: shouldAvoid }),
+      setOffscreenRelationProxyCollisionMode: (mode) =>
+        set({ offscreenRelationProxyCollisionMode: mode }),
       setOffscreenRelationProxyPlacementMode: (mode) =>
         set({ offscreenRelationProxyPlacementMode: mode }),
       setOffscreenRelationProxyVisibilityMode: (mode) =>
@@ -229,6 +240,9 @@ export function useEditorSettings(): EditorSettings {
   const offscreenRelationProxyPlacementMode = useEditorSettingsStore(
     (state) => state.offscreenRelationProxyPlacementMode,
   )
+  const offscreenRelationProxyCollisionMode = useEditorSettingsStore(
+    (state) => state.offscreenRelationProxyCollisionMode,
+  )
   const offscreenRelationProxyVisibilityMode = useEditorSettingsStore(
     (state) => state.offscreenRelationProxyVisibilityMode,
   )
@@ -275,6 +289,9 @@ export function useEditorSettings(): EditorSettings {
     )
   const setOffscreenRelationProxyPlacementMode = useEditorSettingsStore(
     (state) => state.setOffscreenRelationProxyPlacementMode,
+  )
+  const setOffscreenRelationProxyCollisionMode = useEditorSettingsStore(
+    (state) => state.setOffscreenRelationProxyCollisionMode,
   )
   const setOffscreenRelationProxyVisibilityMode = useEditorSettingsStore(
     (state) => state.setOffscreenRelationProxyVisibilityMode,
@@ -347,6 +364,7 @@ export function useEditorSettings(): EditorSettings {
     isOffscreenRelationProxiesEnabled,
     shouldConnectOffscreenRelationProxyLines,
     shouldAvoidOffscreenRelationProxyActiveNodes,
+    offscreenRelationProxyCollisionMode,
     offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode,
     offscreenRelationProxyTransitionMode,
@@ -362,6 +380,7 @@ export function useEditorSettings(): EditorSettings {
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
     setShouldAvoidOffscreenRelationProxyActiveNodes,
+    setOffscreenRelationProxyCollisionMode,
     setOffscreenRelationProxyPlacementMode,
     setOffscreenRelationProxyVisibilityMode,
     setOffscreenRelationProxyTransitionMode,
@@ -429,6 +448,7 @@ function getDefaultEditorSettingsState(): EditorSettingsData {
     isOffscreenRelationProxiesEnabled: false,
     shouldConnectOffscreenRelationProxyLines: false,
     shouldAvoidOffscreenRelationProxyActiveNodes: false,
+    offscreenRelationProxyCollisionMode: 'legacy',
     offscreenRelationProxyPlacementMode: 'line',
     offscreenRelationProxyVisibilityMode: 'any-overlap',
     offscreenRelationProxyTransitionMode: 'none',
@@ -455,6 +475,8 @@ function partializeEditorSettingsState(
       state.shouldConnectOffscreenRelationProxyLines,
     shouldAvoidOffscreenRelationProxyActiveNodes:
       state.shouldAvoidOffscreenRelationProxyActiveNodes,
+    offscreenRelationProxyCollisionMode:
+      state.offscreenRelationProxyCollisionMode,
     offscreenRelationProxyPlacementMode:
       state.offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode:
@@ -499,6 +521,10 @@ function normalizePersistedEditorSettingsState(
       state.shouldAvoidOffscreenRelationProxyActiveNodes,
       false,
     ),
+    offscreenRelationProxyCollisionMode:
+      normalizeOffscreenRelationProxyCollisionMode(
+        state.offscreenRelationProxyCollisionMode,
+      ),
     offscreenRelationProxyPlacementMode:
       normalizeOffscreenRelationProxyPlacementMode(
         state.offscreenRelationProxyPlacementMode,

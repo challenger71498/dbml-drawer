@@ -37,6 +37,7 @@ import {
   useRelationHighlightModeSetting,
   useRelationLineStyleSetting,
   useSetRelationHighlightMode,
+  type OffscreenRelationProxyCollisionMode,
   type OffscreenRelationProxyPlacementMode,
   type OffscreenRelationProxyTransitionMode,
 } from '../model/editor-theme'
@@ -61,6 +62,7 @@ type DbmlDiagramPreviewProps = {
   sourceColumnIds?: ReadonlySet<string>
   referenceColumnIds?: ReadonlySet<string>
   isOffscreenRelationProxiesEnabled?: boolean
+  offscreenRelationProxyCollisionMode?: OffscreenRelationProxyCollisionMode
   offscreenRelationProxyPlacementMode?: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode?: DbmlOffscreenRelationProxyVisibilityMode
   offscreenRelationProxyTransitionMode?: OffscreenRelationProxyTransitionMode
@@ -107,6 +109,7 @@ export function DbmlDiagramPreview({
   sourceColumnIds = EMPTY_ENDPOINT_COLUMN_IDS,
   referenceColumnIds = EMPTY_ENDPOINT_COLUMN_IDS,
   isOffscreenRelationProxiesEnabled = false,
+  offscreenRelationProxyCollisionMode = 'legacy',
   offscreenRelationProxyPlacementMode = 'line',
   offscreenRelationProxyVisibilityMode = 'any-overlap',
   offscreenRelationProxyTransitionMode = 'none',
@@ -233,6 +236,9 @@ export function DbmlDiagramPreview({
               isOffscreenRelationProxiesEnabled={
                 isOffscreenRelationProxiesEnabled
               }
+              offscreenRelationProxyCollisionMode={
+                offscreenRelationProxyCollisionMode
+              }
               offscreenRelationProxyPlacementMode={
                 offscreenRelationProxyPlacementMode
               }
@@ -274,6 +280,7 @@ type DiagramCanvasProps = {
   focusedTableIds: ReadonlySet<string>
   focusedTarget: DbmlDiagramSelectionTarget | null
   isOffscreenRelationProxiesEnabled: boolean
+  offscreenRelationProxyCollisionMode: OffscreenRelationProxyCollisionMode
   offscreenRelationProxyPlacementMode: OffscreenRelationProxyPlacementMode
   offscreenRelationProxyVisibilityMode: DbmlOffscreenRelationProxyVisibilityMode
   offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
@@ -297,6 +304,7 @@ function DiagramCanvas({
   focusedTableIds,
   focusedTarget,
   isOffscreenRelationProxiesEnabled,
+  offscreenRelationProxyCollisionMode,
   offscreenRelationProxyPlacementMode,
   offscreenRelationProxyVisibilityMode,
   offscreenRelationProxyTransitionMode,
@@ -351,6 +359,7 @@ function DiagramCanvas({
         elements,
         focusedTableIds,
         focusedTarget,
+        collisionMode: offscreenRelationProxyCollisionMode,
         isEnabled: isOffscreenRelationProxiesEnabled,
         placementMode: offscreenRelationProxyPlacementMode,
         shouldAvoidActiveNodes: shouldAvoidOffscreenRelationProxyActiveNodes,
@@ -366,6 +375,7 @@ function DiagramCanvas({
       focusedTableIds,
       focusedTarget,
       isOffscreenRelationProxiesEnabled,
+      offscreenRelationProxyCollisionMode,
       offscreenRelationProxyPlacementMode,
       offscreenRelationProxyTransitionMode,
       offscreenRelationProxyVisibilityMode,

@@ -6,6 +6,7 @@ import {
   normalizeCodeEditorThemeMode,
   normalizeEditorSidebarWidth,
   normalizeEditorThemeMode,
+  normalizeOffscreenRelationProxyCollisionMode,
   normalizeOffscreenRelationProxyPlacementMode,
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
@@ -35,6 +36,7 @@ describe('editor theme settings', () => {
       isOffscreenRelationProxiesEnabled: 'true',
       shouldConnectOffscreenRelationProxyLines: 'false',
       shouldAvoidOffscreenRelationProxyActiveNodes: 'true',
+      offscreenRelationProxyCollisionMode: 'invalid',
       offscreenRelationProxyPlacementMode: 'diagonal',
       offscreenRelationProxyVisibilityMode: 'invalid',
       editorSidebarWidth: '10000',
@@ -52,6 +54,12 @@ describe('editor theme settings', () => {
       'parallel',
     )
     expect(normalizeOffscreenRelationProxyPlacementMode('unknown')).toBe('line')
+    expect(normalizeOffscreenRelationProxyCollisionMode('constrained')).toBe(
+      'constrained',
+    )
+    expect(normalizeOffscreenRelationProxyCollisionMode('unknown')).toBe(
+      'legacy',
+    )
     expect(normalizeOffscreenRelationProxyVisibilityMode('center')).toBe(
       'center',
     )
@@ -74,6 +82,7 @@ describe('editor theme settings', () => {
     expect(state.isOffscreenRelationProxiesEnabled).toBe(false)
     expect(state.shouldConnectOffscreenRelationProxyLines).toBe(false)
     expect(state.shouldAvoidOffscreenRelationProxyActiveNodes).toBe(false)
+    expect(state.offscreenRelationProxyCollisionMode).toBe('legacy')
     expect(state.offscreenRelationProxyPlacementMode).toBe('line')
     expect(state.offscreenRelationProxyVisibilityMode).toBe('any-overlap')
     expect(state.editorSidebarWidth).toBe(720)
@@ -181,6 +190,9 @@ describe('editor theme settings', () => {
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'line',
     )
+    expect(screen.getByTestId('offscreen-proxy-collision')).toHaveTextContent(
+      'legacy',
+    )
     expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
       'any-overlap',
     )
@@ -188,6 +200,9 @@ describe('editor theme settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enable proxies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Connect proxies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Avoid active nodes' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Constrain collisions' }),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Place parallel' }))
     fireEvent.click(screen.getByRole('button', { name: 'Visible at center' }))
 
@@ -201,6 +216,9 @@ describe('editor theme settings', () => {
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'parallel',
     )
+    expect(screen.getByTestId('offscreen-proxy-collision')).toHaveTextContent(
+      'constrained',
+    )
     expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
       'center',
     )
@@ -213,6 +231,9 @@ describe('editor theme settings', () => {
     expect(
       getStoredEditorSettings().shouldAvoidOffscreenRelationProxyActiveNodes,
     ).toBe(true)
+    expect(getStoredEditorSettings().offscreenRelationProxyCollisionMode).toBe(
+      'constrained',
+    )
     expect(getStoredEditorSettings().offscreenRelationProxyPlacementMode).toBe(
       'parallel',
     )
@@ -232,6 +253,9 @@ describe('editor theme settings', () => {
     ).toHaveTextContent('avoided')
     expect(screen.getByTestId('offscreen-proxy-placement')).toHaveTextContent(
       'parallel',
+    )
+    expect(screen.getByTestId('offscreen-proxy-collision')).toHaveTextContent(
+      'constrained',
     )
     expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
       'center',
@@ -356,6 +380,7 @@ function ThemeHarness() {
     shouldConnectOffscreenRelationProxyLines,
     shouldAvoidOffscreenRelationProxyActiveNodes,
     offscreenRelationProxyPlacementMode,
+    offscreenRelationProxyCollisionMode,
     offscreenRelationProxyVisibilityMode,
     editorSidebarWidth,
     isEditorSidebarExpanded,
@@ -369,6 +394,7 @@ function ThemeHarness() {
     setShouldConnectOffscreenRelationProxyLines,
     setShouldAvoidOffscreenRelationProxyActiveNodes,
     setOffscreenRelationProxyPlacementMode,
+    setOffscreenRelationProxyCollisionMode,
     setOffscreenRelationProxyVisibilityMode,
     setEditorSidebarWidth,
     setEditorSidebarExpanded,
@@ -398,6 +424,9 @@ function ThemeHarness() {
       <span data-testid="offscreen-proxy-placement">
         {offscreenRelationProxyPlacementMode}
       </span>
+      <span data-testid="offscreen-proxy-collision">
+        {offscreenRelationProxyCollisionMode}
+      </span>
       <span data-testid="offscreen-proxy-visibility">
         {offscreenRelationProxyVisibilityMode}
       </span>
@@ -421,6 +450,12 @@ function ThemeHarness() {
       </button>
       <button type="button" onClick={() => setCodeEditorThemeMode('workspace')}>
         Code workspace
+      </button>
+      <button
+        type="button"
+        onClick={() => setOffscreenRelationProxyCollisionMode('constrained')}
+      >
+        Constrain collisions
       </button>
       <button
         type="button"

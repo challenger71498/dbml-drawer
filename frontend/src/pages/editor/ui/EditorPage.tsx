@@ -97,6 +97,7 @@ export function EditorPage({
     isOffscreenRelationProxiesEnabled,
     shouldConnectOffscreenRelationProxyLines,
     shouldAvoidOffscreenRelationProxyActiveNodes,
+    offscreenRelationProxyCollisionMode,
     offscreenRelationProxyPlacementMode,
     offscreenRelationProxyVisibilityMode,
     offscreenRelationProxyTransitionMode,
@@ -110,6 +111,7 @@ export function EditorPage({
     setOffscreenRelationProxiesEnabled,
     setShouldConnectOffscreenRelationProxyLines,
     setShouldAvoidOffscreenRelationProxyActiveNodes,
+    setOffscreenRelationProxyCollisionMode,
     setOffscreenRelationProxyPlacementMode,
     setOffscreenRelationProxyVisibilityMode,
     setOffscreenRelationProxyTransitionMode,
@@ -333,6 +335,9 @@ export function EditorPage({
           codeEditorOverrideThemeMode={codeEditorOverrideThemeMode}
           isCodeEditorThemeOverrideEnabled={codeEditorThemeMode !== 'workspace'}
           isOffscreenRelationProxiesEnabled={isOffscreenRelationProxiesEnabled}
+          offscreenRelationProxyCollisionMode={
+            offscreenRelationProxyCollisionMode
+          }
           offscreenRelationProxyPlacementMode={
             offscreenRelationProxyPlacementMode
           }
@@ -366,6 +371,9 @@ export function EditorPage({
           onAvoidOffscreenRelationProxyActiveNodesChange={
             setShouldAvoidOffscreenRelationProxyActiveNodes
           }
+          onOffscreenRelationProxyCollisionModeChange={
+            setOffscreenRelationProxyCollisionMode
+          }
           onOffscreenRelationProxyPlacementModeChange={
             setOffscreenRelationProxyPlacementMode
           }
@@ -387,12 +395,14 @@ export function EditorPage({
       handleCodeEditorOverrideThemeModeChange,
       handleCodeEditorThemeOverrideEnabledChange,
       isOffscreenRelationProxiesEnabled,
+      offscreenRelationProxyCollisionMode,
       offscreenRelationProxyPlacementMode,
       offscreenRelationProxyTransitionMode,
       offscreenRelationProxyVisibilityMode,
       relationHighlightMode,
       relationLineStyle,
       setShouldAvoidOffscreenRelationProxyActiveNodes,
+      setOffscreenRelationProxyCollisionMode,
       setOffscreenRelationProxyPlacementMode,
       setOffscreenRelationProxyTransitionMode,
       setOffscreenRelationProxyVisibilityMode,
@@ -479,6 +489,9 @@ export function EditorPage({
                 focusedTarget={focusedDiagramTarget}
                 isOffscreenRelationProxiesEnabled={
                   isOffscreenRelationProxiesEnabled
+                }
+                offscreenRelationProxyCollisionMode={
+                  offscreenRelationProxyCollisionMode
                 }
                 offscreenRelationProxyPlacementMode={
                   offscreenRelationProxyPlacementMode

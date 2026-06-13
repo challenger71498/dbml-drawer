@@ -1,6 +1,7 @@
 import type { DbmlDiagramSelectionTarget } from '../../model/dbml-diagram-selection'
 import type { LayoutedDbmlDiagram } from '../../model/dbml-layout'
 import type {
+  OffscreenRelationProxyCollisionMode,
   OffscreenRelationProxyPlacementMode,
   OffscreenRelationProxyTransitionMode,
 } from '../../model/editor-theme'
@@ -36,6 +37,7 @@ export function createDbmlDiagramFlowProxyState({
   elements,
   focusedTableIds,
   focusedTarget,
+  collisionMode = 'legacy',
   isEnabled,
   placementMode,
   shouldAvoidActiveNodes,
@@ -48,6 +50,7 @@ export function createDbmlDiagramFlowProxyState({
   elements: DbmlDiagramFlowElements
   focusedTableIds: ReadonlySet<string>
   focusedTarget: DbmlDiagramSelectionTarget | null
+  collisionMode?: OffscreenRelationProxyCollisionMode
   isEnabled: boolean
   placementMode: OffscreenRelationProxyPlacementMode
   shouldAvoidActiveNodes: boolean
@@ -89,6 +92,7 @@ export function createDbmlDiagramFlowProxyState({
         : []),
     ],
     options: {
+      collisionMode,
       placementMode,
       shouldAvoidActiveNodes,
     },
