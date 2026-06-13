@@ -42,20 +42,20 @@ describe('dbml diagram flow proxy element adaptation', () => {
       viewport: { x: 0, y: 0, zoom: 1, width: 600, height: 400 },
     })
 
+    const adaptedEdge = adaptedElements.edges[0]
+
+    if (!adaptedEdge?.data) {
+      throw new Error('Expected adapted relation edge data.')
+    }
+
     expect(adaptedElements.nodes).toBe(elements.nodes)
-    expect(adaptedElements.edges[0]).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          endpointOverride: {
-            source: {
-              x: 586,
-              y: 59,
-              position: Position.Right,
-            },
-          },
-        }),
-      }),
-    )
+    expect(adaptedEdge.data.endpointOverride).toEqual({
+      source: {
+        x: 586,
+        y: 59,
+        position: Position.Right,
+      },
+    })
   })
 
   it('keeps unrelated relation edges unchanged', () => {

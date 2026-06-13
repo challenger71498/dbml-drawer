@@ -88,14 +88,16 @@ describe('App', () => {
       throw new Error('Expected DBML editor to render as a textarea in tests.')
     }
 
-    expect(screen.getByRole('heading', { name: 'Editor' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'dbml_drawer' }),
+    ).toBeInTheDocument()
     expect(editor.value).toContain('Table users')
     expect(
       screen.queryByRole('heading', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()
   })
 
-  it('shows diagnostics for invalid DBML after editor changes', () => {
+  it('keeps diagnostics hidden and blocks export for invalid DBML outside dev mode', () => {
     render(<App />)
 
     fireEvent.change(screen.getByRole('textbox', { name: 'DBML editor' }), {
@@ -106,7 +108,7 @@ describe('App', () => {
       vi.advanceTimersByTime(350)
     })
 
-    expect(screen.getByText('Needs attention')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Export' })).toBeDisabled()
     expect(
       screen.queryByRole('heading', { name: 'Diagnostics' }),
     ).not.toBeInTheDocument()

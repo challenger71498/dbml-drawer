@@ -194,6 +194,40 @@ export function DatabaseIcon({ className }: IconProps) {
   )
 }
 
+export function ExportIcon({ className }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      height="20"
+      viewBox="0 0 20 20"
+      width="20"
+    >
+      <path
+        d="M10 3.5v8"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.6"
+      />
+      <path
+        d="m6.75 8.25 3.25 3.25 3.25-3.25"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M4.5 13.5v2h11v-2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.6"
+      />
+    </svg>
+  )
+}
+
 export function CloseIcon({ className }: IconProps) {
   return (
     <svg

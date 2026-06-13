@@ -18,6 +18,7 @@ import {
   SettingsIcon,
 } from './EditorInspectorIcons'
 import { EditorSettingsPanel } from './EditorSettingsPanel'
+import { EditorDiagramExportControl } from './EditorDiagramExportControl'
 import { isEditorDevModeEnabled } from '../lib/editor-dev-mode'
 import type { DbmlDiagramColumn, DbmlDiagramTable } from '../model/dbml-diagram'
 import {
@@ -473,6 +474,16 @@ export function EditorPage({
           <div className={styles.editorHeaderMetadata}>
             <h1 id="editor-heading">{documentMetadata.projectName}</h1>
             {documentMetadata.note ? <p>{documentMetadata.note}</p> : null}
+          </div>
+          <div className={styles.editorToolbarActions}>
+            <EditorDiagramExportControl
+              diagram={layoutedDiagram}
+              focusedTarget={focusedDiagramTarget}
+              projectName={documentMetadata.projectName}
+              relationHighlightMode={relationHighlightMode}
+              relationLineStyle={relationLineStyle}
+              resolvedWorkspaceTheme={resolvedWorkspaceTheme}
+            />
           </div>
         </header>
 

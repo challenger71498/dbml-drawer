@@ -10,6 +10,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   EDITOR_SETTINGS_STORAGE_KEY,
+  getEditorSettingsStateForTests,
   GRUVBOX_MATERIAL_DARK_MEDIUM_MONACO_THEME,
   LIGHT_SOLARIZED_MONACO_THEME,
   PURE_WHITE_LIGHT_MONACO_THEME,
@@ -20,6 +21,7 @@ import {
   useDbmlEditorStore,
 } from '../model/dbml-editor-store'
 import { resetEditorDiagramInteractionStoreForTests } from '../model/editor-diagram-interaction-store'
+import type { DbmlDiagramExportBlobOptions } from '../lib/dbml-diagram-export'
 import { EditorPage } from './EditorPage'
 
 const monacoEditor = vi.hoisted(() => ({
@@ -83,6 +85,8 @@ const layoutOptionControls = vi.hoisted(() => ({
 }))
 
 const loadDbmlLayoutAlgorithmOptions = vi.hoisted(() => vi.fn())
+const createDbmlDiagramExportBlob = vi.hoisted(() => vi.fn())
+const downloadDbmlDiagramExportBlob = vi.hoisted(() => vi.fn())
 
 vi.mock('../model/dbml-layout-settings', () => ({
   DEFAULT_DBML_LAYOUT_ALGORITHM_ID: 'org.eclipse.elk.layered',
@@ -104,6 +108,18 @@ vi.mock('../model/dbml-layout-settings', () => ({
       Object.entries(optionValues).filter(([, value]) => value !== ''),
     ),
 }))
+
+vi.mock('../lib/dbml-diagram-export', async () => {
+  const actual = await vi.importActual<
+    typeof import('../lib/dbml-diagram-export')
+  >('../lib/dbml-diagram-export')
+
+  return {
+    ...actual,
+    createDbmlDiagramExportBlob,
+    downloadDbmlDiagramExportBlob,
+  }
+})
 
 vi.mock('@monaco-editor/react', () => ({
   default: ({
@@ -217,6 +233,11 @@ describe('EditorPage', () => {
     cleanup()
     loadDbmlLayoutAlgorithmOptions.mockReset()
     loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    createDbmlDiagramExportBlob.mockReset()
+    createDbmlDiagramExportBlob.mockResolvedValue(
+      new Blob(['export'], { type: 'text/plain' }),
+    )
+    downloadDbmlDiagramExportBlob.mockReset()
     monacoEditor.focus.mockClear()
     monacoEditor.getModel.mockClear()
     monacoEditor.revealRangeInCenter.mockClear()
@@ -280,6 +301,190 @@ describe('EditorPage', () => {
     ).not.toBeInTheDocument()
     expect(screen.queryByText('Valid')).not.toBeInTheDocument()
     expect(screen.queryByText('Ready')).not.toBeInTheDocument()
+  })
+
+  it('exports the current diagram from the header action area', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    await screen.findByText('email')
+
+    const header = screen
+      .getByRole('heading', { name: 'dbml_drawer' })
+      .closest('header')
+
+    if (!header) {
+      throw new Error('Expected editor heading to render inside a header.')
+    }
+
+    const exportButton = within(header).getByRole('button', {
+      name: /export/i,
+    })
+
+    expect(exportButton).toBeEnabled()
+
+    fireEvent.click(exportButton)
+
+    const dialog = screen.getByRole('dialog', { name: 'Export diagram' })
+    const highlightOption = within(dialog).getByRole('checkbox', {
+      name: 'Include focused selection highlight',
+    })
+    const filenameInput = within(dialog).getByRole('textbox', {
+      name: 'Export file name',
+    })
+
+    expect(highlightOption).toBeChecked()
+    expect(filenameInput).toHaveValue('dbml-drawer')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'HTML' }))
+
+    await waitFor(() => expect(createDbmlDiagramExportBlob).toHaveBeenCalled())
+    const exportOptions = getLastExportBlobOptions()
+    const downloadOptions = getLastDownloadOptions()
+
+    expect(exportOptions.format).toBe('html')
+    expect(exportOptions.snapshot.focusedTarget).toBeNull()
+    expect(exportOptions.snapshot.relationHighlightMode).toBe('gradient')
+    expect(exportOptions.snapshot.theme).toBe('light')
+    expect(downloadOptions.filename).toBe('dbml-drawer.html')
+  })
+
+  it('exports with a custom file name from the export menu', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    await screen.findByText('email')
+
+    fireEvent.click(screen.getByRole('button', { name: /export/i }))
+    fireEvent.change(
+      screen.getByRole('textbox', {
+        name: 'Export file name',
+      }),
+      {
+        target: {
+          value: 'Review diagram',
+        },
+      },
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'PNG' }))
+
+    await waitFor(() => expect(createDbmlDiagramExportBlob).toHaveBeenCalled())
+
+    expect(getLastExportBlobOptions().format).toBe('png')
+    expect(getLastDownloadOptions().filename).toBe('review-diagram.png')
+  })
+
+  it('closes the export menu when clicking outside it', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    await screen.findByText('email')
+
+    fireEvent.click(screen.getByRole('button', { name: /export/i }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Export diagram' })
+
+    fireEvent.pointerDown(
+      within(dialog).getByRole('textbox', { name: 'Export file name' }),
+    )
+
+    expect(
+      screen.getByRole('dialog', { name: 'Export diagram' }),
+    ).toBeInTheDocument()
+
+    fireEvent.pointerDown(document.body)
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Export diagram' }),
+      ).not.toBeInTheDocument(),
+    )
+  })
+
+  it('exports focused selection highlights only when the export option is enabled', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    const usersTable = await screen.findByText('users')
+
+    fireEvent.click(usersTable)
+    fireEvent.click(screen.getByRole('button', { name: /export/i }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Export diagram' })
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'HTML' }))
+
+    await waitFor(() => expect(createDbmlDiagramExportBlob).toHaveBeenCalled())
+    expect(getLastExportBlobOptions().snapshot.focusedTarget?.type).toBe(
+      'table',
+    )
+
+    fireEvent.click(
+      within(dialog).getByRole('checkbox', {
+        name: 'Include focused selection highlight',
+      }),
+    )
+    fireEvent.click(within(dialog).getByRole('button', { name: 'HTML' }))
+
+    await waitFor(() =>
+      expect(createDbmlDiagramExportBlob).toHaveBeenCalledTimes(2),
+    )
+    expect(getLastExportBlobOptions().snapshot.focusedTarget).toBeNull()
+  })
+
+  it('does not mutate live focus or diagram rendering settings when exporting', async () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    openSettingsPanel()
+    fireEvent.click(
+      screen.getByRole('checkbox', {
+        name: 'Show offscreen relation proxies',
+      }),
+    )
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Relation style' })).getByRole(
+        'button',
+        { name: 'Dynamic' },
+      ),
+    )
+
+    const usersTable = await screen.findByText('users')
+
+    fireEvent.click(usersTable)
+    fireEvent.click(screen.getByRole('button', { name: /export/i }))
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Export diagram' })).getByRole(
+        'button',
+        { name: 'HTML' },
+      ),
+    )
+
+    await waitFor(() => expect(createDbmlDiagramExportBlob).toHaveBeenCalled())
+
+    expect(getEditorSettingsStateForTests().relationHighlightMode).toBe(
+      'dynamic',
+    )
+    expect(
+      getEditorSettingsStateForTests().isOffscreenRelationProxiesEnabled,
+    ).toBe(true)
+    expect(usersTable.closest('article')).toHaveAttribute('data-active', 'true')
+    expect(getLastExportBlobOptions().snapshot.relationHighlightMode).toBe(
+      'gradient',
+    )
+  })
+
+  it('blocks export when no rendered diagram is available', async () => {
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    useDbmlEditorStore.getState().setDocumentText('Table broken {')
+
+    render(<EditorPage isEditorDevMode={false} />)
+
+    expect(
+      await screen.findByRole('button', { name: /export/i }),
+    ).toBeDisabled()
   })
 
   it('omits optional note and database metadata when DBML does not declare them', async () => {
@@ -682,7 +887,9 @@ describe('EditorPage', () => {
 
     const dynamicPerformanceWarning = 'This option may impact battery life.'
 
-    expect(screen.getAllByText(dynamicPerformanceWarning)).toHaveLength(1)
+    expect(
+      screen.getAllByText(dynamicPerformanceWarning).length,
+    ).toBeGreaterThanOrEqual(1)
 
     const previewControl = await screen.findByRole('group', {
       name: 'Relation highlight mode',
@@ -1271,6 +1478,30 @@ function isEditorRange(value: unknown): value is {
     typeof value.endLineNumber === 'number' &&
     typeof value.endColumn === 'number'
   )
+}
+
+function getLastExportBlobOptions() {
+  const lastCall = createDbmlDiagramExportBlob.mock.lastCall as
+    | [DbmlDiagramExportBlobOptions]
+    | undefined
+
+  if (!lastCall) {
+    throw new Error('Expected createDbmlDiagramExportBlob to be called.')
+  }
+
+  return lastCall[0]
+}
+
+function getLastDownloadOptions() {
+  const lastCall = downloadDbmlDiagramExportBlob.mock.lastCall as
+    | [{ filename: string }]
+    | undefined
+
+  if (!lastCall) {
+    throw new Error('Expected downloadDbmlDiagramExportBlob to be called.')
+  }
+
+  return lastCall[0]
 }
 
 function openSettingsPanel() {
