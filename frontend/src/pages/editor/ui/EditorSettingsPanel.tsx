@@ -1,6 +1,7 @@
 import type {
   DbmlRelationHighlightMode,
   DbmlRelationLineStyle,
+  DbmlRelationPortRoutingMode,
 } from '../model/dbml-diagram-rendering'
 import type {
   CodeEditorThemeMode,
@@ -13,6 +14,7 @@ import type {
 import {
   EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS,
   EDITOR_RELATION_LINE_STYLE_OPTIONS,
+  EDITOR_RELATION_PORT_ROUTING_MODE_OPTIONS,
   EDITOR_WORKSPACE_THEME_MODES,
   OFFSCREEN_RELATION_PROXY_COLLISION_MODES,
   OFFSCREEN_RELATION_PROXY_PLACEMENT_MODES,
@@ -34,6 +36,7 @@ type EditorSettingsPanelProps = {
   offscreenRelationProxyTransitionMode: OffscreenRelationProxyTransitionMode
   relationLineStyle: DbmlRelationLineStyle
   relationHighlightMode: DbmlRelationHighlightMode
+  relationPortRoutingMode: DbmlRelationPortRoutingMode
   onWorkspaceThemeModeChange: (mode: EditorThemeMode) => void
   onCodeEditorThemeOverrideEnabledChange: (isEnabled: boolean) => void
   onCodeEditorOverrideThemeModeChange: (mode: EditorThemeMode) => void
@@ -54,6 +57,7 @@ type EditorSettingsPanelProps = {
   ) => void
   onRelationLineStyleChange: (style: DbmlRelationLineStyle) => void
   onRelationHighlightModeChange: (mode: DbmlRelationHighlightMode) => void
+  onRelationPortRoutingModeChange: (mode: DbmlRelationPortRoutingMode) => void
 }
 
 export function EditorSettingsPanel({
@@ -69,6 +73,7 @@ export function EditorSettingsPanel({
   offscreenRelationProxyTransitionMode,
   relationLineStyle,
   relationHighlightMode,
+  relationPortRoutingMode,
   onWorkspaceThemeModeChange,
   onCodeEditorThemeOverrideEnabledChange,
   onCodeEditorOverrideThemeModeChange,
@@ -81,6 +86,7 @@ export function EditorSettingsPanel({
   onOffscreenRelationProxyTransitionModeChange,
   onRelationLineStyleChange,
   onRelationHighlightModeChange,
+  onRelationPortRoutingModeChange,
 }: EditorSettingsPanelProps) {
   return (
     <div className={styles.editorSettingsPanel}>
@@ -105,6 +111,12 @@ export function EditorSettingsPanel({
           modes={EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS}
           value={relationHighlightMode}
           onChange={onRelationHighlightModeChange}
+        />
+        <ThemeModeControl
+          label="Relation ports"
+          modes={EDITOR_RELATION_PORT_ROUTING_MODE_OPTIONS}
+          value={relationPortRoutingMode}
+          onChange={onRelationPortRoutingModeChange}
         />
         {relationHighlightMode === 'dynamic' ? (
           <p className={styles.editorSettingsWarning}>
@@ -264,6 +276,7 @@ type ThemeModeControlMode =
   | OffscreenRelationProxyTransitionMode
   | DbmlRelationLineStyle
   | DbmlRelationHighlightMode
+  | DbmlRelationPortRoutingMode
 
 type ThemeModeControlOption<TMode extends ThemeModeControlMode> = {
   value: TMode
@@ -304,6 +317,14 @@ function getThemeModeLabel(mode: ThemeModeControlMode) {
 
   if (mode === 'dynamic') {
     return 'Dynamic'
+  }
+
+  if (mode === 'fixed') {
+    return 'Fixed'
+  }
+
+  if (mode === 'nearest') {
+    return 'Nearest'
   }
 
   if (mode === 'workspace') {

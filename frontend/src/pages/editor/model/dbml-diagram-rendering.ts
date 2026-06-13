@@ -6,6 +6,7 @@ export type DbmlRelationLineStyle =
   | 'rounded-orthogonal'
 
 export type DbmlRelationHighlightMode = 'solid' | 'gradient' | 'dynamic'
+export type DbmlRelationPortRoutingMode = 'fixed' | 'nearest'
 
 export const DEFAULT_DBML_RELATION_LINE_STYLE: DbmlRelationLineStyle = 'bezier'
 export const DEFAULT_DBML_RELATION_HIGHLIGHT_MODE: DbmlRelationHighlightMode =

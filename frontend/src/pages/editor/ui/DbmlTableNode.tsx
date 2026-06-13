@@ -107,12 +107,9 @@ export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
               }
               onMouseDown={(event) => event.stopPropagation()}
             >
-              <Handle
+              <ColumnPortHandles
                 id={column.leftPortId}
-                className={styles.diagramColumnHandle}
-                type="target"
                 position={Position.Left}
-                isConnectable={false}
               />
               <span className={styles.diagramColumnName}>
                 {column.name}
@@ -123,17 +120,41 @@ export function DbmlTableNode({ data }: NodeProps<Node<DbmlTableNodeData>>) {
               <span className={styles.diagramColumnType}>
                 {column.typeName}
               </span>
-              <Handle
+              <ColumnPortHandles
                 id={column.rightPortId}
-                className={styles.diagramColumnHandle}
-                type="source"
                 position={Position.Right}
-                isConnectable={false}
               />
             </div>
           )
         })}
       </div>
     </article>
+  )
+}
+
+function ColumnPortHandles({
+  id,
+  position,
+}: {
+  id: string
+  position: Position
+}) {
+  return (
+    <>
+      <Handle
+        id={id}
+        className={styles.diagramColumnHandle}
+        type="source"
+        position={position}
+        isConnectable={false}
+      />
+      <Handle
+        id={id}
+        className={styles.diagramColumnHandle}
+        type="target"
+        position={position}
+        isConnectable={false}
+      />
+    </>
   )
 }

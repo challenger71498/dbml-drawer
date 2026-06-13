@@ -8,6 +8,7 @@ import {
 import type {
   DbmlRelationHighlightMode,
   DbmlRelationLineStyle,
+  DbmlRelationPortRoutingMode,
 } from './dbml-diagram-rendering'
 import {
   DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
@@ -31,6 +32,7 @@ import {
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
   normalizeRelationLineStyle,
+  normalizeRelationPortRoutingMode,
   resolveCodeEditorThemeMode,
   resolveSystemTheme,
   resolveThemeMode,
@@ -59,6 +61,7 @@ export type EditorSettingsState = {
   isEditorSidebarExpanded: boolean
   relationLineStyle: DbmlRelationLineStyle
   relationHighlightMode: DbmlRelationHighlightMode
+  relationPortRoutingMode: DbmlRelationPortRoutingMode
   selectedLayoutAlgorithmId: DbmlLayoutAlgorithmId
   selectedLayoutOptionValues: DbmlLayoutOptionValueMap
   setSystemTheme: (theme: ResolvedEditorTheme) => void
@@ -86,6 +89,7 @@ export type EditorSettingsState = {
   setEditorSidebarExpanded: (isExpanded: boolean) => void
   setRelationLineStyle: (style: DbmlRelationLineStyle) => void
   setRelationHighlightMode: (mode: DbmlRelationHighlightMode) => void
+  setRelationPortRoutingMode: (mode: DbmlRelationPortRoutingMode) => void
   selectLayoutAlgorithm: (algorithmId: DbmlLayoutAlgorithmId) => void
   setSelectedLayoutOptionValue: (optionId: string, value: string) => void
 }
@@ -106,6 +110,7 @@ export type EditorSettings = Pick<
   | 'isEditorSidebarExpanded'
   | 'relationLineStyle'
   | 'relationHighlightMode'
+  | 'relationPortRoutingMode'
   | 'selectedLayoutAlgorithmId'
   | 'selectedLayoutOptionValues'
   | 'setWorkspaceThemeMode'
@@ -122,6 +127,7 @@ export type EditorSettings = Pick<
   | 'setEditorSidebarExpanded'
   | 'setRelationLineStyle'
   | 'setRelationHighlightMode'
+  | 'setRelationPortRoutingMode'
   | 'selectLayoutAlgorithm'
   | 'setSelectedLayoutOptionValue'
 > & {
@@ -146,6 +152,7 @@ type EditorSettingsData = Omit<
   | 'setEditorSidebarExpanded'
   | 'setRelationLineStyle'
   | 'setRelationHighlightMode'
+  | 'setRelationPortRoutingMode'
   | 'selectLayoutAlgorithm'
   | 'setSelectedLayoutOptionValue'
 >
@@ -189,6 +196,8 @@ const useEditorSettingsStore = create<EditorSettingsState>()(
         set({ isEditorSidebarExpanded: isExpanded }),
       setRelationLineStyle: (style) => set({ relationLineStyle: style }),
       setRelationHighlightMode: (mode) => set({ relationHighlightMode: mode }),
+      setRelationPortRoutingMode: (mode) =>
+        set({ relationPortRoutingMode: mode }),
       selectLayoutAlgorithm: (algorithmId) =>
         set({
           selectedLayoutAlgorithmId: algorithmId,
@@ -261,6 +270,9 @@ export function useEditorSettings(): EditorSettings {
   const relationHighlightMode = useEditorSettingsStore(
     (state) => state.relationHighlightMode,
   )
+  const relationPortRoutingMode = useEditorSettingsStore(
+    (state) => state.relationPortRoutingMode,
+  )
   const selectedLayoutAlgorithmId = useEditorSettingsStore(
     (state) => state.selectedLayoutAlgorithmId,
   )
@@ -310,6 +322,9 @@ export function useEditorSettings(): EditorSettings {
   )
   const setRelationHighlightMode = useEditorSettingsStore(
     (state) => state.setRelationHighlightMode,
+  )
+  const setRelationPortRoutingMode = useEditorSettingsStore(
+    (state) => state.setRelationPortRoutingMode,
   )
   const selectLayoutAlgorithm = useEditorSettingsStore(
     (state) => state.selectLayoutAlgorithm,
@@ -372,6 +387,7 @@ export function useEditorSettings(): EditorSettings {
     isEditorSidebarExpanded,
     relationLineStyle,
     relationHighlightMode,
+    relationPortRoutingMode,
     selectedLayoutAlgorithmId,
     selectedLayoutOptionValues,
     setWorkspaceThemeMode,
@@ -388,6 +404,7 @@ export function useEditorSettings(): EditorSettings {
     setEditorSidebarExpanded,
     setRelationLineStyle,
     setRelationHighlightMode,
+    setRelationPortRoutingMode,
     selectLayoutAlgorithm,
     setSelectedLayoutOptionValue,
   }
@@ -415,6 +432,10 @@ export function useRelationLineStyleSetting() {
 
 export function useRelationHighlightModeSetting() {
   return useEditorSettingsStore((state) => state.relationHighlightMode)
+}
+
+export function useRelationPortRoutingModeSetting() {
+  return useEditorSettingsStore((state) => state.relationPortRoutingMode)
 }
 
 export function useSetRelationLineStyle() {
@@ -456,6 +477,7 @@ function getDefaultEditorSettingsState(): EditorSettingsData {
     isEditorSidebarExpanded: true,
     relationLineStyle: 'bezier',
     relationHighlightMode: 'gradient',
+    relationPortRoutingMode: 'fixed',
     selectedLayoutAlgorithmId: DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
     selectedLayoutOptionValues: getDefaultDbmlLayoutOptionValues(
       DEFAULT_DBML_LAYOUT_ALGORITHM_ID,
@@ -487,6 +509,7 @@ function partializeEditorSettingsState(
     isEditorSidebarExpanded: state.isEditorSidebarExpanded,
     relationLineStyle: state.relationLineStyle,
     relationHighlightMode: state.relationHighlightMode,
+    relationPortRoutingMode: state.relationPortRoutingMode,
     selectedLayoutAlgorithmId: state.selectedLayoutAlgorithmId,
     selectedLayoutOptionValues: state.selectedLayoutOptionValues,
   }
@@ -545,6 +568,9 @@ function normalizePersistedEditorSettingsState(
     relationLineStyle: normalizeRelationLineStyle(state.relationLineStyle),
     relationHighlightMode: normalizeRelationHighlightMode(
       state.relationHighlightMode,
+    ),
+    relationPortRoutingMode: normalizeRelationPortRoutingMode(
+      state.relationPortRoutingMode,
     ),
     selectedLayoutAlgorithmId,
     selectedLayoutOptionValues: normalizeDbmlLayoutOptionValues(

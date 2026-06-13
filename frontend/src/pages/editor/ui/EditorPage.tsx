@@ -104,6 +104,7 @@ export function EditorPage({
     offscreenRelationProxyTransitionMode,
     relationLineStyle,
     relationHighlightMode,
+    relationPortRoutingMode,
     editorSidebarWidth,
     isEditorSidebarExpanded,
     setWorkspaceThemeMode,
@@ -118,6 +119,7 @@ export function EditorPage({
     setOffscreenRelationProxyTransitionMode,
     setRelationLineStyle,
     setRelationHighlightMode,
+    setRelationPortRoutingMode,
     setEditorSidebarWidth,
     setEditorSidebarExpanded,
   } = useEditorSettings()
@@ -350,6 +352,7 @@ export function EditorPage({
           }
           relationLineStyle={relationLineStyle}
           relationHighlightMode={relationHighlightMode}
+          relationPortRoutingMode={relationPortRoutingMode}
           shouldConnectOffscreenRelationProxyLines={
             shouldConnectOffscreenRelationProxyLines
           }
@@ -386,6 +389,7 @@ export function EditorPage({
           }
           onRelationLineStyleChange={setRelationLineStyle}
           onRelationHighlightModeChange={setRelationHighlightMode}
+          onRelationPortRoutingModeChange={setRelationPortRoutingMode}
           onWorkspaceThemeModeChange={setWorkspaceThemeMode}
         />
       ),
@@ -402,6 +406,7 @@ export function EditorPage({
       offscreenRelationProxyVisibilityMode,
       relationHighlightMode,
       relationLineStyle,
+      relationPortRoutingMode,
       setShouldAvoidOffscreenRelationProxyActiveNodes,
       setOffscreenRelationProxyCollisionMode,
       setOffscreenRelationProxyPlacementMode,
@@ -410,6 +415,7 @@ export function EditorPage({
       setOffscreenRelationProxiesEnabled,
       setRelationHighlightMode,
       setRelationLineStyle,
+      setRelationPortRoutingMode,
       setShouldConnectOffscreenRelationProxyLines,
       shouldConnectOffscreenRelationProxyLines,
       shouldAvoidOffscreenRelationProxyActiveNodes,

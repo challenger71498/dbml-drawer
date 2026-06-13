@@ -7,7 +7,10 @@ import {
 } from './dbml-editor-store'
 import { useDbmlDocument, createDbmlLayoutCacheKey } from './dbml-document'
 import type { LayoutedDbmlDiagram } from './dbml-layout'
-import { resetEditorSettingsStoreForTests } from './editor-settings-store'
+import {
+  getEditorSettingsStateForTests,
+  resetEditorSettingsStoreForTests,
+} from './editor-settings-store'
 
 const layoutedDiagram = {
   tables: [
@@ -56,11 +59,13 @@ describe('dbml document model', () => {
       createDbmlLayoutCacheKey({
         documentText,
         algorithmId: 'org.eclipse.elk.layered',
+        relationPortRoutingMode: 'fixed',
       }),
     ).not.toBe(
       createDbmlLayoutCacheKey({
         documentText,
         algorithmId: 'org.eclipse.elk.force',
+        relationPortRoutingMode: 'fixed',
       }),
     )
   })
@@ -75,6 +80,7 @@ describe('dbml document model', () => {
       createDbmlLayoutCacheKey({
         documentText,
         algorithmId: 'org.eclipse.elk.layered',
+        relationPortRoutingMode: 'fixed',
         optionValues: {
           'elk.direction': 'RIGHT',
         },
@@ -83,9 +89,31 @@ describe('dbml document model', () => {
       createDbmlLayoutCacheKey({
         documentText,
         algorithmId: 'org.eclipse.elk.layered',
+        relationPortRoutingMode: 'fixed',
         optionValues: {
           'elk.direction': 'DOWN',
         },
+      }),
+    )
+  })
+
+  it('changes the layout cache key when relation port routing changes', () => {
+    const documentText = `Table users {
+  id integer [pk]
+}
+`
+
+    expect(
+      createDbmlLayoutCacheKey({
+        documentText,
+        algorithmId: 'org.eclipse.elk.layered',
+        relationPortRoutingMode: 'fixed',
+      }),
+    ).not.toBe(
+      createDbmlLayoutCacheKey({
+        documentText,
+        algorithmId: 'org.eclipse.elk.layered',
+        relationPortRoutingMode: 'nearest',
       }),
     )
   })
@@ -102,6 +130,36 @@ describe('dbml document model', () => {
       expect(result.current.layoutedDiagram).toBe(layoutedDiagram)
     })
     expect(layoutDbmlDiagram).toHaveBeenCalled()
+    expect(layoutDbmlDiagram).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        relationPortRoutingMode: 'fixed',
+      }),
+    )
+  })
+
+  it('relayouts the current valid document when relation port routing changes', async () => {
+    layoutDbmlDiagram.mockResolvedValue(layoutedDiagram)
+
+    const { result } = renderHook(() => useDbmlDocument())
+
+    await waitFor(() => {
+      expect(result.current.layoutedDiagram).toBe(layoutedDiagram)
+    })
+
+    act(() => {
+      getEditorSettingsStateForTests().setRelationPortRoutingMode('nearest')
+    })
+
+    await waitFor(() => {
+      expect(layoutDbmlDiagram).toHaveBeenCalledTimes(2)
+    })
+    expect(layoutDbmlDiagram).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        relationPortRoutingMode: 'nearest',
+      }),
+    )
   })
 
   it('keeps the last valid document metadata when the document becomes invalid', () => {

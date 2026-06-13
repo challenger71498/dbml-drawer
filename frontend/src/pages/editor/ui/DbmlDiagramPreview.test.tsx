@@ -71,7 +71,21 @@ vi.mock('@xyflow/react', () => ({
   }) => [
     `M ${sourceX} ${sourceY} C 48 ${sourceY} 72 ${targetY} ${targetX} ${targetY}`,
   ],
-  Handle: ({ id }: { id: string }) => <span data-handle-id={id} />,
+  Handle: ({
+    id,
+    position,
+    type,
+  }: {
+    id: string
+    position: string
+    type: string
+  }) => (
+    <span
+      data-handle-id={id}
+      data-handle-position={position}
+      data-handle-type={type}
+    />
+  ),
   Position: {
     Bottom: 'bottom',
     Left: 'left',
@@ -332,6 +346,28 @@ describe('DbmlDiagramPreview', () => {
     ).not.toHaveClass('nodrag', 'nopan')
     expect(getColumnRow('id')).toHaveClass('nodrag', 'nopan')
     expect(screen.queryByText('Ready')).not.toBeInTheDocument()
+  })
+
+  it('renders every column port as both a source and target handle', async () => {
+    const diagram = createDbmlDiagram(parseDbmlDocument(SOURCE))
+    const layoutedDiagram = await layoutDbmlDiagram(diagram)
+    const firstColumn = layoutedDiagram.tables[0]?.columns[0]
+
+    const { container } = render(
+      <DbmlDiagramPreview
+        diagram={layoutedDiagram}
+        isPending={false}
+        isPaused={false}
+      />,
+    )
+
+    expect(firstColumn).toBeDefined()
+    expect(
+      getHandleTypes(container, firstColumn?.leftPortId ?? ''),
+    ).toStrictEqual(['source', 'target'])
+    expect(
+      getHandleTypes(container, firstColumn?.rightPortId ?? ''),
+    ).toStrictEqual(['source', 'target'])
   })
 
   it('renders relation edges with bezier paths', async () => {
@@ -1793,6 +1829,14 @@ function getRelationEdgeGroup(relationId: string) {
   expect(edgeGroup).not.toBeNull()
 
   return edgeGroup as HTMLElement
+}
+
+function getHandleTypes(container: HTMLElement, handleId: string) {
+  return Array.from(
+    container.querySelectorAll(`[data-handle-id="${handleId}"]`),
+  )
+    .map((handle) => handle.getAttribute('data-handle-type') ?? '')
+    .sort()
 }
 
 function getStopColor(stop: Element | undefined) {

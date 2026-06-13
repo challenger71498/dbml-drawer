@@ -57,6 +57,6 @@ export type DbmlDiagramSize = {
   height: number
 }
 
-type DbmlDiagramPortSide = 'left' | 'right'
+export type DbmlDiagramPortSide = 'left' | 'right'
 
 export type DbmlDiagramCardinality = 'one' | 'many'

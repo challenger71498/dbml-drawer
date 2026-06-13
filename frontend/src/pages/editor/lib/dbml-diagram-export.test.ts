@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { Position } from '@xyflow/react'
 import { createDbmlDiagram } from './create-dbml-diagram'
 import {
   buildDbmlDiagramExportSnapshot,
@@ -10,6 +11,7 @@ import {
 } from './dbml-diagram-export'
 import { layoutDbmlDiagram } from './layout-dbml-diagram'
 import { parseDbmlDocument } from './parse-dbml-document'
+import { getRelationPath } from './dbml-relation-path'
 
 const RELATION_SOURCE = `Project dbml_drawer {
   database_type: 'PostgreSQL'
@@ -193,6 +195,68 @@ describe('dbml diagram export', () => {
     expect(svg).not.toContain('<foreignObject')
     expect(svg).not.toContain('<article')
     expect(svg).not.toContain('<div')
+  })
+
+  it('serializes export relation paths with selected endpoint port sides', async () => {
+    const layoutedDiagram = await getLayoutedDiagram()
+    const relation = layoutedDiagram.relations[0]
+
+    if (!relation) {
+      throw new Error('Expected relation fixture to include a relation.')
+    }
+
+    const routedRelation = {
+      ...relation,
+      sourcePortId: relation.sourcePortId.replace('.port:right', '.port:left'),
+      targetPortId: relation.targetPortId.replace('.port:left', '.port:right'),
+    }
+    const snapshot = buildDbmlDiagramExportSnapshot({
+      diagram: {
+        ...layoutedDiagram,
+        relations: [routedRelation],
+      },
+      focusedTarget: null,
+      includeSelectionHighlight: true,
+      relationHighlightMode: 'solid',
+      relationLineStyle: 'bezier',
+      theme: 'light',
+    })
+
+    if (!snapshot) {
+      throw new Error('Expected export snapshot to be created.')
+    }
+
+    const source = {
+      x: routedRelation.route.startPoint.x - snapshot.bounds.x,
+      y: routedRelation.route.startPoint.y - snapshot.bounds.y,
+    }
+    const target = {
+      x: routedRelation.route.endPoint.x - snapshot.bounds.x,
+      y: routedRelation.route.endPoint.y - snapshot.bounds.y,
+    }
+    const expectedPath = getRelationPath({
+      lineStyle: 'bezier',
+      sourceX: source.x,
+      sourceY: source.y,
+      sourcePosition: Position.Left,
+      targetX: target.x,
+      targetY: target.y,
+      targetPosition: Position.Right,
+    })
+    const fixedPath = getRelationPath({
+      lineStyle: 'bezier',
+      sourceX: source.x,
+      sourceY: source.y,
+      sourcePosition: Position.Right,
+      targetX: target.x,
+      targetY: target.y,
+      targetPosition: Position.Left,
+    })
+    const svg = renderDbmlDiagramExportSvg(snapshot)
+
+    expect(expectedPath).not.toBe(fixedPath)
+    expect(svg).toContain(`d="${expectedPath}"`)
+    expect(svg).not.toContain(`d="${fixedPath}"`)
   })
 
   it('creates stable export filenames', () => {

@@ -1,6 +1,7 @@
 import type {
   DbmlRelationHighlightMode,
   DbmlRelationLineStyle,
+  DbmlRelationPortRoutingMode,
 } from './dbml-diagram-rendering'
 
 export type EditorThemeMode = 'light' | 'light-solarized' | 'dark' | 'system'
@@ -52,6 +53,10 @@ export const EDITOR_RELATION_HIGHLIGHT_MODES = [
   'gradient',
   'dynamic',
 ] as const satisfies readonly DbmlRelationHighlightMode[]
+const EDITOR_RELATION_PORT_ROUTING_MODES = [
+  'fixed',
+  'nearest',
+] as const satisfies readonly DbmlRelationPortRoutingMode[]
 export const EDITOR_RELATION_LINE_STYLE_OPTIONS = [
   {
     value: 'bezier',
@@ -84,6 +89,19 @@ export const EDITOR_RELATION_HIGHLIGHT_MODE_OPTIONS = [
   },
 ] as const satisfies ReadonlyArray<{
   value: DbmlRelationHighlightMode
+  label: string
+}>
+export const EDITOR_RELATION_PORT_ROUTING_MODE_OPTIONS = [
+  {
+    value: 'fixed',
+    label: 'Fixed',
+  },
+  {
+    value: 'nearest',
+    label: 'Nearest',
+  },
+] as const satisfies ReadonlyArray<{
+  value: DbmlRelationPortRoutingMode
   label: string
 }>
 
@@ -193,6 +211,16 @@ export function normalizeRelationHighlightMode(
   )
     ? (value as DbmlRelationHighlightMode)
     : 'gradient'
+}
+
+export function normalizeRelationPortRoutingMode(
+  value: unknown,
+): DbmlRelationPortRoutingMode {
+  return EDITOR_RELATION_PORT_ROUTING_MODES.includes(
+    value as DbmlRelationPortRoutingMode,
+  )
+    ? (value as DbmlRelationPortRoutingMode)
+    : 'fixed'
 }
 
 export function normalizeEditorSidebarWidth(value: unknown) {

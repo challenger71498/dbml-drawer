@@ -22,6 +22,7 @@ import {
   type DbmlLayoutAlgorithmId,
   type DbmlLayoutOptionValueMap,
 } from '../model/dbml-layout-settings'
+import type { DbmlRelationPortRoutingMode } from '../model/dbml-diagram-rendering'
 import { TABLE_COLUMN_HEIGHT } from './create-dbml-diagram'
 
 const elk = new ELK()
@@ -29,6 +30,12 @@ const elk = new ELK()
 export type DbmlDiagramLayoutOptions = {
   algorithmId?: DbmlLayoutAlgorithmId
   optionValues?: DbmlLayoutOptionValueMap
+  relationPortRoutingMode?: DbmlRelationPortRoutingMode
+}
+
+type RelationPortPair = {
+  sourcePortId: string
+  targetPortId: string
 }
 
 const DEFAULT_ELK_LAYOUT_OPTIONS = {
@@ -46,6 +53,7 @@ const EMPTY_ROUTE: DbmlDiagramRoute = {
   bendPoints: [],
   endPoint: { x: 0, y: 0 },
 }
+const MAX_NEAREST_PORT_ROUTING_LAYOUT_PASSES = 6
 
 export async function layoutDbmlDiagram(
   diagram: DbmlDiagram,
@@ -58,9 +66,40 @@ export async function layoutDbmlDiagram(
     }
   }
 
+  if (options.relationPortRoutingMode === 'nearest') {
+    return layoutDbmlDiagramWithNearestPortRouting(diagram, options)
+  }
+
   const graph = await elk.layout(toElkGraph(diagram, options))
 
   return fromElkGraph(diagram, graph)
+}
+
+async function layoutDbmlDiagramWithNearestPortRouting(
+  diagram: DbmlDiagram,
+  options: DbmlDiagramLayoutOptions,
+): Promise<LayoutedDbmlDiagram> {
+  let currentDiagram = diagram
+
+  for (let pass = 0; pass < MAX_NEAREST_PORT_ROUTING_LAYOUT_PASSES; pass += 1) {
+    const graph = await elk.layout(toElkGraph(currentDiagram, options))
+    const layoutedDiagram = fromElkGraph(currentDiagram, graph)
+    const routedDiagram = applyRelationPortRouting(
+      currentDiagram,
+      layoutedDiagram,
+      'nearest',
+    )
+
+    if (hasSameRelationPorts(currentDiagram, routedDiagram)) {
+      return layoutedDiagram
+    }
+
+    currentDiagram = routedDiagram
+  }
+
+  const graph = await elk.layout(toElkGraph(currentDiagram, options))
+
+  return fromElkGraph(currentDiagram, graph)
 }
 
 export function toElkGraph(
@@ -108,6 +147,94 @@ export function fromElkGraph(
     tables,
     relations,
   }
+}
+
+export function applyRelationPortRouting(
+  diagram: DbmlDiagram,
+  layoutedDiagram: LayoutedDbmlDiagram,
+  mode: DbmlRelationPortRoutingMode,
+): DbmlDiagram {
+  if (mode === 'fixed') {
+    return diagram
+  }
+
+  return {
+    ...diagram,
+    relations: diagram.relations.map((relation) => {
+      const selectedPorts = getNearestRelationPortPair(
+        layoutedDiagram,
+        relation,
+      )
+
+      return selectedPorts
+        ? {
+            ...relation,
+            ...selectedPorts,
+          }
+        : relation
+    }),
+  }
+}
+
+export function getNearestRelationPortPair(
+  layoutedDiagram: LayoutedDbmlDiagram,
+  relation: DbmlDiagramRelation,
+): RelationPortPair | null {
+  const sourceColumn = findLayoutedColumn(
+    layoutedDiagram,
+    relation.sourceTableId,
+    relation.sourceColumnId,
+  )
+  const sourceTable = findLayoutedTable(layoutedDiagram, relation.sourceTableId)
+  const targetColumn = findLayoutedColumn(
+    layoutedDiagram,
+    relation.targetTableId,
+    relation.targetColumnId,
+  )
+  const targetTable = findLayoutedTable(layoutedDiagram, relation.targetTableId)
+
+  if (!sourceColumn || !sourceTable || !targetColumn || !targetTable) {
+    return null
+  }
+
+  if (relation.sourceTableId === relation.targetTableId) {
+    return {
+      sourcePortId: sourceColumn.rightPortId,
+      targetPortId: targetColumn.rightPortId,
+    }
+  }
+
+  if (getTableCenterX(targetTable) < getTableCenterX(sourceTable)) {
+    return {
+      sourcePortId: sourceColumn.leftPortId,
+      targetPortId: targetColumn.rightPortId,
+    }
+  }
+
+  return {
+    sourcePortId: sourceColumn.rightPortId,
+    targetPortId: targetColumn.leftPortId,
+  }
+}
+
+function hasSameRelationPorts(
+  firstDiagram: DbmlDiagram,
+  secondDiagram: DbmlDiagram,
+) {
+  if (firstDiagram.relations.length !== secondDiagram.relations.length) {
+    return false
+  }
+
+  return firstDiagram.relations.every((firstRelation, index) => {
+    const secondRelation = secondDiagram.relations[index]
+
+    return (
+      secondRelation !== undefined &&
+      firstRelation.id === secondRelation.id &&
+      firstRelation.sourcePortId === secondRelation.sourcePortId &&
+      firstRelation.targetPortId === secondRelation.targetPortId
+    )
+  })
 }
 
 function toElkNode(table: DbmlDiagramTable): ElkNode {
@@ -172,6 +299,27 @@ function layoutTable(
       },
     })),
   }
+}
+
+function findLayoutedColumn(
+  layoutedDiagram: LayoutedDbmlDiagram,
+  tableId: string,
+  columnId: string,
+) {
+  return layoutedDiagram.tables
+    .find((table) => table.id === tableId)
+    ?.columns.find((column) => column.id === columnId)
+}
+
+function findLayoutedTable(
+  layoutedDiagram: LayoutedDbmlDiagram,
+  tableId: string,
+) {
+  return layoutedDiagram.tables.find((table) => table.id === tableId)
+}
+
+function getTableCenterX(table: LayoutedDbmlDiagramTable) {
+  return table.position.x + table.size.width / 2
 }
 
 function getPortPosition(

@@ -11,6 +11,7 @@ import {
   normalizeOffscreenRelationProxyVisibilityMode,
   normalizeRelationHighlightMode,
   normalizeRelationLineStyle,
+  normalizeRelationPortRoutingMode,
   getEditorSettingsStateForTests,
   resetEditorSettingsStoreForTests,
   useEditorSettings,
@@ -43,6 +44,7 @@ describe('editor theme settings', () => {
       isEditorSidebarExpanded: 'false',
       relationLineStyle: 'arc',
       relationHighlightMode: 'blink',
+      relationPortRoutingMode: 'sideways',
     })
     resetEditorSettingsStoreForTests()
 
@@ -77,6 +79,8 @@ describe('editor theme settings', () => {
       'rounded-orthogonal',
     )
     expect(normalizeRelationHighlightMode('dynamic')).toBe('dynamic')
+    expect(normalizeRelationPortRoutingMode('nearest')).toBe('nearest')
+    expect(normalizeRelationPortRoutingMode('sideways')).toBe('fixed')
 
     const state = getEditorSettingsStateForTests()
 
@@ -93,6 +97,7 @@ describe('editor theme settings', () => {
     expect(state.isEditorSidebarExpanded).toBe(true)
     expect(state.relationLineStyle).toBe('bezier')
     expect(state.relationHighlightMode).toBe('gradient')
+    expect(state.relationPortRoutingMode).toBe('fixed')
     expect(state.selectedLayoutAlgorithmId).toBe('org.eclipse.elk.layered')
     expect(state.selectedLayoutOptionValues).toEqual({
       'elk.direction': 'RIGHT',
@@ -281,11 +286,15 @@ describe('editor theme settings', () => {
     expect(screen.getByTestId('relation-highlight-mode')).toHaveTextContent(
       'gradient',
     )
+    expect(screen.getByTestId('relation-port-routing-mode')).toHaveTextContent(
+      'fixed',
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Resize sidebar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Use step lines' }))
     fireEvent.click(screen.getByRole('button', { name: 'Use dynamic lines' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use nearest ports' }))
 
     expect(screen.getByTestId('editor-sidebar-width')).toHaveTextContent('520')
     expect(screen.getByTestId('editor-sidebar-expanded')).toHaveTextContent(
@@ -297,10 +306,14 @@ describe('editor theme settings', () => {
     expect(screen.getByTestId('relation-highlight-mode')).toHaveTextContent(
       'dynamic',
     )
+    expect(screen.getByTestId('relation-port-routing-mode')).toHaveTextContent(
+      'nearest',
+    )
     expect(getStoredEditorSettings().editorSidebarWidth).toBe(520)
     expect(getStoredEditorSettings().isEditorSidebarExpanded).toBe(false)
     expect(getStoredEditorSettings().relationLineStyle).toBe('orthogonal')
     expect(getStoredEditorSettings().relationHighlightMode).toBe('dynamic')
+    expect(getStoredEditorSettings().relationPortRoutingMode).toBe('nearest')
 
     unmount()
     resetEditorSettingsStoreForTests()
@@ -315,6 +328,9 @@ describe('editor theme settings', () => {
     )
     expect(screen.getByTestId('relation-highlight-mode')).toHaveTextContent(
       'dynamic',
+    )
+    expect(screen.getByTestId('relation-port-routing-mode')).toHaveTextContent(
+      'nearest',
     )
   })
 
@@ -388,6 +404,7 @@ function ThemeHarness() {
     isEditorSidebarExpanded,
     relationLineStyle,
     relationHighlightMode,
+    relationPortRoutingMode,
     selectedLayoutAlgorithmId,
     selectedLayoutOptionValues,
     setWorkspaceThemeMode,
@@ -402,6 +419,7 @@ function ThemeHarness() {
     setEditorSidebarExpanded,
     setRelationLineStyle,
     setRelationHighlightMode,
+    setRelationPortRoutingMode,
     selectLayoutAlgorithm,
     setSelectedLayoutOptionValue,
   } = useEditorSettings()
@@ -438,6 +456,9 @@ function ThemeHarness() {
       </span>
       <span data-testid="relation-line-style">{relationLineStyle}</span>
       <span data-testid="relation-highlight-mode">{relationHighlightMode}</span>
+      <span data-testid="relation-port-routing-mode">
+        {relationPortRoutingMode}
+      </span>
       <span data-testid="layout-algorithm">{selectedLayoutAlgorithmId}</span>
       <span data-testid="layout-options">
         {Object.entries(selectedLayoutOptionValues)
@@ -500,6 +521,12 @@ function ThemeHarness() {
       </button>
       <button type="button" onClick={() => setRelationHighlightMode('dynamic')}>
         Use dynamic lines
+      </button>
+      <button
+        type="button"
+        onClick={() => setRelationPortRoutingMode('nearest')}
+      >
+        Use nearest ports
       </button>
       <button
         type="button"

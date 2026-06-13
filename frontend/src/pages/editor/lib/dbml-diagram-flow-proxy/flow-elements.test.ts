@@ -87,6 +87,48 @@ describe('dbml diagram flow proxy element adaptation', () => {
     expect(adaptedElements.edges[0]).toBe(elements.edges[0])
   })
 
+  it('uses selected original endpoint side when proxying relation lines', () => {
+    const users = createTable('users', 900, 0, ['id'])
+    const posts = createTable('posts', 0, 0, ['id', 'user_id'])
+    const relation = createRelation({
+      id: 'relation:posts-users',
+      sourceTable: users,
+      sourceColumn: 'id',
+      targetTable: posts,
+      targetColumn: 'user_id',
+      sourcePortSide: 'left',
+      startPoint: { x: users.position.x, y: users.position.y + 59 },
+    })
+    const elements = createFlowElements({
+      nodes: [users, posts],
+      relations: [relation],
+    })
+
+    const adaptedElements = getFlowElementsWithProxyLineEndpoints({
+      elements,
+      proxyLayouts: [
+        createProxyLayout({
+          table: users,
+          relationIds: [relation.id],
+          style: {
+            left: 402,
+            top: 14,
+            transform: 'scale(1)',
+          },
+        }),
+      ],
+      viewport: { x: 0, y: 0, zoom: 1, width: 600, height: 400 },
+    })
+
+    expect(adaptedElements.edges[0]?.data?.endpointOverride).toEqual({
+      source: {
+        x: 402,
+        y: 59,
+        position: Position.Left,
+      },
+    })
+  })
+
   it('applies the lowest proxy transition opacity to original table nodes', () => {
     const users = createTable('users', 900, 0, ['id'])
     const posts = createTable('posts', 0, 0, ['id', 'user_id'])
@@ -233,19 +275,23 @@ function createRelation({
   sourceColumn,
   targetTable,
   targetColumn,
+  sourcePortSide = 'right',
+  startPoint = { x: 1200, y: 59 },
 }: {
   id: string
   sourceTable: LayoutedDbmlDiagramTable
   sourceColumn: string
   targetTable: LayoutedDbmlDiagramTable
   targetColumn: string
+  sourcePortSide?: 'left' | 'right'
+  startPoint?: { x: number; y: number }
 }): LayoutedDbmlDiagramRelation {
   return {
     id,
     source: {} as LayoutedDbmlDiagramRelation['source'],
     sourceTableId: sourceTable.id,
     sourceColumnId: `${sourceTable.id}.column:${sourceColumn}`,
-    sourcePortId: `${sourceTable.id}.column:${sourceColumn}.port:right`,
+    sourcePortId: `${sourceTable.id}.column:${sourceColumn}.port:${sourcePortSide}`,
     targetTableId: targetTable.id,
     targetColumnId: `${targetTable.id}.column:${targetColumn}`,
     targetPortId: `${targetTable.id}.column:${targetColumn}.port:left`,
@@ -254,7 +300,7 @@ function createRelation({
       target: 'one',
     },
     route: {
-      startPoint: { x: 1200, y: 59 },
+      startPoint,
       bendPoints: [],
       endPoint: { x: 0, y: 59 },
     },

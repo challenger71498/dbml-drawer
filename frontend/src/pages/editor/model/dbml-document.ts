@@ -8,7 +8,9 @@ import {
   type DbmlLayoutAlgorithmId,
   type DbmlLayoutOptionValueMap,
 } from './dbml-layout-settings'
+import type { DbmlRelationPortRoutingMode } from './dbml-diagram-rendering'
 import {
+  useRelationPortRoutingModeSetting,
   useSelectedDbmlLayoutAlgorithmId,
   useSelectedDbmlLayoutOptionValues,
   useSelectDbmlLayoutAlgorithm,
@@ -44,6 +46,7 @@ export function useDbmlDocument() {
   const setDocumentText = useDbmlEditorStore((state) => state.setDocumentText)
   const selectedLayoutAlgorithmId = useSelectedDbmlLayoutAlgorithmId()
   const selectedLayoutOptionValues = useSelectedDbmlLayoutOptionValues()
+  const relationPortRoutingMode = useRelationPortRoutingModeSetting()
   const selectLayoutAlgorithm = useSelectDbmlLayoutAlgorithm()
   const setSelectedLayoutOptionValue = useSetSelectedDbmlLayoutOptionValue()
   const [{ layoutedDiagram, isDiagramPending }, dispatchLayout] = useReducer(
@@ -98,6 +101,7 @@ export function useDbmlDocument() {
       documentText: debouncedDocumentText,
       algorithmId: selectedLayoutAlgorithmId,
       optionValues: selectedLayoutOptionValues,
+      relationPortRoutingMode,
     })
     if (
       lastLayoutedCacheKeyRef.current === layoutCacheKey ||
@@ -117,6 +121,7 @@ export function useDbmlDocument() {
       documentText: debouncedDocumentText,
       algorithmId: selectedLayoutAlgorithmId,
       optionValues: selectedLayoutOptionValues,
+      relationPortRoutingMode,
     })
       .then((nextLayoutedDiagram) => {
         if (isStale || activeLayoutRequestIdRef.current !== requestId) {
@@ -147,6 +152,7 @@ export function useDbmlDocument() {
     }
   }, [
     debouncedDocumentText,
+    relationPortRoutingMode,
     selectedLayoutAlgorithmId,
     selectedLayoutOptionValues,
     validationResult,
@@ -245,27 +251,31 @@ export function createDbmlLayoutCacheKey({
   documentText,
   algorithmId,
   optionValues = {},
+  relationPortRoutingMode,
 }: {
   documentText: string
   algorithmId: DbmlLayoutAlgorithmId
   optionValues?: DbmlLayoutOptionValueMap
+  relationPortRoutingMode: DbmlRelationPortRoutingMode
 }) {
   const serializedOptionValues = [...Object.entries(optionValues)]
     .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
     .map(([key, value]) => `${key}=${value}`)
     .join('\n')
 
-  return `${algorithmId}\n${serializedOptionValues}\n${documentText}`
+  return `${algorithmId}\n${relationPortRoutingMode}\n${serializedOptionValues}\n${documentText}`
 }
 
 async function buildAndLayoutDiagram({
   documentText,
   algorithmId,
   optionValues,
+  relationPortRoutingMode,
 }: {
   documentText: string
   algorithmId: DbmlLayoutAlgorithmId
   optionValues: DbmlLayoutOptionValueMap
+  relationPortRoutingMode: DbmlRelationPortRoutingMode
 }): Promise<LayoutedDbmlDiagram> {
   const [{ createDbmlDiagram }, { layoutDbmlDiagram }, { parseDbmlDocument }] =
     await Promise.all([
@@ -279,5 +289,6 @@ async function buildAndLayoutDiagram({
   return layoutDbmlDiagram(diagram, {
     algorithmId,
     optionValues,
+    relationPortRoutingMode,
   })
 }

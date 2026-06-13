@@ -540,11 +540,15 @@ function getExportRelationPath(
     lineStyle: snapshot.relationLineStyle,
     sourceX: start.x,
     sourceY: start.y,
-    sourcePosition: Position.Right,
+    sourcePosition: getExportRelationEndpointPosition(relation.sourcePortId),
     targetX: end.x,
     targetY: end.y,
-    targetPosition: Position.Left,
+    targetPosition: getExportRelationEndpointPosition(relation.targetPortId),
   })
+}
+
+function getExportRelationEndpointPosition(portId: string) {
+  return portId.endsWith('.port:left') ? Position.Left : Position.Right
 }
 
 function translatePoint(

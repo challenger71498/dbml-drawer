@@ -871,6 +871,36 @@ describe('EditorPage', () => {
     expect(getStoredEditorSettings().relationLineStyle).toBe('orthogonal')
   })
 
+  it('changes relation port routing from settings without changing relation styling', () => {
+    installLocalStorageMock()
+    installMatchMediaMock(false)
+    loadDbmlLayoutAlgorithmOptions.mockResolvedValue(layoutAlgorithmOptions)
+    render(<EditorPage isEditorDevMode={false} />)
+
+    openSettingsPanel()
+
+    const relationPortsGroup = screen.getByRole('group', {
+      name: 'Relation ports',
+    })
+
+    expect(
+      within(relationPortsGroup).getByRole('button', { name: 'Fixed' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(
+      within(relationPortsGroup).getByRole('button', { name: 'Nearest' }),
+    )
+
+    expect(
+      within(relationPortsGroup).getByRole('button', { name: 'Nearest' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(getStoredEditorSettings().relationPortRoutingMode).toBe('nearest')
+    expect(getEditorSettingsStateForTests().relationLineStyle).toBe('bezier')
+    expect(getEditorSettingsStateForTests().relationHighlightMode).toBe(
+      'gradient',
+    )
+  })
+
   it('keeps settings and preview relation style controls synchronized', async () => {
     installLocalStorageMock()
     installMatchMediaMock(false)

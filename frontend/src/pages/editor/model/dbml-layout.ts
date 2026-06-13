@@ -9,7 +9,7 @@ export type LayoutedDbmlDiagram = {
   relations: LayoutedDbmlDiagramRelation[]
 }
 
-export type LayoutedDbmlDiagramTable = DbmlDiagramTable & {
+export type LayoutedDbmlDiagramTable = Omit<DbmlDiagramTable, 'columns'> & {
   position: DbmlDiagramPoint
   columns: LayoutedDbmlDiagramColumn[]
 }
