@@ -5,7 +5,7 @@ Offscreen relation proxy cards can currently overlap each other, active nodes, o
 ## What Changes
 
 - Add a selectable offscreen relation proxy collision layout mode so the existing legacy behavior can remain available while a new collision strategy is introduced.
-- Introduce a constrained proxy collision strategy that treats safe areas and active nodes as placement constraints before resolving proxy-proxy overlaps.
+- Introduce iterative and score proxy collision strategies that treat safe areas and active nodes as placement constraints before resolving proxy-proxy overlaps.
 - Keep proxy placement modes (`line` and `parallel`) and transition modes independent from the collision strategy.
 - Add regression tests for safe area avoidance, active node avoidance, proxy-proxy overlap resolution, and legacy/new strategy selection.
 
@@ -17,7 +17,7 @@ Offscreen relation proxy cards can currently overlap each other, active nodes, o
 
 ### Modified Capabilities
 
-- `dbml-diagram-preview`: Offscreen relation proxy layout shall support selectable collision strategies and shall provide a constrained collision strategy that avoids safe areas, other active nodes, and other proxy cards where feasible.
+- `dbml-diagram-preview`: Offscreen relation proxy layout shall support selectable collision strategies and shall provide iterative and score strategies that avoid safe areas, other active nodes, and other proxy cards where feasible.
 
 ## Impact
 
