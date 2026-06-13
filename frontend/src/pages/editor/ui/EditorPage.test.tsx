@@ -534,7 +534,10 @@ describe('EditorPage', () => {
       within(proxyCollisionGroup).getByRole('button', { name: 'Legacy' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(
-      within(proxyCollisionGroup).getByRole('button', { name: 'Constrained' }),
+      within(proxyCollisionGroup).getByRole('button', { name: 'Iterative' }),
+    ).toBeDisabled()
+    expect(
+      within(proxyCollisionGroup).getByRole('button', { name: 'Score' }),
     ).toBeDisabled()
     expect(
       within(proxyVisibilityGroup).getByRole('button', {
@@ -559,7 +562,7 @@ describe('EditorPage', () => {
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
     )
     fireEvent.click(
-      within(proxyCollisionGroup).getByRole('button', { name: 'Constrained' }),
+      within(proxyCollisionGroup).getByRole('button', { name: 'Score' }),
     )
     fireEvent.click(
       within(proxyVisibilityGroup).getByRole('button', {
@@ -577,7 +580,7 @@ describe('EditorPage', () => {
       within(proxyPlacementGroup).getByRole('button', { name: 'Parallel' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(
-      within(proxyCollisionGroup).getByRole('button', { name: 'Constrained' }),
+      within(proxyCollisionGroup).getByRole('button', { name: 'Score' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(
       within(proxyVisibilityGroup).getByRole('button', {
@@ -597,7 +600,7 @@ describe('EditorPage', () => {
       'parallel',
     )
     expect(getStoredEditorSettings().offscreenRelationProxyCollisionMode).toBe(
-      'constrained',
+      'score',
     )
     expect(getStoredEditorSettings().offscreenRelationProxyVisibilityMode).toBe(
       'center',
@@ -629,7 +632,7 @@ describe('EditorPage', () => {
     expect(
       within(screen.getByRole('group', { name: 'Proxy collision' })).getByRole(
         'button',
-        { name: 'Constrained' },
+        { name: 'Score' },
       ),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(

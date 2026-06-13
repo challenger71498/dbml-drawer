@@ -72,8 +72,17 @@ function getLegacyOffscreenRelationProxyLayouts({
   obstacles,
   options,
 }: DbmlOffscreenRelationProxyLayoutInput<LegacyOffscreenRelationProxyLayoutOptions>) {
-  if (options.collisionMode === 'constrained') {
-    return getConstrainedOffscreenRelationProxyLayouts({
+  if (options.collisionMode === 'iterative') {
+    return getIterativeOffscreenRelationProxyLayouts({
+      proxies,
+      viewport,
+      obstacles,
+      options,
+    })
+  }
+
+  if (options.collisionMode === 'score') {
+    return getScoreOffscreenRelationProxyLayouts({
       proxies,
       viewport,
       obstacles,
@@ -119,7 +128,7 @@ function getLegacyOffscreenRelationProxyLayouts({
   )
 }
 
-function getConstrainedOffscreenRelationProxyLayouts({
+function getIterativeOffscreenRelationProxyLayouts({
   proxies,
   viewport,
   obstacles,
@@ -129,28 +138,301 @@ function getConstrainedOffscreenRelationProxyLayouts({
     obstacles,
     options.shouldAvoidActiveNodes,
   )
-  const rawLayouts = proxies.map((proxy) => ({
+  const rawLayouts = proxies.map((proxy, sourceIndex) => ({
     proxy,
-    ...getRawProxyCardPosition(proxy, viewport, options.placementMode),
+    sourceIndex,
+    ...getConstrainedRawProxyCardPosition(
+      proxy,
+      viewport,
+      options.placementMode,
+    ),
   }))
-  const orderedLayouts = [...rawLayouts].sort((first, second) =>
-    compareConstrainedRawLayouts(first, second, options.placementMode),
+  const sourceIndexByProxyId = new Map(
+    rawLayouts.map((layout) => [layout.proxy.id, layout.sourceIndex]),
+  )
+  const layoutGroups = getConstrainedRawLayoutGroups(rawLayouts, viewport)
+  const placedLayouts: DbmlOffscreenRelationProxyLayout[] = []
+
+  for (const layouts of layoutGroups) {
+    const orderedLayouts = getOrderedConstrainedRawLayouts(layouts, viewport)
+
+    for (const layout of orderedLayouts) {
+      placedLayouts.push(
+        getConstrainedProxyLayout({
+          layout,
+          placedLayouts,
+          viewport,
+          obstacles: layoutObstacles,
+        }),
+      )
+    }
+  }
+
+  return [...placedLayouts].sort(
+    (first, second) =>
+      (sourceIndexByProxyId.get(first.proxy.id) ?? 0) -
+      (sourceIndexByProxyId.get(second.proxy.id) ?? 0),
+  )
+}
+
+function getScoreOffscreenRelationProxyLayouts({
+  proxies,
+  viewport,
+  obstacles,
+  options,
+}: DbmlOffscreenRelationProxyLayoutInput<LegacyOffscreenRelationProxyLayoutOptions>) {
+  const layoutObstacles = getEffectiveProxyLayoutObstacles(
+    obstacles,
+    options.shouldAvoidActiveNodes,
+  )
+  const rawLayouts = proxies.map((proxy, sourceIndex) => ({
+    proxy,
+    sourceIndex,
+    ...getConstrainedRawProxyCardPosition(
+      proxy,
+      viewport,
+      options.placementMode,
+    ),
+  }))
+  const sourceIndexByProxyId = new Map(
+    rawLayouts.map((layout) => [layout.proxy.id, layout.sourceIndex]),
   )
   const placedLayouts: DbmlOffscreenRelationProxyLayout[] = []
+  const orderedLayouts = [...rawLayouts].sort(compareScoreRawLayoutPriority)
 
   for (const layout of orderedLayouts) {
     placedLayouts.push(
-      getConstrainedProxyLayout({
+      getScoredProxyLayout({
         layout,
+        obstacles: layoutObstacles,
         placedLayouts,
         viewport,
-        obstacles: layoutObstacles,
-        placementMode: options.placementMode,
       }),
     )
   }
 
-  return placedLayouts
+  return [...placedLayouts].sort(
+    (first, second) =>
+      (sourceIndexByProxyId.get(first.proxy.id) ?? 0) -
+      (sourceIndexByProxyId.get(second.proxy.id) ?? 0),
+  )
+}
+
+function compareScoreRawLayoutPriority(
+  first: RawOffscreenRelationProxyLayout,
+  second: RawOffscreenRelationProxyLayout,
+) {
+  return (
+    getScoreSidePriority(first.proxy.side) -
+      getScoreSidePriority(second.proxy.side) ||
+    getScoreOverflowPriority(second) - getScoreOverflowPriority(first) ||
+    (first.sourceIndex ?? 0) - (second.sourceIndex ?? 0)
+  )
+}
+
+function getScoreSidePriority(side: DbmlOffscreenRelationProxy['side']) {
+  switch (side) {
+    case 'top':
+    case 'bottom':
+      return 0
+    case 'left':
+    case 'right':
+      return 1
+  }
+}
+
+function getScoreOverflowPriority(layout: RawOffscreenRelationProxyLayout) {
+  return Math.max(layout.topOverflow ?? 0, layout.bottomOverflow ?? 0)
+}
+
+function getScoredProxyLayout({
+  layout,
+  obstacles,
+  placedLayouts,
+  viewport,
+}: {
+  layout: RawOffscreenRelationProxyLayout
+  obstacles: readonly DbmlOffscreenRelationProxyLayoutObstacle[]
+  placedLayouts: readonly DbmlOffscreenRelationProxyLayout[]
+  viewport: DbmlDiagramViewport
+}): DbmlOffscreenRelationProxyLayout {
+  const effectiveObstacles = obstacles.filter(
+    (obstacle) =>
+      obstacle.kind !== 'active-node' || obstacle.id !== layout.proxy.table.id,
+  )
+  const hardObstacleRects = effectiveObstacles.map((obstacle) => obstacle.rect)
+  const proxyObstacleRects = placedLayouts.map((placedLayout) =>
+    getProxyLayoutRect(placedLayout, viewport),
+  )
+  const candidates = getScoredProxyLayoutCandidates({
+    hardObstacleRects,
+    layout,
+    proxyObstacleRects,
+    viewport,
+  })
+  const bestCandidate = candidates.sort(
+    (first, second) =>
+      getScoredProxyLayoutCandidateScore({
+        candidate: first,
+        hardObstacleRects,
+        layout,
+        proxyObstacleRects,
+        viewport,
+      }) -
+        getScoredProxyLayoutCandidateScore({
+          candidate: second,
+          hardObstacleRects,
+          layout,
+          proxyObstacleRects,
+          viewport,
+        }) ||
+      first.top - second.top ||
+      first.left - second.left,
+  )[0]
+
+  return {
+    proxy: layout.proxy,
+    style: {
+      left: bestCandidate.left,
+      top: bestCandidate.top,
+      transform: `scale(${viewport.zoom})`,
+    },
+  }
+}
+
+function getScoredProxyLayoutCandidates({
+  hardObstacleRects,
+  layout,
+  proxyObstacleRects,
+  viewport,
+}: {
+  hardObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  layout: RawOffscreenRelationProxyLayout
+  proxyObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  viewport: DbmlDiagramViewport
+}) {
+  const cardWidth = getScaledProxyCardWidth(viewport)
+  const cardHeight = getScaledProxyCardHeight(layout.proxy, viewport)
+  const maxLeft = viewport.width - cardWidth - PROXY_CARD_EDGE_GAP
+  const maxTop = viewport.height - cardHeight - PROXY_CARD_EDGE_GAP
+  const laneStep = cardWidth + PROXY_CARD_GAP
+  const leftCandidates = new Set<number>([
+    layout.left,
+    layout.left - laneStep,
+    layout.left + laneStep,
+    layout.left - laneStep * 2,
+    layout.left + laneStep * 2,
+  ])
+  const candidates: RawProxyCardPosition[] = []
+
+  for (const leftCandidate of leftCandidates) {
+    const left = clampScreenPosition({
+      max: maxLeft,
+      min: PROXY_CARD_EDGE_GAP,
+      value: leftCandidate,
+    })
+    const topCandidates = new Set<number>([
+      layout.top,
+      PROXY_CARD_EDGE_GAP,
+      maxTop,
+    ])
+
+    for (const obstacleRect of [...hardObstacleRects, ...proxyObstacleRects]) {
+      if (
+        !intervalsOverlap(
+          left,
+          left + cardWidth,
+          obstacleRect.left,
+          obstacleRect.left + obstacleRect.width,
+        )
+      ) {
+        continue
+      }
+
+      topCandidates.add(obstacleRect.top - cardHeight - PROXY_CARD_GAP)
+      topCandidates.add(obstacleRect.top + obstacleRect.height + PROXY_CARD_GAP)
+    }
+
+    for (const topCandidate of topCandidates) {
+      candidates.push({
+        left,
+        top: clampScreenPosition({
+          max: maxTop,
+          min: PROXY_CARD_EDGE_GAP,
+          value: topCandidate,
+        }),
+      })
+    }
+  }
+
+  return getUniqueScoredProxyLayoutCandidates(candidates)
+}
+
+function getUniqueScoredProxyLayoutCandidates(
+  candidates: readonly RawProxyCardPosition[],
+) {
+  const seenCandidates = new Set<string>()
+  const uniqueCandidates: RawProxyCardPosition[] = []
+
+  for (const candidate of candidates) {
+    const key = `${candidate.left}:${candidate.top}`
+
+    if (seenCandidates.has(key)) {
+      continue
+    }
+
+    seenCandidates.add(key)
+    uniqueCandidates.push(candidate)
+  }
+
+  return uniqueCandidates
+}
+
+function getScoredProxyLayoutCandidateScore({
+  candidate,
+  hardObstacleRects,
+  layout,
+  proxyObstacleRects,
+  viewport,
+}: {
+  candidate: RawProxyCardPosition
+  hardObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  layout: RawOffscreenRelationProxyLayout
+  proxyObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  viewport: DbmlDiagramViewport
+}) {
+  const cardHeight = getScaledProxyCardHeight(layout.proxy, viewport)
+  const rect = {
+    left: candidate.left,
+    top: candidate.top,
+    width: getScaledProxyCardWidth(viewport),
+    height: cardHeight,
+  }
+  const hardOverlapArea = hardObstacleRects.reduce(
+    (sum, obstacleRect) => sum + getRectangleOverlapArea(rect, obstacleRect),
+    0,
+  )
+  const proxyOverlapArea = proxyObstacleRects.reduce(
+    (sum, obstacleRect) => sum + getRectangleOverlapArea(rect, obstacleRect),
+    0,
+  )
+  const maxTop = viewport.height - cardHeight - PROXY_CARD_EDGE_GAP
+  const edgePriorityPenalty =
+    layout.proxy.side === 'top'
+      ? Math.abs(candidate.top - PROXY_CARD_EDGE_GAP)
+      : layout.proxy.side === 'bottom'
+        ? Math.abs(candidate.top - maxTop)
+        : 0
+  const movementDistance =
+    Math.abs(candidate.left - layout.left) +
+    Math.abs(candidate.top - layout.top)
+
+  return (
+    hardOverlapArea * 1_000_000_000 +
+    proxyOverlapArea * 1_000_000 +
+    edgePriorityPenalty * 1_000 +
+    movementDistance
+  )
 }
 
 function getConstrainedProxyLayout({
@@ -158,15 +440,13 @@ function getConstrainedProxyLayout({
   placedLayouts,
   viewport,
   obstacles,
-  placementMode,
 }: {
   layout: RawOffscreenRelationProxyLayout
   placedLayouts: readonly DbmlOffscreenRelationProxyLayout[]
   viewport: DbmlDiagramViewport
   obstacles: readonly DbmlOffscreenRelationProxyLayoutObstacle[]
-  placementMode: OffscreenRelationProxyPlacementMode
 }): DbmlOffscreenRelationProxyLayout {
-  const isVerticalShift = isVerticalProxyStack(layout.proxy.side, placementMode)
+  const isVerticalShift = true
   const rect = getRawProxyLayoutRect(layout, viewport)
   const position = getRawLayoutAxisPosition(layout, isVerticalShift)
   const size = isVerticalShift ? rect.height : rect.width
@@ -378,6 +658,58 @@ function getRawProxyCardPosition(
   }
 
   return getLineProxyCardPosition(proxy, viewport)
+}
+
+function getConstrainedRawProxyCardPosition(
+  proxy: DbmlOffscreenRelationProxy,
+  viewport: DbmlDiagramViewport,
+  placementMode: OffscreenRelationProxyPlacementMode,
+) {
+  const position = getRawProxyCardPosition(proxy, viewport, placementMode)
+  const unclampedTop = getUnclampedProxyCardTop(proxy, viewport, placementMode)
+  const cardHeight = getScaledProxyCardHeight(proxy, viewport)
+  const minTop = PROXY_CARD_EDGE_GAP
+  const maxTop = viewport.height - cardHeight - PROXY_CARD_EDGE_GAP
+
+  return {
+    ...position,
+    bottomOverflow: Math.max(0, unclampedTop - maxTop),
+    topOverflow: Math.max(0, minTop - unclampedTop),
+    unclampedTop,
+  }
+}
+
+function getUnclampedProxyCardTop(
+  proxy: DbmlOffscreenRelationProxy,
+  viewport: DbmlDiagramViewport,
+  placementMode: OffscreenRelationProxyPlacementMode,
+) {
+  if (placementMode === 'parallel') {
+    return getUnclampedParallelProxyCardTop(proxy, viewport)
+  }
+
+  return getUnclampedLineProxyCardTop(proxy, viewport)
+}
+
+function getUnclampedLineProxyCardTop(
+  proxy: DbmlOffscreenRelationProxy,
+  viewport: DbmlDiagramViewport,
+) {
+  const anchorY = proxy.anchor.y * viewport.zoom + viewport.y
+  const cardHeight = getScaledProxyCardHeight(proxy, viewport)
+
+  if (proxy.side === 'bottom') {
+    return anchorY - cardHeight
+  }
+
+  return anchorY - cardHeight / 2
+}
+
+function getUnclampedParallelProxyCardTop(
+  proxy: DbmlOffscreenRelationProxy,
+  viewport: DbmlDiagramViewport,
+) {
+  return proxy.table.position.y * viewport.zoom + viewport.y
 }
 
 function getLineProxyCardPosition(
@@ -692,40 +1024,403 @@ function getProxyLayoutRect(
   }
 }
 
-function compareConstrainedRawLayouts(
-  first: RawOffscreenRelationProxyLayout,
-  second: RawOffscreenRelationProxyLayout,
-  placementMode: OffscreenRelationProxyPlacementMode,
+function getConstrainedRawLayoutGroups(
+  layouts: RawOffscreenRelationProxyLayout[],
+  viewport: DbmlDiagramViewport,
 ) {
-  const firstSidePriority = getProxySidePriority(first.proxy.side)
-  const secondSidePriority = getProxySidePriority(second.proxy.side)
-
-  if (firstSidePriority !== secondSidePriority) {
-    return firstSidePriority - secondSidePriority
-  }
-
-  const isVerticalShift = isVerticalProxyStack(first.proxy.side, placementMode)
-  const firstPosition = getRawLayoutAxisPosition(first, isVerticalShift)
-  const secondPosition = getRawLayoutAxisPosition(second, isVerticalShift)
-
-  if (firstPosition !== secondPosition) {
-    return firstPosition - secondPosition
-  }
-
-  return first.proxy.id.localeCompare(second.proxy.id)
+  return getCollidingRawLayoutGroups(layouts, viewport).flatMap((layoutGroup) =>
+    getConstrainedRawLayoutLanes(layoutGroup, viewport),
+  )
 }
 
-function getProxySidePriority(side: DbmlOffscreenRelationProxy['side']) {
-  switch (side) {
-    case 'left':
+function getCollidingRawLayoutGroups(
+  layouts: RawOffscreenRelationProxyLayout[],
+  viewport: DbmlDiagramViewport,
+) {
+  const visitedLayoutIndexes = new Set<number>()
+  const groups: RawOffscreenRelationProxyLayout[][] = []
+
+  for (const [layoutIndex] of layouts.entries()) {
+    if (visitedLayoutIndexes.has(layoutIndex)) {
+      continue
+    }
+
+    const group: RawOffscreenRelationProxyLayout[] = []
+    const pendingLayoutIndexes = [layoutIndex]
+    visitedLayoutIndexes.add(layoutIndex)
+
+    while (pendingLayoutIndexes.length > 0) {
+      const currentLayoutIndex = pendingLayoutIndexes.pop()
+
+      if (currentLayoutIndex === undefined) {
+        continue
+      }
+
+      const currentLayout = layouts[currentLayoutIndex]
+
+      group.push(currentLayout)
+
+      for (const [candidateLayoutIndex, candidateLayout] of layouts.entries()) {
+        if (visitedLayoutIndexes.has(candidateLayoutIndex)) {
+          continue
+        }
+
+        if (
+          !rectanglesOverlap(
+            getRawProxyLayoutRect(currentLayout, viewport),
+            getRawProxyLayoutRect(candidateLayout, viewport),
+          )
+        ) {
+          continue
+        }
+
+        visitedLayoutIndexes.add(candidateLayoutIndex)
+        pendingLayoutIndexes.push(candidateLayoutIndex)
+      }
+    }
+
+    groups.push(group)
+  }
+
+  return groups.map((group) =>
+    [...group].sort(
+      (first, second) => (first.sourceIndex ?? 0) - (second.sourceIndex ?? 0),
+    ),
+  )
+}
+
+function getConstrainedRawLayoutLanes(
+  layouts: RawOffscreenRelationProxyLayout[],
+  viewport: DbmlDiagramViewport,
+) {
+  const availableHeight = viewport.height - PROXY_CARD_EDGE_GAP * 2
+
+  if (getConstrainedStackHeight(layouts, viewport) <= availableHeight) {
+    return [layouts]
+  }
+
+  const intent = getConstrainedGroupVerticalIntent(layouts)
+  const lanes: RawOffscreenRelationProxyLayout[][] = []
+  const priorityOrderedLayouts = [...layouts].sort((first, second) =>
+    compareConstrainedLanePriority(first, second, intent),
+  )
+
+  for (const layout of priorityOrderedLayouts) {
+    const targetLane = lanes.find((lane) =>
+      canFitConstrainedLane([...lane, layout], viewport),
+    )
+
+    if (targetLane) {
+      targetLane.push(layout)
+      continue
+    }
+
+    lanes.push([layout])
+  }
+
+  const laneOffsets = getConstrainedLaneOffsets(layouts, viewport, lanes.length)
+
+  return lanes.map((lane, laneIndex) =>
+    lane.map((layout) => ({
+      ...layout,
+      left: clampScreenPosition({
+        max:
+          viewport.width -
+          getScaledProxyCardWidth(viewport) -
+          PROXY_CARD_EDGE_GAP,
+        min: PROXY_CARD_EDGE_GAP,
+        value: layout.left + laneOffsets[laneIndex],
+      }),
+    })),
+  )
+}
+
+function canFitConstrainedLane(
+  layouts: readonly RawOffscreenRelationProxyLayout[],
+  viewport: DbmlDiagramViewport,
+) {
+  if (layouts.length <= 1) {
+    return true
+  }
+
+  return (
+    getConstrainedStackHeight(layouts, viewport) <=
+    viewport.height - PROXY_CARD_EDGE_GAP * 2
+  )
+}
+
+function getConstrainedStackHeight(
+  layouts: readonly RawOffscreenRelationProxyLayout[],
+  viewport: DbmlDiagramViewport,
+) {
+  return layouts.reduce(
+    (height, layout, index) =>
+      height +
+      getScaledProxyCardHeight(layout.proxy, viewport) +
+      (index === 0 ? 0 : PROXY_CARD_GAP),
+    0,
+  )
+}
+
+function getConstrainedLaneOffsets(
+  layouts: readonly RawOffscreenRelationProxyLayout[],
+  viewport: DbmlDiagramViewport,
+  laneCount: number,
+) {
+  const cardWidth = getScaledProxyCardWidth(viewport)
+  const groupLeft = Math.min(...layouts.map((layout) => layout.left))
+  const groupRight = Math.max(
+    ...layouts.map((layout) => layout.left + cardWidth),
+  )
+  const groupWidth = groupRight - groupLeft
+  const laneStep = groupWidth + PROXY_CARD_GAP
+  const viewportCenter = viewport.width / 2
+  const groupCenter = groupLeft + groupWidth / 2
+  const preferredDirection = groupCenter >= viewportCenter ? -1 : 1
+  const minOffset = PROXY_CARD_EDGE_GAP - groupLeft
+  const maxOffset = viewport.width - PROXY_CARD_EDGE_GAP - groupRight
+  const offsets = [0]
+  const usedOffsets = new Set(offsets)
+
+  for (let laneIndex = 1; laneIndex < laneCount; laneIndex += 1) {
+    let nextOffset: number | undefined
+
+    for (
+      let distance = 1;
+      distance <= laneCount && nextOffset === undefined;
+      distance += 1
+    ) {
+      for (const direction of [preferredDirection, -preferredDirection]) {
+        const candidate = direction * distance * laneStep
+
+        if (
+          usedOffsets.has(candidate) ||
+          candidate < minOffset ||
+          candidate > maxOffset
+        ) {
+          continue
+        }
+
+        nextOffset = candidate
+        break
+      }
+    }
+
+    if (nextOffset === undefined) {
+      nextOffset = clampScreenPosition({
+        max: maxOffset,
+        min: minOffset,
+        value: preferredDirection * laneIndex * laneStep,
+      })
+    }
+
+    offsets.push(nextOffset)
+    usedOffsets.add(nextOffset)
+  }
+
+  return offsets
+}
+
+function compareConstrainedLanePriority(
+  first: RawOffscreenRelationProxyLayout,
+  second: RawOffscreenRelationProxyLayout,
+  intent: ConstrainedVerticalStackIntent,
+) {
+  const firstOverflow = getConstrainedIntentOverflow(first, intent)
+  const secondOverflow = getConstrainedIntentOverflow(second, intent)
+
+  if (firstOverflow !== secondOverflow) {
+    return secondOverflow - firstOverflow
+  }
+
+  const firstDesiredTop = first.unclampedTop ?? first.top
+  const secondDesiredTop = second.unclampedTop ?? second.top
+
+  if (firstDesiredTop !== secondDesiredTop) {
+    return intent === 'top'
+      ? firstDesiredTop - secondDesiredTop
+      : secondDesiredTop - firstDesiredTop
+  }
+
+  return (first.sourceIndex ?? 0) - (second.sourceIndex ?? 0)
+}
+
+function getConstrainedIntentOverflow(
+  layout: RawOffscreenRelationProxyLayout,
+  intent: ConstrainedVerticalStackIntent,
+) {
+  if (intent === 'top') {
+    return layout.topOverflow ?? 0
+  }
+
+  if (intent === 'bottom') {
+    return layout.bottomOverflow ?? 0
+  }
+
+  return Math.max(layout.topOverflow ?? 0, layout.bottomOverflow ?? 0)
+}
+
+function getOrderedConstrainedRawLayouts(
+  layouts: RawOffscreenRelationProxyLayout[],
+  viewport: DbmlDiagramViewport,
+) {
+  const intent = getConstrainedGroupVerticalIntent(layouts)
+  const sortedLayouts = [...layouts].sort(
+    (first, second) =>
+      getConstrainedStackOrderPriority(first, intent) -
+        getConstrainedStackOrderPriority(second, intent) ||
+      (first.unclampedTop ?? first.top) - (second.unclampedTop ?? second.top) ||
+      first.left - second.left ||
+      (first.sourceIndex ?? 0) - (second.sourceIndex ?? 0),
+  )
+  const itemSizes = sortedLayouts.map((layout) =>
+    getScaledProxyCardHeight(layout.proxy, viewport),
+  )
+  const stackPositions = getConstrainedStackPositions({
+    desiredPositions: sortedLayouts.map((layout) => layout.top),
+    intent,
+    itemSizes,
+    maxEndPosition: viewport.height - PROXY_CARD_EDGE_GAP,
+    minPosition: PROXY_CARD_EDGE_GAP,
+  })
+
+  return sortedLayouts.map((layout, index) => ({
+    ...layout,
+    top: stackPositions[index],
+  }))
+}
+
+function getConstrainedStackOrderPriority(
+  layout: RawOffscreenRelationProxyLayout,
+  intent: ConstrainedVerticalStackIntent,
+) {
+  if (intent === 'top') {
+    return layout.proxy.side === 'top' ? 0 : 1
+  }
+
+  if (intent === 'bottom') {
+    return layout.proxy.side === 'bottom' ? 1 : 0
+  }
+
+  switch (layout.proxy.side) {
+    case 'top':
       return 0
+    case 'bottom':
+      return 2
+    case 'left':
     case 'right':
       return 1
-    case 'top':
-      return 2
-    case 'bottom':
-      return 3
   }
+}
+
+function getConstrainedGroupVerticalIntent(
+  layouts: readonly RawOffscreenRelationProxyLayout[],
+): ConstrainedVerticalStackIntent {
+  const topOverflow = layouts.reduce(
+    (overflow, layout) => overflow + (layout.topOverflow ?? 0),
+    0,
+  )
+  const bottomOverflow = layouts.reduce(
+    (overflow, layout) => overflow + (layout.bottomOverflow ?? 0),
+    0,
+  )
+
+  if (topOverflow > bottomOverflow) {
+    return 'top'
+  }
+
+  if (bottomOverflow > topOverflow) {
+    return 'bottom'
+  }
+
+  return 'neutral'
+}
+
+function getConstrainedStackPositions({
+  desiredPositions,
+  intent,
+  itemSizes,
+  maxEndPosition,
+  minPosition,
+}: {
+  desiredPositions: readonly number[]
+  intent: ConstrainedVerticalStackIntent
+  itemSizes: readonly number[]
+  maxEndPosition: number
+  minPosition: number
+}) {
+  if (intent === 'top') {
+    return getTopAnchoredStackPositions({
+      gap: PROXY_CARD_GAP,
+      itemSizes,
+      minPosition,
+    })
+  }
+
+  if (intent === 'bottom') {
+    return getBottomAnchoredStackPositions({
+      gap: PROXY_CARD_GAP,
+      itemSizes,
+      maxEndPosition,
+      minPosition,
+    })
+  }
+
+  return getNonOverlappingStackPositions({
+    desiredPositions,
+    gap: PROXY_CARD_GAP,
+    itemSizes,
+    maxEndPosition,
+    minPosition,
+  })
+}
+
+function getTopAnchoredStackPositions({
+  gap,
+  itemSizes,
+  minPosition,
+}: {
+  gap: number
+  itemSizes: readonly number[]
+  minPosition: number
+}) {
+  const positions: number[] = []
+  let nextPosition = minPosition
+
+  for (const itemSize of itemSizes) {
+    positions.push(nextPosition)
+    nextPosition += itemSize + gap
+  }
+
+  return positions
+}
+
+function getBottomAnchoredStackPositions({
+  gap,
+  itemSizes,
+  maxEndPosition,
+  minPosition,
+}: {
+  gap: number
+  itemSizes: readonly number[]
+  maxEndPosition: number
+  minPosition: number
+}) {
+  const positions = Array<number>(itemSizes.length)
+  let nextEndPosition = maxEndPosition
+
+  for (let index = itemSizes.length - 1; index >= 0; index -= 1) {
+    positions[index] = nextEndPosition - itemSizes[index]
+    nextEndPosition = positions[index] - gap
+  }
+
+  const underflow = minPosition - positions[0]
+
+  if (underflow <= 0) {
+    return positions
+  }
+
+  return positions.map((position) => position + underflow)
 }
 
 function isVerticalProxyStack(
@@ -999,7 +1694,18 @@ type PositionInterval = {
 }
 
 type RawOffscreenRelationProxyLayout = {
+  bottomOverflow?: number
   proxy: DbmlOffscreenRelationProxy
+  left: number
+  sourceIndex?: number
+  top: number
+  topOverflow?: number
+  unclampedTop?: number
+}
+
+type RawProxyCardPosition = {
   left: number
   top: number
 }
+
+type ConstrainedVerticalStackIntent = 'bottom' | 'neutral' | 'top'

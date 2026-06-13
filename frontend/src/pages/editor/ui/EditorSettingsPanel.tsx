@@ -322,8 +322,12 @@ function getThemeModeLabel(mode: ThemeModeControlMode) {
     return 'Legacy'
   }
 
-  if (mode === 'constrained') {
-    return 'Constrained'
+  if (mode === 'iterative') {
+    return 'Iterative'
+  }
+
+  if (mode === 'score') {
+    return 'Score'
   }
 
   if (mode === 'any-overlap') {

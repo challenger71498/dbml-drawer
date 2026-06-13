@@ -54,8 +54,12 @@ describe('editor theme settings', () => {
       'parallel',
     )
     expect(normalizeOffscreenRelationProxyPlacementMode('unknown')).toBe('line')
+    expect(normalizeOffscreenRelationProxyCollisionMode('iterative')).toBe(
+      'iterative',
+    )
+    expect(normalizeOffscreenRelationProxyCollisionMode('score')).toBe('score')
     expect(normalizeOffscreenRelationProxyCollisionMode('constrained')).toBe(
-      'constrained',
+      'iterative',
     )
     expect(normalizeOffscreenRelationProxyCollisionMode('unknown')).toBe(
       'legacy',
@@ -200,9 +204,7 @@ describe('editor theme settings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enable proxies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Connect proxies' }))
     fireEvent.click(screen.getByRole('button', { name: 'Avoid active nodes' }))
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Constrain collisions' }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: 'Iterate collisions' }))
     fireEvent.click(screen.getByRole('button', { name: 'Place parallel' }))
     fireEvent.click(screen.getByRole('button', { name: 'Visible at center' }))
 
@@ -217,7 +219,7 @@ describe('editor theme settings', () => {
       'parallel',
     )
     expect(screen.getByTestId('offscreen-proxy-collision')).toHaveTextContent(
-      'constrained',
+      'iterative',
     )
     expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
       'center',
@@ -232,7 +234,7 @@ describe('editor theme settings', () => {
       getStoredEditorSettings().shouldAvoidOffscreenRelationProxyActiveNodes,
     ).toBe(true)
     expect(getStoredEditorSettings().offscreenRelationProxyCollisionMode).toBe(
-      'constrained',
+      'iterative',
     )
     expect(getStoredEditorSettings().offscreenRelationProxyPlacementMode).toBe(
       'parallel',
@@ -255,7 +257,7 @@ describe('editor theme settings', () => {
       'parallel',
     )
     expect(screen.getByTestId('offscreen-proxy-collision')).toHaveTextContent(
-      'constrained',
+      'iterative',
     )
     expect(screen.getByTestId('offscreen-proxy-visibility')).toHaveTextContent(
       'center',
@@ -453,9 +455,9 @@ function ThemeHarness() {
       </button>
       <button
         type="button"
-        onClick={() => setOffscreenRelationProxyCollisionMode('constrained')}
+        onClick={() => setOffscreenRelationProxyCollisionMode('iterative')}
       >
-        Constrain collisions
+        Iterate collisions
       </button>
       <button
         type="button"
