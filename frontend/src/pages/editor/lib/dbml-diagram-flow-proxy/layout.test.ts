@@ -200,6 +200,62 @@ describe('dbml offscreen relation proxy layout', () => {
     ).toBe(false)
   })
 
+  it('stacks score top-side proxies vertically before using horizontal lanes', () => {
+    const layouts = legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
+      proxies: [
+        createProxy(createTable('users', 400, -200), {
+          anchor: { x: 400, y: 0 },
+          side: 'top',
+        }),
+        createProxy(createTable('comments', 400, -200), {
+          anchor: { x: 400, y: 0 },
+          side: 'top',
+        }),
+      ],
+      viewport: { x: 0, y: 0, zoom: 1, width: 800, height: 600 },
+      obstacles: [],
+      options: {
+        collisionMode: 'score',
+        placementMode: 'line',
+        shouldAvoidActiveNodes: false,
+      },
+    })
+
+    expect(layouts.map((layout) => layout.style.left)).toEqual([308, 308])
+    expect(layouts.map((layout) => layout.style.top)).toEqual([14, 54])
+    expect(
+      rectanglesOverlap(getLayoutRect(layouts[0]), getLayoutRect(layouts[1])),
+    ).toBe(false)
+  })
+
+  it('stacks score bottom-side proxies vertically before using horizontal lanes', () => {
+    const layouts = legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
+      proxies: [
+        createProxy(createTable('users', 400, 900), {
+          anchor: { x: 400, y: 590 },
+          side: 'bottom',
+        }),
+        createProxy(createTable('comments', 400, 900), {
+          anchor: { x: 400, y: 590 },
+          side: 'bottom',
+        }),
+      ],
+      viewport: { x: 0, y: 0, zoom: 1, width: 800, height: 600 },
+      obstacles: [],
+      options: {
+        collisionMode: 'score',
+        placementMode: 'line',
+        shouldAvoidActiveNodes: false,
+      },
+    })
+
+    expect(layouts.map((layout) => layout.style.left)).toEqual([308, 308])
+    expect(layouts.map((layout) => layout.style.top)).toEqual([556, 516])
+    expect(
+      rectanglesOverlap(getLayoutRect(layouts[0]), getLayoutRect(layouts[1])),
+    ).toBe(false)
+  })
+
   it('splits iterative proxies into secondary lanes when one stack cannot fit', () => {
     const layouts = legacyOffscreenRelationProxyLayoutStrategy.getLayouts({
       proxies: [

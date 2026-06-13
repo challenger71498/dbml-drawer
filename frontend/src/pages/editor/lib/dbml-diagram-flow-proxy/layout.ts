@@ -365,7 +365,34 @@ function getScoredProxyLayoutCandidates({
     }
   }
 
-  return getUniqueScoredProxyLayoutCandidates(candidates)
+  const uniqueCandidates = getUniqueScoredProxyLayoutCandidates(candidates)
+
+  if (layout.proxy.side !== 'top' && layout.proxy.side !== 'bottom') {
+    return uniqueCandidates
+  }
+
+  const primaryLeft = clampScreenPosition({
+    max: maxLeft,
+    min: PROXY_CARD_EDGE_GAP,
+    value: layout.left,
+  })
+  const primaryCandidates = uniqueCandidates.filter(
+    (candidate) => candidate.left === primaryLeft,
+  )
+  const hasNonOverlappingPrimaryCandidate = primaryCandidates.some(
+    (candidate) =>
+      getScoredProxyLayoutCandidateOverlapArea({
+        candidate,
+        hardObstacleRects,
+        layout,
+        proxyObstacleRects,
+        viewport,
+      }) === 0,
+  )
+
+  return hasNonOverlappingPrimaryCandidate
+    ? primaryCandidates
+    : uniqueCandidates
 }
 
 function getUniqueScoredProxyLayoutCandidates(
@@ -402,20 +429,14 @@ function getScoredProxyLayoutCandidateScore({
   viewport: DbmlDiagramViewport
 }) {
   const cardHeight = getScaledProxyCardHeight(layout.proxy, viewport)
-  const rect = {
-    left: candidate.left,
-    top: candidate.top,
-    width: getScaledProxyCardWidth(viewport),
-    height: cardHeight,
-  }
-  const hardOverlapArea = hardObstacleRects.reduce(
-    (sum, obstacleRect) => sum + getRectangleOverlapArea(rect, obstacleRect),
-    0,
-  )
-  const proxyOverlapArea = proxyObstacleRects.reduce(
-    (sum, obstacleRect) => sum + getRectangleOverlapArea(rect, obstacleRect),
-    0,
-  )
+  const { hardOverlapArea, proxyOverlapArea } =
+    getScoredProxyLayoutCandidateOverlapAreas({
+      candidate,
+      hardObstacleRects,
+      layout,
+      proxyObstacleRects,
+      viewport,
+    })
   const maxTop = viewport.height - cardHeight - PROXY_CARD_EDGE_GAP
   const edgePriorityPenalty =
     layout.proxy.side === 'top'
@@ -433,6 +454,62 @@ function getScoredProxyLayoutCandidateScore({
     edgePriorityPenalty * 1_000 +
     movementDistance
   )
+}
+
+function getScoredProxyLayoutCandidateOverlapArea({
+  candidate,
+  hardObstacleRects,
+  layout,
+  proxyObstacleRects,
+  viewport,
+}: {
+  candidate: RawProxyCardPosition
+  hardObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  layout: RawOffscreenRelationProxyLayout
+  proxyObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  viewport: DbmlDiagramViewport
+}) {
+  const { hardOverlapArea, proxyOverlapArea } =
+    getScoredProxyLayoutCandidateOverlapAreas({
+      candidate,
+      hardObstacleRects,
+      layout,
+      proxyObstacleRects,
+      viewport,
+    })
+
+  return hardOverlapArea + proxyOverlapArea
+}
+
+function getScoredProxyLayoutCandidateOverlapAreas({
+  candidate,
+  hardObstacleRects,
+  layout,
+  proxyObstacleRects,
+  viewport,
+}: {
+  candidate: RawProxyCardPosition
+  hardObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  layout: RawOffscreenRelationProxyLayout
+  proxyObstacleRects: readonly DbmlOffscreenRelationProxyLayoutRect[]
+  viewport: DbmlDiagramViewport
+}) {
+  const rect = {
+    left: candidate.left,
+    top: candidate.top,
+    width: getScaledProxyCardWidth(viewport),
+    height: getScaledProxyCardHeight(layout.proxy, viewport),
+  }
+  const hardOverlapArea = hardObstacleRects.reduce(
+    (sum, obstacleRect) => sum + getRectangleOverlapArea(rect, obstacleRect),
+    0,
+  )
+  const proxyOverlapArea = proxyObstacleRects.reduce(
+    (sum, obstacleRect) => sum + getRectangleOverlapArea(rect, obstacleRect),
+    0,
+  )
+
+  return { hardOverlapArea, proxyOverlapArea }
 }
 
 function getConstrainedProxyLayout({
