@@ -757,6 +757,8 @@ Table posts {
 
     expect(within(proxy).getByText('users')).toBeInTheDocument()
     expect(within(proxy).getByText('id')).toBeInTheDocument()
+    expect(proxy.closest('[data-node-id]')).toBeNull()
+    expect(screen.getByTestId('diagram-pane')).not.toContainElement(proxy)
     expect(within(proxy).queryByText('email')).not.toBeInTheDocument()
     expect(within(proxy).queryByText('3 cols')).not.toBeInTheDocument()
     expect(within(proxy).queryByText('...')).not.toBeInTheDocument()

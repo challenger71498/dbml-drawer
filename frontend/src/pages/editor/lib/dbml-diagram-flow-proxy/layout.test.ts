@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { DbmlOffscreenRelationProxy } from './dbml-offscreen-relation-proxies'
-import { legacyOffscreenRelationProxyLayoutStrategy } from './dbml-offscreen-relation-proxy-layout'
-import type { LayoutedDbmlDiagramTable } from './dbml-layout'
+import type { DbmlOffscreenRelationProxy } from './proxy'
+import { legacyOffscreenRelationProxyLayoutStrategy } from './layout'
+import type { LayoutedDbmlDiagramTable } from '../../model/dbml-layout'
 
 describe('dbml offscreen relation proxy layout', () => {
   it('does not move a proxy away from its own original table obstacle', () => {

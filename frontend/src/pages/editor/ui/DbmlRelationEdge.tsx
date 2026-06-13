@@ -5,7 +5,7 @@ import {
   type EdgeProps,
 } from '@xyflow/react'
 import type { CSSProperties } from 'react'
-import type { DbmlRelationEdgeData } from '../lib/map-dbml-diagram-flow'
+import type { DbmlRelationEdgeData } from '../lib/dbml-diagram-flow'
 import {
   DEFAULT_DBML_RELATION_HIGHLIGHT_MODE,
   DBML_RELATION_DEFAULT_COLOR,

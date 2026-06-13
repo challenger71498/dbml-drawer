@@ -1,10 +1,10 @@
-import type { DbmlDiagramColumn } from './dbml-diagram'
-import type { DbmlDiagramSelectionTarget } from './dbml-diagram-selection'
+import type { DbmlDiagramColumn } from '../../model/dbml-diagram'
+import type { DbmlDiagramSelectionTarget } from '../../model/dbml-diagram-selection'
 import type {
   LayoutedDbmlDiagram,
   LayoutedDbmlDiagramRelation,
   LayoutedDbmlDiagramTable,
-} from './dbml-layout'
+} from '../../model/dbml-layout'
 
 export type DbmlDiagramViewport = {
   x: number

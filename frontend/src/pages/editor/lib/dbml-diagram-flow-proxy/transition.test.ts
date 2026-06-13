@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { DbmlOffscreenRelationProxy } from './dbml-offscreen-relation-proxies'
-import type { DbmlOffscreenRelationProxyLayout } from './dbml-offscreen-relation-proxy-layout'
-import { getOffscreenRelationProxyTransitionLayouts } from './dbml-offscreen-relation-proxy-transition'
-import type { LayoutedDbmlDiagramTable } from './dbml-layout'
+import type { DbmlOffscreenRelationProxy } from './proxy'
+import type { DbmlOffscreenRelationProxyLayout } from './layout'
+import { getOffscreenRelationProxyTransitionLayouts } from './transition'
+import type { LayoutedDbmlDiagramTable } from '../../model/dbml-layout'
 
 const VIEWPORT = { x: 0, y: 0, zoom: 1, width: 800, height: 600 }
 

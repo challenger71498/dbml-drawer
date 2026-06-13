@@ -1,5 +1,5 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
-import type { DbmlTableNodeData } from '../lib/map-dbml-diagram-flow'
+import type { DbmlTableNodeData } from '../lib/dbml-diagram-flow'
 import {
   isColumnActive,
   isTableHeaderActive,

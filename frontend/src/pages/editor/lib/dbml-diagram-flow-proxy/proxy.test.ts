@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import type { DbmlDiagramSelectionTarget } from './dbml-diagram-selection'
+import type { DbmlDiagramSelectionTarget } from '../../model/dbml-diagram-selection'
 import type {
   LayoutedDbmlDiagram,
   LayoutedDbmlDiagramRelation,
   LayoutedDbmlDiagramTable,
-} from './dbml-layout'
+} from '../../model/dbml-layout'
 import {
   getFlowViewportBounds,
   getOffscreenRelationProxies,
   isTableVisible,
-} from './dbml-offscreen-relation-proxies'
+} from './proxy'
 
 const FOCUSED_TABLE_TARGET: DbmlDiagramSelectionTarget = {
   type: 'table',

@@ -1,15 +1,14 @@
 import {
   getScaledProxyCardHeight,
   getScaledProxyCardWidth,
-  type DbmlOffscreenRelationProxyLayout,
-  type DbmlOffscreenRelationProxyLayoutRect,
-} from './dbml-offscreen-relation-proxy-layout'
-import type { LayoutedDbmlDiagramTable } from './dbml-layout'
+} from './card-metrics'
 import type {
-  DbmlDiagramViewport,
-  DbmlOffscreenRelationProxy,
-} from './dbml-offscreen-relation-proxies'
-import type { OffscreenRelationProxyTransitionMode } from './editor-theme'
+  DbmlOffscreenRelationProxyLayout,
+  DbmlOffscreenRelationProxyLayoutRect,
+} from './layout'
+import type { LayoutedDbmlDiagramTable } from '../../model/dbml-layout'
+import type { DbmlDiagramViewport, DbmlOffscreenRelationProxy } from './proxy'
+import type { OffscreenRelationProxyTransitionMode } from '../../model/editor-theme'
 
 const MIN_PROXY_OPACITY = 0.1
 const PROXY_HANDOFF_DISTANCE = 80
